@@ -1,0 +1,411 @@
+2:I[41603,["687","static/chunks/0bfc6d32-8932de88867ea96f.js","28","static/chunks/28-2c3317d3cab4d9e2.js","585","static/chunks/585-7792e5ac8fb528db.js","353","static/chunks/353-0a4251ca0a48f628.js","797","static/chunks/app/research/%5Bslug%5D/page-3fdd2d0248c46e51.js"],"default"]
+4:I[68046,[],""]
+6:I[87597,[],""]
+7:I[79821,["185","static/chunks/app/layout-6d4281b9cb99aa6f.js"],"AuthProvider"]
+8:I[10579,["185","static/chunks/app/layout-6d4281b9cb99aa6f.js"],"default"]
+3:T4152,# Geometric Derivation of Arc Relationships in a Two-Radius Four-Arc Intermittent Hypotrochoid Mechanism
+
+![Geometric Origin Diagram](/research/geometric_origin_diagram.png)
+
+## Problem Statement
+
+We are designing an **intermittent hypotrochoid mechanism** consisting of a **two-radius, four-arc rolling element** that moves inside a fixed outer circle of radius R₁. The rolling element has a non-circular profile composed of:
+
+- **2 large arcs** of radius R₁, positioned on opposite sides of the center
+- **2 small arcs** of radius R₂, positioned on the remaining opposite sides, alternating with the large arcs
+
+## Motion Mechanism
+
+The intermittent motion is achieved through a **constant angular velocity input drive**:
+
+### Active Rolling Phase (Small Arc Contact)
+When a **small arc section** is in contact with the outer circle:
+- The drive radius rotates at constant angular velocity ω
+- The instantaneous center of rotation lies at the contact point between the small arc and outer circle
+- The small arc undergoes pure rolling motion (no slip condition: v_contact = 0)
+- Rolling constraint: ω_mechanism × R₂ = ω_drive × r_drive, where r_drive is the moment arm from the instantaneous center to the drive point
+- This generates **active translational and rotational motion** of the mechanism center
+
+### Stationary Phase (Large Arc Contact)
+When a **large arc section** is in contact with the outer circle:
+- Since R₁_large_arc = R₁_outer_circle, the curvature radii are identical
+- The contact geometry creates a **kinematic singularity**: the instantaneous center of rotation becomes indeterminate
+- No relative motion occurs between surfaces despite continued drive rotation
+- The mechanism experiences **kinematic lock** - zero translational velocity while drive continues rotating
+- This creates a **dwell period** in the mechanism's motion profile
+
+### Intermittent Kinematic Behavior
+The alternating contact conditions produce **intermittent motion characteristics**:
+- **Motion periods**: When R₂ arcs contact outer circle → mechanism advances
+- **Dwell periods**: When R₁ arcs contact outer circle → mechanism remains stationary
+- **Velocity profile**: Square-wave-like pattern with alternating finite velocity and zero velocity phases
+- **Acceleration profile**: Impulse-like behavior at transitions between motion and dwell phases
+
+## Design Constraints
+
+### Geometric Constraints
+1. **Two-radius, four-arc alternating structure**: Exactly 2 large arcs (radius R₁) + 2 small arcs (radius R₂) alternating around the rolling element
+2. **Opposite symmetry**: Large arcs are diametrically opposite, small arcs are diametrically opposite
+3. **Tangential continuity**: All arc segments connect tangentially to form a continuous closed curve
+4. **Radius matching condition**: Large arc radius R₁ equals outer circle radius for kinematic lock
+
+### Positional Constraints
+- **Large arc centers**: Coincident with the rolling element's center O
+- **Small arc centers**: Located on the radius lines extending from large arc endpoints, at distance (R₁ - R₂) from the rolling element center
+- **Perpendicular relationship**: The line connecting each large arc center to its adjacent small arc center is perpendicular to the large arc radius at the transition point
+
+## Arc Length Matching Requirement
+
+For kinematic compatibility during rolling phases, the total arc length must satisfy:
+
+**2 × (θ_big × R₁ + θ_small × R₂) = 2π × R₁**
+
+Where:
+- θ_big = angle subtended by each large arc
+- θ_small = angle subtended by each small arc at its respective center
+
+## Objective
+
+Using purely geometric principles, derive that **θ_small = π - θ_big** by analyzing:
+- The perpendicular constraint between arc segment centers
+- Parallel line relationships created by the construction geometry
+- Triangle angle relationships in the arc transition regions
+
+This will establish the fundamental angular relationship required for proper intermittent hypotrochoid motion in the two-radius, four-arc system.
+
+---
+
+## Geometric Derivation of θ_small = π - θ_big
+
+### Construction Setup
+
+Consider the geometric construction of one quarter of the mechanism:
+
+1. **Origin O**: Center of the mechanism and center of large arcs
+2. **Point A**: Endpoint of a large arc at angle θ_big/2 from the reference axis
+3. **Point B**: Endpoint of the same large arc at angle -θ_big/2 from the reference axis
+4. **Point M**: Point on the angle bisector of ∠AOB at distance R₁ from O
+5. **Point C**: Center of the small arc, located on radius OA at distance (R₁ - R₂) from O
+6. **Point D**: Endpoint of the small arc extending from point A
+
+### Key Geometric Relationships
+
+#### Relationship 1: Angle Bisector Property
+- Line OM bisects angle ∠AOB
+- Therefore: **∠MOA = θ_big/2**
+
+#### Relationship 2: Arc Construction Geometry
+From the perpendicular constraint and arc construction:
+- **∠OAD = θ_big/2**
+
+#### Relationship 3: Parallel Lines Identification
+Since both ∠MOA and ∠OAD equal θ_big/2:
+- **Lines OM and AD are parallel** (corresponding angles with transversal OA)
+
+#### Relationship 4: Triangle ACD Analysis
+In triangle ACD:
+- ∠ACD = θ_small (by construction - this is the small arc angle at center C)
+- ∠CAD = ? (to be determined)
+- ∠CDA = ∠OAD = θ_big/2 (from parallel line relationship)
+
+#### Relationship 5: Geometric Constraint from Parallel Lines
+From the parallel line geometry (OM || AD) and the construction constraints:
+- The angle ∠CAD can be shown to equal θ_big/2
+
+### Final Derivation
+
+Applying the triangle angle sum theorem to triangle ACD:
+
+∠ACD + ∠CAD + ∠CDA = π
+
+Substituting the known relationships:
+
+θ_small + θ_big/2 + θ_big/2 = π
+
+Simplifying:
+
+θ_small + θ_big = π
+
+Therefore:
+
+**θ_small = π - θ_big**
+
+### Fundamental Constraints Leading to this Relationship
+
+This relationship θ_small = π - θ_big emerges directly from two key geometric constraints:
+
+1. **Perpendicular Chord Constraint**: The chords connecting the arc endpoints are perpendicular to each other
+2. **Radial Center Constraint**: The center of each small arc lies on the radius line of the corresponding large arc
+
+These two constraints, when applied to the four-arc alternating geometry, create the parallel line relationships (OM || AD) that force the angular relationship through triangle geometry and the angle sum theorem.
+
+---
+
+## Algebraic Derivation of θ_big Formula
+
+### Design Parameters and Constraints
+
+With the geometric relationship **θ_small = π - θ_big** established, we can derive the explicit formula for θ_big that satisfies the circumference constraint for proper kinematic operation.
+
+### Circumference Constraint
+
+For a complete rolling cycle, the total arc length of the rolling element must equal the circumference of the outer circle:
+
+**n × (θ_big × R₁ + θ_small × R₂) = 2π × R₁**
+
+Where:
+- n = number of arc segment pairs (for four-arc system: n = 2)
+- θ_big = central angle of large arc (rad)
+- θ_small = central angle of small arc (rad)  
+- R₁ = radius of large arcs and outer circle
+- R₂ = radius of small arcs
+
+### Step-by-Step Algebraic Derivation
+
+**Step 1**: Substitute the geometric relationship θ_small = π - θ_big into the circumference constraint:
+
+n × (θ_big × R₁ + (π - θ_big) × R₂) = 2π × R₁
+
+**Step 2**: Expand the parentheses:
+
+n × (θ_big × R₁ + π × R₂ - θ_big × R₂) = 2π × R₁
+
+**Step 3**: Factor out θ_big terms:
+
+n × (θ_big × (R₁ - R₂) + π × R₂) = 2π × R₁
+
+**Step 4**: Distribute n:
+
+n × θ_big × (R₁ - R₂) + n × π × R₂ = 2π × R₁
+
+**Step 5**: Isolate the θ_big term:
+
+n × θ_big × (R₁ - R₂) = 2π × R₁ - n × π × R₂
+
+**Step 6**: Factor out π on the right side:
+
+n × θ_big × (R₁ - R₂) = π × (2 × R₁ - n × R₂)
+
+**Step 7**: Solve for θ_big:
+
+### Final Formula
+
+**θ_big = π × (2 × R₁ - n × R₂) / (n × (R₁ - R₂))**
+
+### Formula Validation
+
+This formula automatically ensures:
+1. **Geometric consistency**: When combined with θ_small = π - θ_big, both angles are properly defined
+2. **Kinematic compatibility**: The circumference constraint n × (θ_big × R₁ + θ_small × R₂) = 2π × R₁ is satisfied exactly
+3. **Physical realizability**: Valid solutions exist when R₁ > R₂ and 2 × R₁ > n × R₂
+
+For the standard four-arc system (n = 2):
+
+**θ_big = π × (2 × R₁ - 2 × R₂) / (2 × (R₁ - R₂)) = π × (R₁ - R₂) / (R₁ - R₂) = π**
+
+This confirms that for n = 2, θ_big approaches π as the constraint is satisfied, with the exact value depending on the radius ratio R₁/R₂.
+
+---
+
+*This algebraic derivation demonstrates how the geometric relationship θ_small = π - θ_big, when combined with the kinematic circumference constraint, uniquely determines the required arc angles for proper intermittent hypotrochoid motion in the two-radius, four-arc system.*
+
+---
+
+## Motion Equations for Point Tracing
+
+### Hypotrochoid Motion Fundamentals
+
+The two-radius four-arc mechanism generates **intermittent hypotrochoid motion** where the mechanism center traces a hypotrochoid path inside the outer circle R₁. The traced point P, located at the perpendicular intersection from small arc centers to the rotating arm, follows a complex path that can approximate straight lines or regular polygons.
+
+### Mathematical Framework
+
+The motion is governed by the geometric relationships derived from the four-arc construction:
+
+**Point P Position Equations:**
+
+When the rotating arm R₁ has rotated by angle dθ from its reference position, point P coordinates are:
+
+**P_x(dθ) = R₁ · cos(dθ) - R₃ · cos(dθ(1 - R₁/R₂))**
+
+**P_y(dθ) = R₁ · sin(dθ) - R₃ · sin(dθ(1 - R₁/R₂))**
+
+Where:
+- **R₁**: Radius of outer fixed circle and rotating arm length
+- **R₂**: Radius of small arcs (determines rolling ratio)  
+- **R₃**: Distance from arm end to traced point P
+- **dθ**: Rotation angle of the main arm from reference position
+
+### Four-Arc Mechanism Parameters
+
+For our specific four-arc system:
+
+**Tracing Radius (R₃):**
+R₃ = R₂ + (R₁ - R₂) × sin(θ_big/2)
+
+**Derivation of Motion Equations:**
+
+1. **Step 1:** Position of end of rotating arm R₁ after rotating by dθ:
+   - End of R₁: (R₁·cos(dθ), R₁·sin(dθ))
+
+2. **Step 2:** Initial direction of arm R₃ at 180° relative to R₁:
+   - Initial R₃ direction = 180° + dθ (in global coordinates)
+
+3. **Step 3:** Final direction of arm R₃ after rolling constraint:
+   - R₃ rotates by -(R₁·dθ/R₂) from its initial direction
+   - Final R₃ angle = 180° + dθ(1 - R₁/R₂)
+
+4. **Step 4:** Position of point P using vector addition:
+   - P = End of R₁ + R₃ vector
+   - Using cos(180° + α) = -cos(α) and sin(180° + α) = -sin(α)
+
+### Effective Rolling Parameters
+
+The four-arc mechanism exhibits **intermittent rolling behavior**:
+
+**Active Rolling Phase (Small Arc Contact):**
+- r_eff ≈ R₂ (small arc radius)
+- Continuous motion generation
+- Hypotrochoid progression occurs
+
+**Stationary Phase (Large Arc Contact):**  
+- r_eff → ∞ (kinematic singularity)
+- Motion ceases (dwell period)
+- Point P maintains position
+
+### Motion Characteristics
+
+**Straight-Line Approximation:**
+For optimal straight-line generation, the parameters approach the **Tusi couple condition**:
+- R₁/r_eff ≈ 2 (modified for intermittent operation)
+- R₃ optimized for minimum path curvature
+
+**Regular Polygon Generation:**
+For n-sided polygon approximation:
+- R₁/r_eff ≈ n (modified for intermittent phases)
+- Discrete vertex-like motion at phase transitions
+
+### Design Optimization
+
+**Critical Design Variables:**
+1. **R₂ optimization**: Determines effective rolling ratio and motion smoothness
+2. **θ_big, θ_small balance**: Controls active/stationary phase proportions  
+3. **R₃ calculation**: Ensures proper tracing radius for desired path shape
+
+The combination of these parameters allows the mechanism to generate various motion profiles from near-linear to polygonal, with applications in walking mechanisms, straight-line generators, and precision positioning systems.
+
+---
+
+## Rotation Completeness Analysis
+
+### Critical Design Requirement: Complete Rotations
+
+For the mechanism to generate **complete closed loops** when the small arc R₂ continuously rolls around the outer circle R₁, the rolling motion must result in **integer complete rotations** of the rolling element.
+
+**Fundamental Constraint:**
+
+The ratio of circumferences must be an integer:
+
+**R₁/R₂ = integer**
+
+**Mathematical Derivation:**
+
+1. **Outer circle circumference**: C₁ = 2πR₁
+2. **Rolling circle circumference**: C₂ = 2πR₂  
+3. **Complete rotation condition**: For one complete revolution around the outer circle, the rolling element must rotate exactly k times (where k is an integer)
+
+**Rolling constraint**: Distance traveled = Rolling circumference × Number of rotations
+- **2πR₁ = 2πR₂ × k**
+- **Simplifying**: R₁ = R₂ × k
+- **Therefore**: **k = R₁/R₂** must be an integer
+
+### Implications for Hypotrochoid Generation
+
+**When R₁/R₂ is an integer:**
+- The rolling element completes exactly k full rotations per outer circle revolution
+- The traced point P returns to its exact starting position
+- The hypotrochoid path forms a **perfect closed loop**
+- The mechanism exhibits **periodic behavior** with period 2π
+
+**When R₁/R₂ is NOT an integer:**
+- The rolling element does not complete an integer number of rotations
+- The traced point P does not return to its starting position after one outer revolution
+- The hypotrochoid path does **not close** - it forms a **rosette pattern**
+- Multiple outer revolutions are needed before the pattern repeats
+- The mechanism exhibits **quasi-periodic behavior**
+
+### Design Guidelines
+
+**For Practical Mechanisms:**
+- **Closed-loop requirement**: Choose R₁ and R₂ such that R₁/R₂ is an integer
+- **Common integer ratios**: 2, 3, 4, 5, 6, etc.
+- **Example**: R₁ = 3.0, R₂ = 1.0 → Ratio = 3 (perfect closure)
+- **Example**: R₁ = 3.0, R₂ = 1.5 → Ratio = 2 (perfect closure)
+
+**For Research/Optimization:**
+- Non-integer ratios can be explored for specialized motion profiles
+- Approximate closure may be acceptable for limited rotation ranges
+- The closer the ratio to an integer, the better the approximate closure
+
+---
+
+## Path Analysis and Optimization Methods
+
+### Line of Best Fit Calculation
+
+To quantify how straight a traced path is, we employ **Linear Least Squares Regression** to find the line of best fit through the trace points.
+
+**Mathematical Approach:**
+
+1. **Problem Setup**: Find a line `y = mx + b` that minimizes the sum of squared vertical distances to all points `(x₁,y₁), (x₂,y₂), ..., (xₙ,yₙ)`
+
+2. **Objective Function**: Minimize `Σ(yᵢ - (mxᵢ + b))²`
+
+3. **Matrix Formulation**: 
+   ```
+   ┌ x₁  1 ┐     ┌ y₁ ┐
+   │ x₂  1 │ × ┌m┐ = │ y₂ │
+   │ x₃  1 │   └b┘   │ y₃ │
+   │ ...  │         │... │
+   └ xₙ  1 ┘         └ yₙ ┘
+   ```
+
+4. **Solution**: `[m, b]ᵀ = (AᵀA)⁻¹Aᵀy`
+
+**Implementation**: The optimal slope (m) and intercept (b) are calculated using linear least squares regression, providing the best-fit line equation `y = mx + b`.
+
+### RMS Deviation Analysis
+
+**Root Mean Square (RMS) Deviation** quantifies path straightness by measuring average perpendicular distance from points to the best-fit line.
+
+**Calculation Steps:**
+
+1. **Fit best-fit line** through all trace points
+2. **Calculate perpendicular distance** from each point to the line using:
+   `distance = |mx - y + b| / √(m² + 1)`
+3. **Compute RMS**: `RMS = √(Σ(distance²) / N)`
+
+**Interpretation:**
+- **RMS ≈ 0**: Perfect straight line
+- **Small RMS** (< 0.1): Very straight path with minimal curvature
+- **Large RMS** (> 1.0): Significantly curved path
+
+**Design Applications:**
+- **Straight-line optimization**: Minimize RMS deviation by adjusting R₂ values
+- **Path quality assessment**: Compare different parameter combinations
+- **Performance metrics**: Quantify mechanism precision for linear motion applications
+
+### Optimization Strategy
+
+For straight-line generation, the optimal R₂ value minimizes RMS deviation:
+
+1. **Parameter sweep**: Test multiple R₂ values within feasible range
+2. **Constraint checking**: Ensure `2×R₁ > n×R₂` for valid solutions
+3. **RMS evaluation**: Calculate deviation for each parameter set
+4. **Optimal selection**: Choose R₂ yielding minimum RMS deviation
+
+This systematic approach enables precise tuning of the mechanism for specific linear motion requirements.
+
+---5:["slug","hypotrochoid-regular-polygon","d"]
+0:["Ke2XNJQU8lgkgeNTS_K2j",[[["",{"children":["research",{"children":[["slug","hypotrochoid-regular-polygon","d"],{"children":["__PAGE__?{\"slug\":\"hypotrochoid-regular-polygon\"}",{}]}]}]},"$undefined","$undefined",true],["",{"children":["research",{"children":[["slug","hypotrochoid-regular-polygon","d"],{"children":["__PAGE__",{},[["$L1",["$","$L2",null,{"markdown":"$3","error":null,"slug":"hypotrochoid-regular-polygon"}],[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/5ab1acfdd2984050.css","precedence":"next","crossOrigin":"$undefined"}]]],null],null]},[null,["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children","research","children","$5","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[null,["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children","research","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/5ae46670f3bebd27.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_866e57","children":["$","$L7",null,{"children":[["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}],["$","$L8",null,{}]]}]}]}]],null],null],["$L9",null]]]]
+9:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","3",{"name":"description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems. Interactive demonstration platform for mechanical engineering."}],["$","meta","4",{"name":"author","content":"Brian Mechanisms Robotics"}],["$","meta","5",{"name":"keywords","content":"mechanical engineering, mechanisms, quick return, rotary motion, walking systems, brianmechanisms, robotics"}],["$","meta","6",{"name":"creator","content":"Brian Mechanisms Robotics"}],["$","meta","7",{"name":"publisher","content":"Brian Mechanisms Robotics"}],["$","meta","8",{"name":"robots","content":"noindex, nofollow"}],["$","meta","9",{"property":"og:title","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","10",{"property":"og:description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems."}],["$","meta","11",{"property":"og:url","content":"https://cseco.co.ke/mechanisms-research/"}],["$","meta","12",{"property":"og:site_name","content":"Brian Mechanisms"}],["$","meta","13",{"property":"og:locale","content":"en_US"}],["$","meta","14",{"property":"og:image","content":"https://cseco.co.ke/mechanisms-research/mechanisms-research/og-image.png"}],["$","meta","15",{"property":"og:image:width","content":"1200"}],["$","meta","16",{"property":"og:image:height","content":"630"}],["$","meta","17",{"property":"og:image:alt","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","18",{"property":"og:type","content":"website"}],["$","meta","19",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","20",{"name":"twitter:creator","content":"@brianmechanisms"}],["$","meta","21",{"name":"twitter:title","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","22",{"name":"twitter:description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems."}],["$","meta","23",{"name":"twitter:image","content":"https://cseco.co.ke/mechanisms-research/mechanisms-research/og-image.png"}],["$","link","24",{"rel":"shortcut icon","href":"/mechanisms-research/favicon.svg"}],["$","link","25",{"rel":"icon","href":"/mechanisms-research/favicon.svg","type":"image/svg+xml"}],["$","link","26",{"rel":"icon","href":"/mechanisms-research/favicon.svg","sizes":"any"}],["$","link","27",{"rel":"apple-touch-icon","href":"/mechanisms-research/favicon.svg"}],["$","meta","28",{"name":"next-size-adjust"}]]
+1:null
