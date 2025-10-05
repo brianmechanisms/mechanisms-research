@@ -185,7 +185,7 @@ n × θ_big × (R₁ - R₂) = π × (2 × R₁ - n × R₂)
 
 ### Final Formula
 
-**θ_big = π × (2 × R₁ - n × R₂) / (n × (R₁ - R₂))**
+$$\theta_{\text{big}} = \frac{\pi \times (2 \times R_1 - n \times R_2)}{n \times (R_1 - R_2)}$$
 
 ### Formula Validation
 
@@ -235,7 +235,8 @@ Where:
 For our specific four-arc system:
 
 **Tracing Radius (R₃):**
-R₃ = R₂ + (R₁ - R₂) × sin(θ_big/2)
+
+$$R_3 = R_2 + (R_1 - R_2) \times \sin\left(\frac{\theta_{\text{big}}}{2}\right)$$
 
 **Derivation of Motion Equations:**
 
@@ -376,8 +377,9 @@ To quantify how straight a traced path is, we employ **Linear Least Squares Regr
 
 1. **Fit best-fit line** through all trace points
 2. **Calculate perpendicular distance** from each point to the line using:
-   `distance = |mx - y + b| / √(m² + 1)`
-3. **Compute RMS**: `RMS = √(Σ(distance²) / N)`
+   $$\text{distance} = \frac{|mx - y + b|}{\sqrt{m^2 + 1}}$$
+3. **Compute RMS**:
+   $$\text{RMS} = \sqrt{\frac{\sum(\text{distance}^2)}{N}}$$
 
 **Interpretation:**
 - **RMS ≈ 0**: Perfect straight line
