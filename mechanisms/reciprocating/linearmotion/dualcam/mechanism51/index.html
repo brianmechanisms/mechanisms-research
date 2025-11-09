@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 51 - Walking Gait Mechanism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-full mx-auto px-8">
+
+        <!-- Main Tabs: Mechanism vs Design -->
+        <div class="bg-white rounded-lg shadow-lg mb-6">
+            <div class="flex border-b border-gray-300">
+                <button id="mechanismMainTab" class="px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50" onclick="switchMainTab('mechanism')">
+                    Mechanism
+                </button>
+                <button id="designMainTab" class="px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50" onclick="switchMainTab('design')">
+                    Design
+                </button>
+            </div>
+        </div>
+
+        <!-- Mechanism Tab Content -->
+        <div id="mechanismContent">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Mechanism Visualization</h2>
+
+                <div class="flex items-start gap-4">
+                    <!-- Canvas -->
+                    <div class="flex-1">
+                        <canvas id="mechanismCanvas" width="900" height="700" class="w-full border border-gray-300 rounded bg-white"></canvas>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="w-80 flex-shrink-0">
+                        <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Animation Controls</h3>
+
+                            <!-- Theta Slider -->
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Angle (θ): <span id="thetaValue" class="text-blue-600 font-bold">0</span>°
+                                </label>
+                                <input type="range" id="thetaSlider" min="0" max="360" step="1" value="0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+
+                            <!-- Animation Controls -->
+                            <div class="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                <!-- Play/Pause Button -->
+                                <button id="playPauseBtn" class="w-full mb-3 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium">
+                                    ▶ Play
+                                </button>
+
+                                <!-- Direction Control -->
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Direction:</label>
+                                    <div class="flex gap-2">
+                                        <button id="dirForward" class="flex-1 px-3 py-2 bg-blue-500 text-white text-xl rounded hover:bg-blue-600" title="Forward">
+                                            ➡️
+                                        </button>
+                                        <button id="dirBackward" class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-xl rounded hover:bg-gray-400" title="Backward">
+                                            ⬅️
+                                        </button>
+                                        <button id="dirPingPong" class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-xl rounded hover:bg-gray-400" title="Ping Pong">
+                                            🔁
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Speed Control -->
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Speed: <span id="speedValue" class="text-purple-600 font-bold">1</span>°/frame
+                                </label>
+                                <input type="range" id="speedSlider" min="0.5" max="5" step="0.5" value="1"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+
+                            <!-- Mechanism Parameters -->
+                            <div class="mb-4 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                                <h4 class="text-sm font-bold text-gray-800 mb-3">Mechanism Parameters</h4>
+
+                                <!-- R1 (Outer Circle Radius = First Arm Length) -->
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        R1 (Arm/Circle): <span id="r1Value" class="text-gray-600 font-bold">150</span>
+                                    </label>
+                                    <input type="range" id="r1Slider" min="50" max="250" step="10" value="150"
+                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="text-xs text-gray-500 mt-1">First arm length & outer circle radius</div>
+                                </div>
+
+                                <!-- R2 (Second Arm Length) -->
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        R2 (Second Arm): <span id="r2Value" class="text-gray-600 font-bold">135</span>
+                                    </label>
+                                    <input type="range" id="r2Slider" min="50" max="200" step="5" value="135"
+                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="text-xs text-gray-500 mt-1">Fixed arm length</div>
+                                </div>
+
+                                <!-- Fixed Pin Distance -->
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        Fixed Pin Distance: <span id="fixedPinValue" class="text-gray-600 font-bold">20</span>
+                                    </label>
+                                    <input type="range" id="fixedPinSlider" min="20" max="150" step="5" value="20"
+                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="text-xs text-gray-500 mt-1">Distance of pin from pivot (fixed during operation)</div>
+                                </div>
+
+                                <!-- Locus Offset -->
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        Locus Offset: <span id="locusOffsetValue" class="text-gray-600 font-bold">3.8</span>
+                                    </label>
+                                    <input type="range" id="locusOffsetSlider" min="0" max="20" step="0.1" value="3.8"
+                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="text-xs text-gray-500 mt-1">Horizontal offset for left/right output loci</div>
+                                </div>
+
+                                <!-- Vertical Offset -->
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        Vertical Offset: <span id="verticalOffsetValue" class="text-gray-600 font-bold">-9.2</span>
+                                    </label>
+                                    <input type="range" id="verticalOffsetSlider" min="-50" max="50" step="0.1" value="-9.2"
+                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="text-xs text-gray-500 mt-1">Vertical offset (+ moves up, - moves down)</div>
+                                </div>
+
+                                <!-- Number of Arms -->
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                                        Number of Arms: <span id="numArmsValue" class="text-gray-600 font-bold">1</span>
+                                    </label>
+                                    <input type="range" id="numArmsSlider" min="1" max="8" step="1" value="1"
+                                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="text-xs text-gray-500 mt-1">Arms equally spaced around circle</div>
+                                </div>
+                            </div>
+
+                            <!-- Export Controls -->
+                            <div class="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                                <h4 class="text-sm font-bold text-gray-800 mb-3">Export</h4>
+                                <div class="flex gap-2 items-center">
+                                    <select id="mechanismExportFormat" class="px-2 py-1 border border-gray-300 rounded text-sm flex-1">
+                                        <option value="png">PNG</option>
+                                        <option value="svg">SVG</option>
+                                        <option value="gif">GIF (animated)</option>
+                                    </select>
+                                    <button id="exportMechanism" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                        Export
+                                    </button>
+                                </div>
+                                <div id="exportStatus" class="text-xs text-gray-600 mt-2 text-center hidden"></div>
+                            </div>
+
+                            <!-- Info -->
+                            <div class="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                <p class="font-semibold mb-1">Legend:</p>
+                                <p class="text-blue-600">● First Arm - Rotates with θ</p>
+                                <p class="text-red-600">● Second Arm - Connects to output</p>
+                                <p class="text-purple-600">● Fixed Pin - Traces purple locus</p>
+                                <p class="text-green-600">● Output Locus - From velocity profiles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design Tab Content -->
+        <div id="designContent" class="hidden">
+
+        <!-- Velocity Profile Chart - Full Width -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mb-4">
+                <button id="curveTab" class="px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600" onclick="switchTab('curve')">
+                    Velocity Curves
+                </button>
+                <button id="calculationTab" class="px-4 py-2 font-medium text-gray-500 hover:text-gray-700" onclick="switchTab('calculation')">
+                    Mathematical Derivation
+                </button>
+            </div>
+
+            <div class="flex items-start gap-4">
+                <!-- Tab Content -->
+                <div class="flex-1">
+                    <!-- Curve Tab Content -->
+                    <div id="curveContent">
+                        <canvas id="velocityCanvas" width="1200" height="500" class="w-full border border-gray-300 rounded"></canvas>
+                        <div class="flex items-center justify-end mt-2">
+                            <div class="flex gap-2 items-center">
+                                <select id="exportFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                    <option value="png">PNG</option>
+                                    <option value="svg">SVG</option>
+                                </select>
+                                <button onclick="exportCurve()" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                    Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculation Tab Content -->
+                    <div id="calculationContent" class="hidden prose max-w-none">
+                        <h3 class="text-lg font-bold mb-4">Displacement Calculation with Smooth Transitions</h3>
+
+                        <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-bold text-blue-900 mb-2">Smooth Transition Function</h4>
+                            <p class="mb-2">We use a quintic polynomial that ensures zero velocity derivatives at boundaries:</p>
+                            <div class="bg-white p-3 rounded font-mono text-sm mb-2">
+                                smoothTransition(t) = 6t⁵ - 15t⁴ + 10t³, where t ∈ [0, 1]
+                            </div>
+                            <p class="text-sm">At t=0: smoothTransition(0) = 0<br>
+                            At t=1: smoothTransition(1) = 1<br>
+                            Derivatives at t=0 and t=1 are zero (smooth connection)</p>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-bold text-green-900 mb-2">Velocity During Transition</h4>
+                            <p class="mb-2">When transitioning from velocity v₁ to v₂ over angle θ:</p>
+                            <div class="bg-white p-3 rounded font-mono text-sm mb-2">
+                                t = (angle - startAngle) / θ<br>
+                                velocity(t) = v₁ + smoothTransition(t) × (v₂ - v₁)
+                            </div>
+                            <p class="text-sm">The parameter t is normalized: at start of transition t=0, at end t=1</p>
+                        </div>
+
+                        <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-bold text-yellow-900 mb-2">Integration to Find Displacement</h4>
+                            <p class="mb-2">Displacement during transition:</p>
+                            <div class="bg-white p-3 rounded font-mono text-sm space-y-1">
+                                displacement = ∫ velocity d(angle)<br>
+                                <br>
+                                Since angle = startAngle + θ×t, we have d(angle) = θ dt<br>
+                                <br>
+                                = θ × ∫₀¹ [v₁ + (6t⁵ - 15t⁴ + 10t³)(v₂ - v₁)] dt<br>
+                                <br>
+                                = θ × [v₁×t + (t⁶ - 3t⁵ + 2.5t⁴)(v₂ - v₁)]₀¹<br>
+                                <br>
+                                = θ × [v₁ + (1 - 3 + 2.5)(v₂ - v₁)]<br>
+                                <br>
+                                = θ × [v₁ + 0.5(v₂ - v₁)]<br>
+                                <br>
+                                = θ × (v₁ + v₂)/2
+                            </div>
+                            <p class="text-sm mt-2 font-bold">Result: Displacement = average velocity × angle</p>
+                        </div>
+
+                        <div class="bg-purple-50 p-4 rounded-lg mb-4">
+                            <h4 class="font-bold text-purple-900 mb-2">Total Displacement Equation</h4>
+                            <p class="mb-2">For a complete cycle (360°), total displacement must equal zero:</p>
+                            <div class="bg-white p-3 rounded font-mono text-sm space-y-1">
+                                Forward section: forwardVx × forwardAngle<br>
+                                Transition 1: (forwardVx + returnVx)/2 × transitionAngle<br>
+                                Return section: returnVx × returnAngle<br>
+                                Transition 2: (returnVx + forwardVx)/2 × transitionAngle<br>
+                                <br>
+                                Total = 0:<br>
+                                forwardVx × forwardAngle + (forwardVx + returnVx) × transitionAngle + returnVx × returnAngle = 0<br>
+                                <br>
+                                Simplifying:<br>
+                                forwardVx × (forwardAngle + transitionAngle) + returnVx × (returnAngle + transitionAngle) = 0<br>
+                                <br>
+                                <span class="text-purple-900 font-bold">returnVx = -forwardVx × (forwardAngle + transitionAngle) / (returnAngle + transitionAngle)</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-gray-900 mb-2">Example Calculation</h4>
+                            <p class="mb-2">With forwardVx = 1.0, forwardAngle = 180°, swingAngle = 180°, transitionAngle = 30°:</p>
+                            <div class="bg-white p-3 rounded font-mono text-sm space-y-1">
+                                returnAngle = swingAngle - 2×transitionAngle = 180 - 60 = 120°<br>
+                                <br>
+                                returnVx = -1.0 × (180 + 30) / (120 + 30)<br>
+                                returnVx = -210 / 150<br>
+                                <span class="text-red-600 font-bold">returnVx = -1.4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Controls -->
+                <div class="w-80 flex-shrink-0">
+                    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4 max-h-[500px] overflow-y-auto">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Controls</h3>
+
+                    <!-- VX Parameters -->
+                    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-sm font-bold text-blue-800 mb-3">Horizontal Velocity (VX)</h4>
+
+                        <!-- Forward VX -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Forward VX: <span id="forwardVxValue" class="text-blue-600 font-bold">1.0</span>
+                            </label>
+                            <input type="range" id="forwardVxSlider" min="0.1" max="3" step="0.1" value="1.0"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Return VX (calculated) -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Return VX: <span id="returnVxValue" class="text-red-600 font-bold">-2.0</span>
+                            </label>
+                        </div>
+
+                        <!-- Transition Angle -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Transition: <span id="transitionAngleValue" class="text-blue-600 font-bold">30</span>°
+                            </label>
+                            <input type="range" id="transitionAngleSlider" min="5" max="90" step="1" value="30"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- Phase Angles -->
+                    <div class="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <h4 class="text-sm font-bold text-green-800 mb-3">Phase Angles</h4>
+
+                        <!-- Stance Angle -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Stance: <span id="stanceAngleValue" class="text-green-600 font-bold">190</span>°
+                            </label>
+                            <input type="range" id="stanceAngleSlider" min="10" max="300" step="5" value="190"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Lift/Drop Angle -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Lift/Drop: <span id="liftDropAngleValue" class="text-blue-600 font-bold">20</span>°
+                            </label>
+                            <input type="range" id="liftDropAngleSlider" min="5" max="90" step="5" value="20"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="text-xs text-gray-500">Same angle for lift and drop</div>
+                        </div>
+
+                        <!-- Swing (calculated) -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Swing: <span id="swingAngleValue" class="text-orange-600 font-bold">120</span>°
+                            </label>
+                            <div class="text-xs text-gray-500 italic">Auto-calculated</div>
+                        </div>
+                    </div>
+
+                    <!-- VY Parameters -->
+                    <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <h4 class="text-sm font-bold text-yellow-800 mb-3">Vertical Velocity (VY)</h4>
+
+                        <!-- Drop/Lift VY -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Drop/Lift VY: <span id="liftVyValue" class="text-blue-600 font-bold">1.0</span>
+                            </label>
+                            <input type="range" id="liftVySlider" min="0.1" max="3" step="0.1" value="1.0"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Swing Displacement -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                Swing Displacement: <span id="swingDisplacementValue" class="text-purple-600 font-bold">2.1</span>
+                            </label>
+                            <input type="range" id="swingDisplacementSlider" min="0" max="50" step="0.1" value="2.1"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="text-xs text-gray-500">Vertical motion during swing (0 = constant height)</div>
+                        </div>
+
+                        <!-- VY Scale -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                VY Scale: <span id="vyScaleValue" class="text-yellow-600 font-bold">1.0</span>x
+                            </label>
+                            <input type="range" id="vyScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="text-xs text-gray-500">Magnify VY display</div>
+                        </div>
+                    </div>
+
+                    <!-- Calculated Values -->
+                    <div class="p-3 bg-gray-100 rounded-lg border border-gray-300">
+                        <h4 class="text-sm font-bold text-gray-800 mb-2">Calculated Values</h4>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between">
+                                <span>Forward angle:</span>
+                                <span id="calcForwardAngle" class="font-mono">180°</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Return angle:</span>
+                                <span id="calcReturnAngle" class="font-mono">120°</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Quick return ratio:</span>
+                                <span id="calcQuickReturnRatio" class="font-mono">2.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Displacement Profile Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Displacement Profile</h2>
+            <div class="flex items-start gap-4">
+                <!-- Canvas -->
+                <div class="flex-1">
+                    <canvas id="displacementCanvas" width="1200" height="500" class="w-full border border-gray-300 rounded"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportDisplacementFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button onclick="exportDisplacement()" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls on the right -->
+                <div class="w-80 flex-shrink-0">
+                    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4 max-h-[500px] overflow-y-auto">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Scale</h3>
+
+                        <!-- SX Scale -->
+                        <div class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="text-sm font-bold text-blue-800 mb-3">Horizontal Displacement (SX)</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    SX Scale: <span id="sxScaleValue" class="text-blue-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="sxScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Magnify SX display</div>
+                            </div>
+                        </div>
+
+                        <!-- SY Scale -->
+                        <div class="mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                            <h4 class="text-sm font-bold text-red-800 mb-3">Vertical Displacement (SY)</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    SY Scale: <span id="syScaleValue" class="text-red-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="syScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Magnify SY display</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acceleration Profile Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Acceleration Profile</h2>
+            <div class="flex items-start gap-4">
+                <!-- Canvas -->
+                <div class="flex-1">
+                    <canvas id="accelerationCanvas" width="1200" height="500" class="w-full border border-gray-300 rounded"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportAccelerationFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button onclick="exportAcceleration()" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls on the right -->
+                <div class="w-80 flex-shrink-0">
+                    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4 max-h-[500px] overflow-y-auto">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Scale</h3>
+
+                        <!-- AX Scale -->
+                        <div class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="text-sm font-bold text-blue-800 mb-3">Horizontal Acceleration (AX)</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    AX Scale: <span id="axScaleValue" class="text-blue-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="axScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Magnify AX display</div>
+                            </div>
+                        </div>
+
+                        <!-- AY Scale -->
+                        <div class="mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                            <h4 class="text-sm font-bold text-red-800 mb-3">Vertical Acceleration (AY)</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    AY Scale: <span id="ayScaleValue" class="text-red-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="ayScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Magnify AY display</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jerk Profile Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Jerk Profile</h2>
+            <div class="flex items-start gap-4">
+                <!-- Canvas -->
+                <div class="flex-1">
+                    <canvas id="jerkCanvas" width="1200" height="500" class="w-full border border-gray-300 rounded"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportJerkFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button onclick="exportJerk()" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls on the right -->
+                <div class="w-80 flex-shrink-0">
+                    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4 max-h-[500px] overflow-y-auto">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Scale</h3>
+
+                        <!-- JX Scale -->
+                        <div class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="text-sm font-bold text-blue-800 mb-3">Horizontal Jerk (JX)</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    JX Scale: <span id="jxScaleValue" class="text-blue-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="jxScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Magnify JX display</div>
+                            </div>
+                        </div>
+
+                        <!-- JY Scale -->
+                        <div class="mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                            <h4 class="text-sm font-bold text-red-800 mb-3">Vertical Jerk (JY)</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    JY Scale: <span id="jyScaleValue" class="text-red-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="jyScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Magnify JY display</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Locus -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Output Locus</h2>
+            <div class="flex items-start gap-4">
+                <!-- Canvas -->
+                <div class="flex-1">
+                    <canvas id="positionCanvas" width="800" height="800" class="w-full border border-gray-300 rounded"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportPositionFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button onclick="exportPosition()" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls on the right -->
+                <div class="w-80 flex-shrink-0">
+                    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4 max-h-[500px] overflow-y-auto">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Display Options</h3>
+
+                        <!-- Overall Scale -->
+                        <div class="mb-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <h4 class="text-sm font-bold text-purple-800 mb-3">Overall Scale</h4>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">
+                                    Zoom: <span id="pathScaleValue" class="text-purple-600 font-bold">1.0</span>x
+                                </label>
+                                <input type="range" id="pathScaleSlider" min="0.1" max="5" step="0.1" value="1.0"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <div class="text-xs text-gray-500">Zoom in/out on path</div>
+                            </div>
+                        </div>
+
+                        <!-- Show Phase Colors -->
+                        <div class="mb-3 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                            <h4 class="text-sm font-bold text-gray-800 mb-3">Path Coloring</h4>
+                            <div class="flex items-center mb-2">
+                                <input type="checkbox" id="showPhaseColors" checked class="mr-2">
+                                <label for="showPhaseColors" class="text-xs font-medium text-gray-700">
+                                    Color by phase
+                                </label>
+                            </div>
+                            <div class="text-xs text-gray-500">Show phases with different colors</div>
+                        </div>
+
+                        <!-- Show Angle Markers -->
+                        <div class="mb-3 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                            <h4 class="text-sm font-bold text-gray-800 mb-3">Angle Markers</h4>
+                            <div class="flex items-center mb-2">
+                                <input type="checkbox" id="showAngleMarkers" checked class="mr-2">
+                                <label for="showAngleMarkers" class="text-xs font-medium text-gray-700">
+                                    Show angle markers
+                                </label>
+                            </div>
+                            <div class="text-xs text-gray-500">Mark angles every 30°</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+        <!-- End Design Tab Content -->
+
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
