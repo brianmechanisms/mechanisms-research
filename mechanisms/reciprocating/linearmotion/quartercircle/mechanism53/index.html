@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 53 - Quarter Circle on Gear</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Mechanism 53 - Quarter Circle on Gear</h1>
+        <p class="text-gray-600 mb-4">
+            Fixed gear at origin rotates CCW. Revolving gear shape translates without rotating.
+            Shape defined by bounding rectangle with arc centers at corners.
+        </p>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-start gap-6">
+                <!-- Canvas and Animation Controls -->
+                <div class="flex-1">
+                    <canvas id="mainCanvas" width="700" height="600" class="border border-gray-300 bg-white"></canvas>
+
+                    <!-- Animation Controls (under canvas) -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <!-- Row 1: Progress slider -->
+                        <div class="flex items-center gap-3 mb-3">
+                            <label class="text-sm font-medium text-gray-700 w-16">Progress:</label>
+                            <input type="range" id="thetaSlider" min="0" max="100" value="0" step="0.5"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="progressValue" class="text-sm text-purple-600 font-bold w-10 text-right">0</span>%
+                            <span id="stageLabel" class="text-xs text-gray-500 w-20">(Stage 1)</span>
+                        </div>
+
+                        <!-- Row 2: Play, Direction, Speed -->
+                        <div class="flex items-center gap-4">
+                            <!-- Play/Pause -->
+                            <button id="playPauseBtn" class="px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24">
+                                ▶ Play
+                            </button>
+
+                            <!-- Direction Controls -->
+                            <div class="flex gap-1">
+                                <button id="dirForward" class="px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600" title="Forward">
+                                    ➡️
+                                </button>
+                                <button id="dirBackward" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Backward">
+                                    ⬅️
+                                </button>
+                                <button id="dirPingPong" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Ping Pong">
+                                    🔁
+                                </button>
+                            </div>
+
+                            <!-- Speed Control -->
+                            <div class="flex items-center gap-2 ml-auto">
+                                <label class="text-sm font-medium text-gray-700">Speed:</label>
+                                <input type="range" id="speedSlider" min="0.1" max="2" value="0.3" step="0.1"
+                                       class="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="speedValue" class="text-sm text-gray-800 font-bold w-8">0.3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="w-72 flex-shrink-0">
+                    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Parameters</h3>
+
+                        <!-- Revolving Gear Radius (R_rg) -->
+                        <div class="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                R_rg: <span id="revolvingGearRadiusValue" class="text-green-600 font-bold">40</span>
+                            </label>
+                            <input type="range" id="revolvingGearRadiusSlider" min="20" max="200" value="40" step="10"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-500 mt-1">Revolving gear arc radius</p>
+                        </div>
+
+                        <!-- Upper Arc Angle (fixed at 90° for now) -->
+                        <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 opacity-60">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Upper Arc Angle: <span id="upperArcAngleValue" class="text-yellow-600 font-bold">90</span>&deg;
+                            </label>
+                            <input type="range" id="upperArcAngleSlider" min="10" max="170" value="90" step="5"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" disabled>
+                            <p class="text-xs text-gray-500 mt-1">Fixed at π/2 for simplicity</p>
+                        </div>
+
+                        <!-- Shape Length -->
+                        <div class="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Shape Length: <span id="shapeLengthValue" class="text-indigo-600 font-bold">80</span>
+                            </label>
+                            <input type="range" id="shapeLengthSlider" min="80" max="400" value="80" step="10"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Shape Height -->
+                        <div class="mb-4 p-3 bg-teal-50 rounded-lg border border-teal-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Shape Height: <span id="shapeHeightValue" class="text-teal-600 font-bold">80</span>
+                            </label>
+                            <input type="range" id="shapeHeightSlider" min="80" max="400" value="80" step="10"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <h4 class="text-sm font-bold text-gray-600 mb-2 mt-4">Racetrack Locus</h4>
+
+                        <!-- Track Straight Length -->
+                        <div class="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Straight Length: <span id="trackStraightValue" class="text-orange-600 font-bold">200</span>
+                            </label>
+                            <input type="range" id="trackStraightSlider" min="0" max="300" value="200" step="10"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Track Height (vertical sections) -->
+                        <div class="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Track Height: <span id="trackHeightValue" class="text-orange-600 font-bold">90</span>
+                            </label>
+                            <input type="range" id="trackHeightSlider" min="0" max="200" value="90" step="10"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-500 mt-1">Vertical line height (centered at y=0)</p>
+                        </div>
+
+                        <!-- Track Offset -->
+                        <div class="mb-4 p-3 bg-pink-50 rounded-lg border border-pink-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Track Offset: <span id="trackOffsetValue" class="text-pink-600 font-bold">10</span>
+                            </label>
+                            <input type="range" id="trackOffsetSlider" min="0" max="30" value="10" step="0.1"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-500 mt-1">X offset for side racetracks</p>
+                        </div>
+
+                        <!-- Number of Revolving Gears -->
+                        <div class="mb-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Revolving Gears (n): <span id="numGearsValue" class="text-emerald-600 font-bold">7</span>
+                            </label>
+                            <input type="range" id="numGearsSlider" min="1" max="12" value="7" step="1"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <p class="text-xs text-gray-500 mt-1">Equally spaced on track</p>
+                        </div>
+
+                        <!-- End Gear Radius -->
+                        <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                End Gear Radius: <span id="endGearRadiusValue" class="text-blue-600 font-bold">10</span>
+                            </label>
+                            <input type="range" id="endGearRadiusSlider" min="5" max="80" value="10" step="5"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Checkboxes -->
+                        <div class="mb-4 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                            <label class="flex items-center text-sm text-gray-700 mb-2">
+                                <input type="checkbox" id="showLocusCheck" checked class="mr-2">
+                                Show Racetrack
+                            </label>
+                            <label class="flex items-center text-sm text-gray-700">
+                                <input type="checkbox" id="showBoundingRectCheck" class="mr-2">
+                                Show Bounding Rect
+                            </label>
+                        </div>
+
+                        <!-- Info Display -->
+                        <div class="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                            <h4 class="text-sm font-bold text-gray-700 mb-2">Info</h4>
+                            <p class="text-xs text-gray-600">Center Position: <span id="centerPosValue">--</span></p>
+                            <p class="text-xs text-gray-600 mt-1">Track Length: <span id="trackLengthValue">--</span></p>
+                        </div>
+
+                        <!-- Export -->
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-bold text-gray-700 mb-2">Export</h4>
+                            <div class="flex gap-2 items-center">
+                                <select id="exportFormat" class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm">
+                                    <option value="png">PNG</option>
+                                    <option value="svg">SVG</option>
+                                    <option value="gif">GIF</option>
+                                </select>
+                                <button id="exportBtn" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                    Export
+                                </button>
+                            </div>
+                            <p id="exportStatus" class="text-xs text-gray-500 mt-2 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { params } from './js/params.js';
+        import {
+            generateRevolvingGearShape,
+            generateRacetrackLocus
+        } from './js/calculations.js';
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isPlaying = false;
+        let animationId = null;
+        let currentThetaPercent = 0;  // 0 to 100
+        let animationSpeed = 0.3;
+        let animationDirection = 'forward';
+        let pingPongReverse = false;
+
+        // Get DOM elements
+        const revolvingGearRadiusSlider = document.getElementById('revolvingGearRadiusSlider');
+        const upperArcAngleSlider = document.getElementById('upperArcAngleSlider');
+        const shapeLengthSlider = document.getElementById('shapeLengthSlider');
+        const shapeHeightSlider = document.getElementById('shapeHeightSlider');
+        const trackStraightSlider = document.getElementById('trackStraightSlider');
+        const trackHeightSlider = document.getElementById('trackHeightSlider');
+        const trackOffsetSlider = document.getElementById('trackOffsetSlider');
+        const numGearsSlider = document.getElementById('numGearsSlider');
+        const endGearRadiusSlider = document.getElementById('endGearRadiusSlider');
+        const thetaSlider = document.getElementById('thetaSlider');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const showLocusCheck = document.getElementById('showLocusCheck');
+        const showBoundingRectCheck = document.getElementById('showBoundingRectCheck');
+        const speedSlider = document.getElementById('speedSlider');
+        const dirForward = document.getElementById('dirForward');
+        const dirBackward = document.getElementById('dirBackward');
+        const dirPingPong = document.getElementById('dirPingPong');
+        const exportFormat = document.getElementById('exportFormat');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportStatus = document.getElementById('exportStatus');
+
+        // Canvas center and scale
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const scale = 1.5;
+
+        function toCanvas(x, y) {
+            return {
+                x: centerX + x * scale,
+                y: centerY - y * scale  // Flip y for screen coords
+            };
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw title on canvas
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = '#1f2937';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Mechanism 53', 20, 15);
+
+            // Draw watermark (BrianMechanisms)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(-30 * Math.PI / 180);
+            ctx.font = '60px sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.globalAlpha = 0.3;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BrianMechanisms', 0, 0);
+            ctx.restore();
+
+            // ========== GLOBAL TRACK GEOMETRY VARIABLES ==========
+            const trackL = params.trackStraightLength;
+            const trackH = params.trackHeight;
+            const trackR = params.revolvingGearRadius - params.endGearRadius;
+            const R_rg = params.revolvingGearRadius;
+            const r_g = params.endGearRadius;
+
+            const topY = trackR + trackH / 2;
+            const bottomY = -(trackR + trackH / 2);
+            // =====================================================
+
+            // Draw coordinate axes (faint)
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+
+            // Helper function to draw a racetrack at a given x offset
+            function drawRacetrack(xOffset, strokeColor, dashed = false, lineWidth = 2) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                if (dashed) ctx.setLineDash([6, 4]);
+
+                // Horizontal straights
+                ctx.beginPath();
+                let p1 = toCanvas(-trackL/2 + xOffset, topY);
+                let p2 = toCanvas(trackL/2 + xOffset, topY);
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                p1 = toCanvas(trackL/2 + xOffset, bottomY);
+                p2 = toCanvas(-trackL/2 + xOffset, bottomY);
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+
+                // Vertical straights
+                ctx.beginPath();
+                p1 = toCanvas(trackL/2 + trackR + xOffset, trackH/2);
+                p2 = toCanvas(trackL/2 + trackR + xOffset, -trackH/2);
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                p1 = toCanvas(-trackL/2 - trackR + xOffset, trackH/2);
+                p2 = toCanvas(-trackL/2 - trackR + xOffset, -trackH/2);
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+
+                // Quarter arcs
+                ctx.beginPath();
+                let arcCenter = toCanvas(trackL/2 + xOffset, trackH/2);
+                ctx.arc(arcCenter.x, arcCenter.y, trackR * scale, -Math.PI/2, 0);
+                ctx.stroke();
+
+                ctx.beginPath();
+                arcCenter = toCanvas(trackL/2 + xOffset, -trackH/2);
+                ctx.arc(arcCenter.x, arcCenter.y, trackR * scale, 0, Math.PI/2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                arcCenter = toCanvas(-trackL/2 + xOffset, -trackH/2);
+                ctx.arc(arcCenter.x, arcCenter.y, trackR * scale, Math.PI/2, Math.PI);
+                ctx.stroke();
+
+                ctx.beginPath();
+                arcCenter = toCanvas(-trackL/2 + xOffset, trackH/2);
+                ctx.arc(arcCenter.x, arcCenter.y, trackR * scale, Math.PI, 1.5*Math.PI);
+                ctx.stroke();
+
+                if (dashed) ctx.setLineDash([]);
+            }
+
+            // Draw the racetrack loci if enabled
+            if (showLocusCheck.checked) {
+                const xOffset = params.trackOffset;
+                drawRacetrack(0, 'rgba(249, 115, 22, 0.3)', true);
+                drawRacetrack(xOffset, '#3b82f6', false);
+                drawRacetrack(-xOffset, '#10b981', false);
+            }
+
+            // Draw the racetrack rectangle
+            const rectOffsetX = params.shapeLength / 2;
+            const rectOffsetY = params.shapeHeight / 2;
+            const racetrackRect = {
+                topRight: { x: trackL/2 + rectOffsetX, y: topY + rectOffsetY },
+                bottomRight: { x: trackL/2 + rectOffsetX, y: bottomY - rectOffsetY },
+                bottomLeft: { x: -trackL/2 - rectOffsetX, y: bottomY - rectOffsetY },
+                topLeft: { x: -trackL/2 - rectOffsetX, y: topY + rectOffsetY }
+            };
+
+            const rtTR = toCanvas(racetrackRect.topRight.x, racetrackRect.topRight.y);
+            const rtBR = toCanvas(racetrackRect.bottomRight.x, racetrackRect.bottomRight.y);
+            const rtBL = toCanvas(racetrackRect.bottomLeft.x, racetrackRect.bottomLeft.y);
+            const rtTL = toCanvas(racetrackRect.topLeft.x, racetrackRect.topLeft.y);
+
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([6, 4]);
+            ctx.moveTo(rtTL.x, rtTL.y);
+            ctx.lineTo(rtTR.x, rtTR.y);
+            ctx.lineTo(rtBR.x, rtBR.y);
+            ctx.lineTo(rtBL.x, rtBL.y);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Calculate distances for each stage type
+            const horizDist = trackL;
+            const vertDist = trackH;
+            const arcDist = trackR * Math.PI / 2;
+            const totalDist = 2 * horizDist + 2 * vertDist + 4 * arcDist;
+
+            const horizFrac = horizDist / totalDist;
+            const vertFrac = vertDist / totalDist;
+            const arcFrac = arcDist / totalDist;
+
+            const stage1End = horizFrac;
+            const stage2End = stage1End + arcFrac;
+            const stage3End = stage2End + vertFrac;
+            const stage4End = stage3End + arcFrac;
+            const stage5End = stage4End + horizFrac;
+            const stage6End = stage5End + arcFrac;
+            const stage7End = stage6End + vertFrac;
+
+            function getGearCenterAtProgress(progress) {
+                progress = ((progress % 1) + 1) % 1;
+                let center;
+
+                if (progress <= stage1End) {
+                    const stageProgress = progress / stage1End;
+                    center = { x: -trackL/2 + stageProgress * trackL, y: topY };
+                } else if (progress <= stage2End) {
+                    const stageProgress = (progress - stage1End) / (stage2End - stage1End);
+                    const maxTheta = (R_rg / r_g) * params.upperArcAngle;
+                    const theta = stageProgress * maxTheta;
+                    const phi = (r_g / R_rg) * theta;
+                    const contactAngle = 1.5 * Math.PI - phi;
+                    const g1Center = { x: racetrackRect.topRight.x, y: racetrackRect.topRight.y - R_rg + r_g };
+                    const arcCenter = {
+                        x: g1Center.x + (r_g - R_rg) * Math.cos(contactAngle),
+                        y: g1Center.y + (r_g - R_rg) * Math.sin(contactAngle)
+                    };
+                    center = { x: arcCenter.x - params.shapeLength / 2, y: arcCenter.y - params.shapeHeight / 2 };
+                } else if (progress <= stage3End) {
+                    const stageProgress = (progress - stage2End) / (stage3End - stage2End);
+                    center = { x: trackL/2 + trackR, y: trackH/2 - stageProgress * trackH };
+                } else if (progress <= stage4End) {
+                    const stageProgress = (progress - stage3End) / (stage4End - stage3End);
+                    const maxTheta = (R_rg / r_g) * params.upperArcAngle;
+                    const theta = stageProgress * maxTheta;
+                    const phi = (r_g / R_rg) * theta;
+                    const contactAngle = Math.PI - phi;
+                    const g2Center = { x: racetrackRect.bottomRight.x, y: racetrackRect.bottomRight.y + R_rg - r_g };
+                    const arcCenter = {
+                        x: g2Center.x + (r_g - R_rg) * Math.cos(contactAngle),
+                        y: g2Center.y + (r_g - R_rg) * Math.sin(contactAngle)
+                    };
+                    center = { x: arcCenter.x - params.shapeLength / 2, y: arcCenter.y + params.shapeHeight / 2 };
+                } else if (progress <= stage5End) {
+                    const stageProgress = (progress - stage4End) / (stage5End - stage4End);
+                    center = { x: trackL/2 - stageProgress * trackL, y: bottomY };
+                } else if (progress <= stage6End) {
+                    const stageProgress = (progress - stage5End) / (stage6End - stage5End);
+                    const maxTheta = (R_rg / r_g) * params.upperArcAngle;
+                    const theta = stageProgress * maxTheta;
+                    const phi = (r_g / R_rg) * theta;
+                    const contactAngle = Math.PI / 2 - phi;
+                    const g3Center = { x: racetrackRect.bottomLeft.x, y: racetrackRect.bottomLeft.y + R_rg - r_g };
+                    const arcCenter = {
+                        x: g3Center.x + (r_g - R_rg) * Math.cos(contactAngle),
+                        y: g3Center.y + (r_g - R_rg) * Math.sin(contactAngle)
+                    };
+                    center = { x: arcCenter.x + params.shapeLength / 2, y: arcCenter.y + params.shapeHeight / 2 };
+                } else if (progress <= stage7End) {
+                    const stageProgress = (progress - stage6End) / (stage7End - stage6End);
+                    center = { x: -trackL/2 - trackR, y: -trackH/2 + stageProgress * trackH };
+                } else {
+                    const stageProgress = (progress - stage7End) / (1 - stage7End);
+                    const maxTheta = (R_rg / r_g) * params.upperArcAngle;
+                    const theta = stageProgress * maxTheta;
+                    const phi = (r_g / R_rg) * theta;
+                    const contactAngle = -phi;
+                    const g4Center = { x: racetrackRect.topLeft.x, y: racetrackRect.topLeft.y - R_rg + r_g };
+                    const arcCenter = {
+                        x: g4Center.x + (r_g - R_rg) * Math.cos(contactAngle),
+                        y: g4Center.y + (r_g - R_rg) * Math.sin(contactAngle)
+                    };
+                    center = { x: arcCenter.x + params.shapeLength / 2, y: arcCenter.y - params.shapeHeight / 2 };
+                }
+                return center;
+            }
+
+            const progress = currentThetaPercent / 100;
+            const numGears = params.numRevolvingGears;
+            const xOffset = params.trackOffset;
+
+            for (let gearIdx = 0; gearIdx < numGears; gearIdx++) {
+                const gearProgress = progress + (gearIdx / numGears);
+                const revolvingGearCenter = getGearCenterAtProgress(gearProgress);
+
+                const shape = generateRevolvingGearShape(
+                    revolvingGearCenter,
+                    params.revolvingGearRadius,
+                    params.upperArcAngle,
+                    params.shapeLength,
+                    params.shapeHeight,
+                    60
+                );
+
+                if (showBoundingRectCheck.checked && gearIdx === 0) {
+                    const br = shape.boundingRect;
+                    const tl = toCanvas(br.topLeft.x, br.topLeft.y);
+                    const tr = toCanvas(br.topRight.x, br.topRight.y);
+                    const bl = toCanvas(br.bottomLeft.x, br.bottomLeft.y);
+                    const brr = toCanvas(br.bottomRight.x, br.bottomRight.y);
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(156, 163, 175, 0.7)';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(tl.x, tl.y);
+                    ctx.lineTo(tr.x, tr.y);
+                    ctx.lineTo(brr.x, brr.y);
+                    ctx.lineTo(bl.x, bl.y);
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    const arcCenters = [br.topLeft, br.topRight, br.bottomLeft, br.bottomRight];
+                    for (const center of arcCenters) {
+                        const c = toCanvas(center.x, center.y);
+                        ctx.beginPath();
+                        ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(156, 163, 175, 0.7)';
+                        ctx.fill();
+                    }
+                }
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < shape.fullPath.length; i++) {
+                    const p = toCanvas(shape.fullPath[i].x, shape.fullPath[i].y);
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                const centerCanvas = toCanvas(revolvingGearCenter.x, revolvingGearCenter.y);
+                ctx.beginPath();
+                ctx.arc(centerCanvas.x, centerCanvas.y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(249, 115, 22, 0.3)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const rightDotCanvas = toCanvas(revolvingGearCenter.x + xOffset, revolvingGearCenter.y);
+                ctx.beginPath();
+                ctx.arc(rightDotCanvas.x, rightDotCanvas.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                const leftDotCanvas = toCanvas(revolvingGearCenter.x - xOffset, revolvingGearCenter.y);
+                ctx.beginPath();
+                ctx.arc(leftDotCanvas.x, leftDotCanvas.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                if (gearIdx === 0) {
+                    ctx.font = '12px sans-serif';
+                    ctx.fillStyle = 'rgba(107, 114, 128, 0.7)';
+                    ctx.fillText('Gᵣ', centerCanvas.x + 10, centerCanvas.y - 10);
+                }
+            }
+
+            const revolvingGearCenter = getGearCenterAtProgress(progress);
+
+            function drawCornerGear(center, label, color) {
+                const canvasCenter = toCanvas(center.x, center.y);
+                const canvasRadius = r_g * scale;
+
+                ctx.beginPath();
+                ctx.arc(canvasCenter.x, canvasCenter.y, canvasRadius, 0, Math.PI * 2);
+                ctx.fillStyle = color + '4D';
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(canvasCenter.x, canvasCenter.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                ctx.font = '11px sans-serif';
+                ctx.fillStyle = color;
+                ctx.fillText(label, canvasCenter.x + canvasRadius + 3, canvasCenter.y + 4);
+            }
+
+            const gear1Center = { x: racetrackRect.topRight.x, y: racetrackRect.topRight.y - R_rg + r_g };
+            drawCornerGear(gear1Center, 'G1', '#ef4444');
+
+            const gear2Center = { x: racetrackRect.bottomRight.x, y: racetrackRect.bottomRight.y + R_rg - r_g };
+            drawCornerGear(gear2Center, 'G2', '#f97316');
+
+            const gear3Center = { x: racetrackRect.bottomLeft.x, y: racetrackRect.bottomLeft.y + R_rg - r_g };
+            drawCornerGear(gear3Center, 'G3', '#8b5cf6');
+
+            const gear4Center = { x: racetrackRect.topLeft.x, y: racetrackRect.topLeft.y - R_rg + r_g };
+            drawCornerGear(gear4Center, 'G4', '#3b82f6');
+
+            // Update info display
+            document.getElementById('revolvingGearRadiusValue').textContent = params.revolvingGearRadius;
+            document.getElementById('upperArcAngleValue').textContent = (params.upperArcAngle * 180 / Math.PI).toFixed(0);
+            document.getElementById('shapeLengthValue').textContent = params.shapeLength;
+            document.getElementById('shapeHeightValue').textContent = params.shapeHeight;
+            document.getElementById('progressValue').textContent = currentThetaPercent.toFixed(1);
+            document.getElementById('stageLabel').textContent = progress <= stage1End ? '(Stage 1: Top)'
+                : progress <= stage2End ? '(Stage 2: G1)'
+                : progress <= stage3End ? '(Stage 3: Right)'
+                : progress <= stage4End ? '(Stage 4: G2)'
+                : progress <= stage5End ? '(Stage 5: Bottom)'
+                : progress <= stage6End ? '(Stage 6: G3)'
+                : progress <= stage7End ? '(Stage 7: Left)'
+                : '(Stage 8: G4)';
+            document.getElementById('centerPosValue').textContent = `(${revolvingGearCenter.x.toFixed(1)}, ${revolvingGearCenter.y.toFixed(1)})`;
+            document.getElementById('trackLengthValue').textContent = params.trackStraightLength;
+        }
+
+        function animate() {
+            if (isPlaying) {
+                if (animationDirection === 'forward') {
+                    currentThetaPercent += animationSpeed;
+                    if (currentThetaPercent >= 100) currentThetaPercent = 0;
+                } else if (animationDirection === 'backward') {
+                    currentThetaPercent -= animationSpeed;
+                    if (currentThetaPercent < 0) currentThetaPercent = 100 + currentThetaPercent;
+                } else if (animationDirection === 'pingpong') {
+                    if (pingPongReverse) {
+                        currentThetaPercent -= animationSpeed;
+                        if (currentThetaPercent <= 0) { currentThetaPercent = 0; pingPongReverse = false; }
+                    } else {
+                        currentThetaPercent += animationSpeed;
+                        if (currentThetaPercent >= 100) { currentThetaPercent = 100; pingPongReverse = true; }
+                    }
+                }
+                thetaSlider.value = currentThetaPercent;
+                draw();
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        function enforceConstraints() {
+            const minLength = 2 * params.revolvingGearRadius;
+            const minHeight = 2 * params.revolvingGearRadius;
+            shapeLengthSlider.min = minLength;
+            shapeHeightSlider.min = minHeight;
+            if (params.shapeLength < minLength) {
+                params.shapeLength = minLength;
+                shapeLengthSlider.value = minLength;
+                document.getElementById('shapeLengthValue').textContent = minLength;
+            }
+            if (params.shapeHeight < minHeight) {
+                params.shapeHeight = minHeight;
+                shapeHeightSlider.value = minHeight;
+                document.getElementById('shapeHeightValue').textContent = minHeight;
+            }
+        }
+
+        // Event listeners
+        revolvingGearRadiusSlider.addEventListener('input', (e) => { params.revolvingGearRadius = parseInt(e.target.value); enforceConstraints(); draw(); });
+        upperArcAngleSlider.addEventListener('input', (e) => { params.upperArcAngle = (parseFloat(e.target.value) * Math.PI) / 180; draw(); });
+        shapeLengthSlider.addEventListener('input', (e) => { params.shapeLength = parseInt(e.target.value); enforceConstraints(); draw(); });
+        shapeHeightSlider.addEventListener('input', (e) => { params.shapeHeight = parseInt(e.target.value); enforceConstraints(); draw(); });
+        trackStraightSlider.addEventListener('input', (e) => { params.trackStraightLength = parseInt(e.target.value); document.getElementById('trackStraightValue').textContent = e.target.value; draw(); });
+        trackHeightSlider.addEventListener('input', (e) => { params.trackHeight = parseInt(e.target.value); document.getElementById('trackHeightValue').textContent = e.target.value; draw(); });
+        trackOffsetSlider.addEventListener('input', (e) => { params.trackOffset = parseFloat(e.target.value); document.getElementById('trackOffsetValue').textContent = e.target.value; draw(); });
+        numGearsSlider.addEventListener('input', (e) => { params.numRevolvingGears = parseInt(e.target.value); document.getElementById('numGearsValue').textContent = e.target.value; draw(); });
+        endGearRadiusSlider.addEventListener('input', (e) => { params.endGearRadius = parseInt(e.target.value); document.getElementById('endGearRadiusValue').textContent = e.target.value; draw(); });
+        thetaSlider.addEventListener('input', (e) => { currentThetaPercent = parseFloat(e.target.value); draw(); });
+
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            playPauseBtn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+            playPauseBtn.className = isPlaying
+                ? 'px-5 py-2 bg-red-500 text-white rounded hover:bg-red-600 font-medium min-w-24'
+                : 'px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24';
+            if (isPlaying) animate();
+            else if (animationId) cancelAnimationFrame(animationId);
+        });
+
+        speedSlider.addEventListener('input', (e) => { animationSpeed = parseFloat(e.target.value); document.getElementById('speedValue').textContent = animationSpeed.toFixed(1); });
+
+        function updateDirectionButtons(activeBtn) {
+            [dirForward, dirBackward, dirPingPong].forEach(btn => {
+                btn.className = btn === activeBtn
+                    ? 'px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600'
+                    : 'px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400';
+            });
+        }
+
+        dirForward.addEventListener('click', () => { animationDirection = 'forward'; updateDirectionButtons(dirForward); });
+        dirBackward.addEventListener('click', () => { animationDirection = 'backward'; updateDirectionButtons(dirBackward); });
+        dirPingPong.addEventListener('click', () => { animationDirection = 'pingpong'; updateDirectionButtons(dirPingPong); });
+
+        // Export functionality
+        function exportPNG() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement('a');
+            link.download = 'mechanism53-quarter-circle.png';
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportSVG() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const dataURL = tempCanvas.toDataURL('image/png');
+            const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <image width="${canvas.width}" height="${canvas.height}" xlink:href="${dataURL}"/>
+</svg>`;
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'mechanism53-quarter-circle.svg';
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        function exportGIF() {
+            exportStatus.textContent = 'Generating GIF...';
+            exportStatus.classList.remove('hidden');
+            const totalFrames = 100;
+            let currentFrame = 0;
+            const originalTheta = currentThetaPercent;
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height,
+                workerScript: './gif.worker.js'
+            });
+
+            function captureNextFrame() {
+                if (currentFrame >= totalFrames) {
+                    exportStatus.textContent = 'Encoding GIF...';
+                    gif.render();
+                    return;
+                }
+                currentThetaPercent = currentFrame;
+                draw();
+                requestAnimationFrame(() => {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.fillStyle = '#ffffff';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(canvas, 0, 0);
+                    gif.addFrame(tempCanvas, { copy: true, delay: 50 });
+                    currentFrame++;
+                    exportStatus.textContent = `Capturing frame ${currentFrame}/${totalFrames}...`;
+                    setTimeout(captureNextFrame, 10);
+                });
+            }
+            captureNextFrame();
+
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'mechanism53-quarter-circle.gif';
+                link.href = url;
+                link.click();
+                setTimeout(() => { URL.revokeObjectURL(url); exportStatus.classList.add('hidden'); }, 1000);
+                currentThetaPercent = originalTheta;
+                thetaSlider.value = currentThetaPercent;
+                draw();
+            });
+
+            gif.on('progress', function(progress) { exportStatus.textContent = `Encoding GIF: ${Math.round(progress * 100)}%`; });
+            gif.on('error', function(error) {
+                console.error('GIF encoding error:', error);
+                exportStatus.textContent = 'Error encoding GIF';
+                currentThetaPercent = originalTheta;
+                thetaSlider.value = currentThetaPercent;
+                draw();
+            });
+        }
+
+        exportBtn.addEventListener('click', () => {
+            const format = exportFormat.value;
+            if (format === 'png') exportPNG();
+            else if (format === 'svg') exportSVG();
+            else if (format === 'gif') exportGIF();
+        });
+
+        showLocusCheck.addEventListener('change', draw);
+        showBoundingRectCheck.addEventListener('change', draw);
+
+        enforceConstraints();
+        draw();
+    </script>
+</body>
+</html>

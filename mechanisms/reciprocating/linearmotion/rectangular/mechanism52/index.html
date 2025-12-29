@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rectangular Mechanism - Velocity Profiles</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Rectangular Mechanism</h1>
+
+        <!-- Main Tabs: Mechanism vs Design -->
+        <div class="bg-white rounded-lg shadow-lg mb-6">
+            <div class="flex border-b border-gray-300">
+                <button id="mechanismMainTab" class="px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50" onclick="switchMainTab('mechanism')">
+                    Mechanism
+                </button>
+                <button id="designMainTab" class="px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50" onclick="switchMainTab('design')">
+                    Design
+                </button>
+            </div>
+        </div>
+
+        <!-- Mechanism Tab Content -->
+        <div id="mechanismContent">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Mechanism Visualization</h2>
+
+                <div class="flex items-start gap-6">
+                    <!-- Path Canvas -->
+                    <div class="flex-1">
+                        <canvas id="pathCanvas" width="800" height="800" class="border border-gray-300 mx-auto bg-white"></canvas>
+                    </div>
+
+                    <!-- Animation Controls -->
+                    <div class="w-80 flex-shrink-0">
+                        <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Animation Controls</h3>
+
+                            <!-- Theta Slider -->
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Angle (θ): <span id="thetaValue" class="text-blue-600 font-bold">0</span>°
+                                </label>
+                                <input type="range" id="thetaSlider" min="0" max="360" value="0" step="1"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+
+                            <!-- Play/Pause Button -->
+                            <button id="playPauseBtn" class="w-full mb-3 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium">
+                                ▶ Play
+                            </button>
+
+                            <!-- Speed Control -->
+                            <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Speed: <span id="speedValue" class="text-gray-800 font-bold">1</span>°/frame
+                                </label>
+                                <input type="range" id="speedSlider" min="0.1" max="5" value="1" step="0.1"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+
+                            <!-- Direction Controls -->
+                            <div class="flex gap-2 mb-4">
+                                <button id="dirForward" class="flex-1 px-3 py-2 bg-blue-500 text-white text-xl rounded hover:bg-blue-600" title="Forward">
+                                    ➡️
+                                </button>
+                                <button id="dirBackward" class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-xl rounded hover:bg-gray-400" title="Backward">
+                                    ⬅️
+                                </button>
+                                <button id="dirPingPong" class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-xl rounded hover:bg-gray-400" title="Ping Pong">
+                                    🔁
+                                </button>
+                            </div>
+
+                            <!-- Perpendicular Offset -->
+                            <div class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Perpendicular Offset: <span id="perpendicularOffsetValue" class="text-indigo-600 font-bold">3.0</span>
+                                </label>
+                                <input type="range" id="perpendicularOffsetSlider" min="0" max="50" value="3" step="0.1"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+
+                            <!-- Export Path -->
+                            <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <h4 class="text-sm font-bold text-gray-700 mb-2">Export Path</h4>
+                                <div class="flex gap-2 items-center">
+                                    <select id="exportPathFormat" class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm">
+                                        <option value="png">PNG</option>
+                                        <option value="svg">SVG</option>
+                                        <option value="gif">GIF</option>
+                                    </select>
+                                    <button id="exportPath" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                        Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design Tab Content -->
+        <div id="designContent" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left: Charts (3 columns wide) -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Velocity Charts -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Velocity Profiles</h3>
+                    <canvas id="velocityChart" height="200"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportVelocityFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button id="exportVelocity" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Displacement Charts -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Displacement (Position)</h3>
+                    <canvas id="displacementChart" height="200"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportDisplacementFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button id="exportDisplacement" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acceleration Charts -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Acceleration</h3>
+                    <canvas id="accelerationChart" height="200"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportAccelerationFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button id="exportAcceleration" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jerk Charts -->
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">Jerk</h3>
+                    <canvas id="jerkChart" height="200"></canvas>
+                    <div class="flex items-center justify-end mt-2">
+                        <div class="flex gap-2 items-center">
+                            <select id="exportJerkFormat" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button id="exportJerk" class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Controls (1 column wide) -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">Design Parameters</h2>
+
+                <!-- Phase Lengths -->
+                <div class="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                    <h4 class="text-sm font-bold text-gray-800 mb-3">Side Lengths</h4>
+
+                    <div class="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Horizontal Length: <span id="horizontalLengthValue">100</span></label>
+                        <input type="range" id="horizontalLengthSlider" min="20" max="200" value="100" step="5"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Vertical Length: <span id="verticalLengthValue">80</span></label>
+                        <input type="range" id="verticalLengthSlider" min="20" max="200" value="80" step="5"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div class="mb-3 p-2 bg-purple-50 rounded border border-purple-200">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Corner Radius: <span id="transitionRadiusValue">10.0</span></label>
+                        <input type="range" id="transitionRadiusSlider" min="1" max="30" value="10.0" step="0.5"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Lift and Drop (All Sections) -->
+                <div class="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                    <h4 class="text-sm font-bold text-gray-800 mb-3">Lift & Drop (All Sections)</h4>
+
+                    <div class="mb-3 p-2 bg-yellow-50 rounded border border-yellow-200">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Lift Height: <span id="liftHeightValue">20</span></label>
+                        <input type="range" id="liftHeightSlider" min="0" max="50" value="20" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div class="mb-3 p-2 bg-orange-50 rounded border border-orange-200">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Lift/Drop Angle: <span id="liftDropAngleValue">30</span>°</label>
+                        <input type="range" id="liftDropAngleSlider" min="5" max="60" value="30" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Computed Angles (Display Only) -->
+                <div class="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                    <h4 class="text-sm font-bold text-gray-800 mb-3">Computed Angles</h4>
+
+                    <div class="mb-2 p-2 bg-blue-50 rounded border border-blue-200">
+                        <label class="block text-xs font-medium text-gray-700">Horizontal Angle: <span id="computedHorizontalAngle">--</span>°</label>
+                    </div>
+
+                    <div class="mb-2 p-2 bg-green-50 rounded border border-green-200">
+                        <label class="block text-xs font-medium text-gray-700">Vertical Angle: <span id="computedVerticalAngle">--</span>°</label>
+                    </div>
+
+                    <div class="mb-2 p-2 bg-purple-50 rounded border border-purple-200">
+                        <label class="block text-xs font-medium text-gray-700">Corner Transition Angle: <span id="computedTransitionAngle">--</span>°</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <!-- End Design Tab Content -->
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
