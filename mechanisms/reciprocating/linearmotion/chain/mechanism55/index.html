@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 55 - Square Chain Fixed Orientation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Mechanism 55 - Square Chain Fixed Orientation</h1>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-lg shadow-lg mb-6">
+            <div class="flex border-b border-gray-300">
+                <button id="mechanismTab" class="px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50" onclick="switchTab('mechanism')">
+                    Mechanism
+                </button>
+                <button id="parametersTab" class="px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50" onclick="switchTab('parameters')">
+                    Parameters
+                </button>
+            </div>
+        </div>
+
+        <!-- Mechanism Tab Content -->
+        <div id="mechanismContent" class="bg-white rounded-lg shadow-lg p-6">
+            <!-- Canvas -->
+            <div class="flex justify-center">
+                <canvas id="mainCanvas" width="1000" height="700" class="border border-gray-300 bg-white"></canvas>
+            </div>
+
+            <!-- Animation Controls (under canvas) -->
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-4xl mx-auto">
+                <!-- Row 1: Progress slider -->
+                <div class="flex items-center gap-3 mb-3">
+                    <label class="text-sm font-medium text-gray-700 w-16">Progress:</label>
+                    <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5"
+                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <span id="progressValue" class="text-sm text-gray-600 font-bold w-12 text-right">0</span>%
+                </div>
+
+                <!-- Row 2: Play, Direction, Speed -->
+                <div class="flex items-center gap-4">
+                    <!-- Play/Pause -->
+                    <button id="playPauseBtn" class="px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24">
+                        ▶ Play
+                    </button>
+
+                    <!-- Direction Controls -->
+                    <div class="flex gap-1">
+                        <button id="dirForward" class="px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600" title="Forward">
+                            ➡️
+                        </button>
+                        <button id="dirBackward" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Backward">
+                            ⬅️
+                        </button>
+                        <button id="dirPingPong" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Ping Pong">
+                            🔁
+                        </button>
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Speed:</label>
+                        <input type="range" id="speedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                               class="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="speedValue" class="text-sm text-gray-800 font-bold w-8">0.5</span>
+                    </div>
+
+                    <!-- Export -->
+                    <div class="flex items-center gap-2 ml-auto">
+                        <select id="exportFormat" class="px-2 py-2 border border-gray-300 rounded text-sm">
+                            <option value="png">PNG</option>
+                            <option value="svg">SVG</option>
+                            <option value="gif">GIF</option>
+                        </select>
+                        <button id="exportBtn" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium">
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <p id="exportStatus" class="text-sm text-gray-600 mt-2 text-right hidden"></p>
+            </div>
+        </div>
+
+        <!-- Parameters Tab Content -->
+        <div id="parametersContent" class="bg-white rounded-lg shadow-lg p-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Track Parameters -->
+                <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Track Parameters</h3>
+
+                    <!-- Straight Length -->
+                    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Straight Length: <span id="straightLengthValue" class="text-blue-600 font-bold">400</span>
+                        </label>
+                        <input type="range" id="straightLengthSlider" min="50" max="500" value="400" step="10"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Corner Radius -->
+                    <div class="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Corner Radius: <span id="radiusValue" class="text-green-600 font-bold">80</span>
+                        </label>
+                        <input type="range" id="radiusSlider" min="20" max="150" value="80" step="5"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Vertical Gap -->
+                    <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Vertical Gap: <span id="verticalGapValue" class="text-yellow-600 font-bold">400</span>
+                        </label>
+                        <input type="range" id="verticalGapSlider" min="0" max="500" value="400" step="10"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Track Width -->
+                    <div class="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Track Width: <span id="trackWidthValue" class="text-purple-600 font-bold">20</span>
+                        </label>
+                        <input type="range" id="trackWidthSlider" min="5" max="50" value="20" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Offset Parameters -->
+                <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Offset Parameters</h3>
+
+                    <!-- Radius Extension -->
+                    <div class="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Radius Extension: <span id="radiusExtValue" class="text-orange-600 font-bold">5</span>
+                        </label>
+                        <input type="range" id="radiusExtSlider" min="1" max="40" value="5" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- X Offset -->
+                    <div class="mb-4 p-3 bg-pink-50 rounded-lg border border-pink-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            X Offset: <span id="xOffsetValue" class="text-pink-600 font-bold">70</span>
+                        </label>
+                        <input type="range" id="xOffsetSlider" min="0" max="150" value="70" step="5"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Chain Parameters -->
+                <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Chain Parameters</h3>
+
+                    <!-- Number of Circle Sets -->
+                    <div class="mb-4 p-3 bg-cyan-50 rounded-lg border border-cyan-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Number of Links (n): <span id="numLinksValue" class="text-cyan-600 font-bold">5</span>
+                        </label>
+                        <input type="range" id="numLinksSlider" min="1" max="20" value="5" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Info -->
+                    <div class="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-300">
+                        <h4 class="text-sm font-bold text-gray-700 mb-2">Track Info</h4>
+                        <p class="text-xs text-gray-600">Total Length: <span id="totalLengthValue">--</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tab) {
+            const mechanismTab = document.getElementById('mechanismTab');
+            const parametersTab = document.getElementById('parametersTab');
+            const mechanismContent = document.getElementById('mechanismContent');
+            const parametersContent = document.getElementById('parametersContent');
+
+            if (tab === 'mechanism') {
+                mechanismTab.className = 'px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50';
+                parametersTab.className = 'px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                mechanismContent.classList.remove('hidden');
+                parametersContent.classList.add('hidden');
+            } else {
+                parametersTab.className = 'px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50';
+                mechanismTab.className = 'px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                parametersContent.classList.remove('hidden');
+                mechanismContent.classList.add('hidden');
+            }
+        }
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Parameters
+        let straightLength = 400;
+        let radius = 80;
+        let trackWidth = 20;
+        let radiusExt = 5;
+        let xOffset = 70;
+        let numLinks = 5;
+        let verticalGap = 400;  // Length of vertical lines centered at y=0
+
+        // Animation state
+        let progress = 0;
+        let isPlaying = false;
+        let animationSpeed = 0.5;
+        let animationDirection = 'forward';
+        let pingPongReverse = false;
+        let animationId = null;
+
+        // Canvas center
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Function to get position on track with quarter circles and vertical lines
+        // Track shape: top straight -> top-right quarter arc -> right vertical -> bottom-right quarter arc -> bottom straight -> bottom-left quarter arc -> left vertical -> top-left quarter arc
+        function getPositionOnTrack(progress, trackCenterX, midRadius, gap) {
+            if (gap === undefined) gap = verticalGap;
+
+            const topLength = straightLength;
+            const quarterArcLength = Math.PI * midRadius / 2;  // Quarter circle
+            const vertLineLength = gap;  // Vertical line length
+            const bottomLength = straightLength;
+
+            // Total: 2 straights + 4 quarter arcs + 2 vertical lines
+            const totalLength = 2 * straightLength + 4 * quarterArcLength + 2 * vertLineLength;
+
+            // Calculate fractional positions for each segment
+            const seg1End = topLength / totalLength * 100;  // End of top straight
+            const seg2End = seg1End + quarterArcLength / totalLength * 100;  // End of top-right quarter
+            const seg3End = seg2End + vertLineLength / totalLength * 100;  // End of right vertical
+            const seg4End = seg3End + quarterArcLength / totalLength * 100;  // End of bottom-right quarter
+            const seg5End = seg4End + bottomLength / totalLength * 100;  // End of bottom straight
+            const seg6End = seg5End + quarterArcLength / totalLength * 100;  // End of bottom-left quarter
+            const seg7End = seg6End + vertLineLength / totalLength * 100;  // End of left vertical
+            // seg8 goes to 100%
+
+            let x, y;
+            const rightEndX = trackCenterX + straightLength / 2;
+            const leftEndX = trackCenterX - straightLength / 2;
+            const topY = centerY - gap / 2 - midRadius;
+            const bottomY = centerY + gap / 2 + midRadius;
+
+            if (progress <= seg1End) {
+                // Segment 1: Top horizontal (left to right)
+                const t = progress / seg1End;
+                x = leftEndX + t * straightLength;
+                y = topY;
+            } else if (progress <= seg2End) {
+                // Segment 2: Top-right quarter arc (top to right)
+                const t = (progress - seg1End) / (seg2End - seg1End);
+                const angle = -Math.PI / 2 + t * Math.PI / 2;  // -90° to 0°
+                x = rightEndX + midRadius * Math.cos(angle);
+                y = (centerY - gap / 2) + midRadius * Math.sin(angle);
+            } else if (progress <= seg3End) {
+                // Segment 3: Right vertical line (top to bottom)
+                const t = (progress - seg2End) / (seg3End - seg2End);
+                x = rightEndX + midRadius;
+                y = (centerY - gap / 2) + t * gap;
+            } else if (progress <= seg4End) {
+                // Segment 4: Bottom-right quarter arc (right to bottom)
+                const t = (progress - seg3End) / (seg4End - seg3End);
+                const angle = t * Math.PI / 2;  // 0° to 90°
+                x = rightEndX + midRadius * Math.cos(angle);
+                y = (centerY + gap / 2) + midRadius * Math.sin(angle);
+            } else if (progress <= seg5End) {
+                // Segment 5: Bottom horizontal (right to left)
+                const t = (progress - seg4End) / (seg5End - seg4End);
+                x = rightEndX - t * straightLength;
+                y = bottomY;
+            } else if (progress <= seg6End) {
+                // Segment 6: Bottom-left quarter arc (bottom to left)
+                const t = (progress - seg5End) / (seg6End - seg5End);
+                const angle = Math.PI / 2 + t * Math.PI / 2;  // 90° to 180°
+                x = leftEndX + midRadius * Math.cos(angle);
+                y = (centerY + gap / 2) + midRadius * Math.sin(angle);
+            } else if (progress <= seg7End) {
+                // Segment 7: Left vertical line (bottom to top)
+                const t = (progress - seg6End) / (seg7End - seg6End);
+                x = leftEndX - midRadius;
+                y = (centerY + gap / 2) - t * gap;
+            } else {
+                // Segment 8: Top-left quarter arc (left to top)
+                const t = (progress - seg7End) / (100 - seg7End);
+                const angle = Math.PI + t * Math.PI / 2;  // 180° to 270°
+                x = leftEndX + midRadius * Math.cos(angle);
+                y = (centerY - gap / 2) + midRadius * Math.sin(angle);
+            }
+
+            return { x, y };
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw title on canvas (centered)
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = '#1f2937';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Mechanism 55', canvas.width / 2, 15);
+
+            // Draw watermark (BrianMechanisms)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(-30 * Math.PI / 180);
+            ctx.font = '60px sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.globalAlpha = 0.3;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BrianMechanisms', 0, 0);
+            ctx.restore();
+
+            // Draw coordinate axes (faint)
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+
+            const innerRadius = radius - trackWidth;
+            const padding = 30;
+
+            // Calculate the largest radius (from set 3)
+            const maxOuterRadius = radius + 2 * radiusExt;
+
+            // Bounding rectangle dimensions (covers all 3 sets)
+            const rectLeft = centerX - straightLength / 2 - radius - padding;
+            const rectRight = (centerX + 2 * xOffset) + straightLength / 2 + maxOuterRadius + padding;
+            const rectTop = centerY - verticalGap / 2 - maxOuterRadius - padding;
+            const rectBottom = centerY + verticalGap / 2 + maxOuterRadius + padding;
+            const rectWidth = rectRight - rectLeft;
+            const rectHeight = rectBottom - rectTop;
+
+            // Step 1: Fill the entire rectangle with shade
+            ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+            ctx.fillRect(rectLeft, rectTop, rectWidth, rectHeight);
+
+            // Step 2: Cut out the outer track area (fill with white)
+            // Shape with quarter circles at corners and vertical lines at ends
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            // Top line
+            ctx.moveTo(centerX - straightLength / 2, centerY - verticalGap / 2 - radius);
+            ctx.lineTo(centerX + straightLength / 2, centerY - verticalGap / 2 - radius);
+            // Top-right quarter arc
+            ctx.arc(centerX + straightLength / 2, centerY - verticalGap / 2, radius, -Math.PI / 2, 0);
+            // Right vertical line
+            ctx.lineTo(centerX + straightLength / 2 + radius, centerY + verticalGap / 2);
+            // Bottom-right quarter arc
+            ctx.arc(centerX + straightLength / 2, centerY + verticalGap / 2, radius, 0, Math.PI / 2);
+            // Bottom line
+            ctx.lineTo(centerX - straightLength / 2, centerY + verticalGap / 2 + radius);
+            // Bottom-left quarter arc
+            ctx.arc(centerX - straightLength / 2, centerY + verticalGap / 2, radius, Math.PI / 2, Math.PI);
+            // Left vertical line
+            ctx.lineTo(centerX - straightLength / 2 - radius, centerY - verticalGap / 2);
+            // Top-left quarter arc
+            ctx.arc(centerX - straightLength / 2, centerY - verticalGap / 2, radius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Step 3: Fill the inner track area with shade
+            ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(centerX - straightLength / 2, centerY - verticalGap / 2 - innerRadius);
+            ctx.lineTo(centerX + straightLength / 2, centerY - verticalGap / 2 - innerRadius);
+            ctx.arc(centerX + straightLength / 2, centerY - verticalGap / 2, innerRadius, -Math.PI / 2, 0);
+            ctx.lineTo(centerX + straightLength / 2 + innerRadius, centerY + verticalGap / 2);
+            ctx.arc(centerX + straightLength / 2, centerY + verticalGap / 2, innerRadius, 0, Math.PI / 2);
+            ctx.lineTo(centerX - straightLength / 2, centerY + verticalGap / 2 + innerRadius);
+            ctx.arc(centerX - straightLength / 2, centerY + verticalGap / 2, innerRadius, Math.PI / 2, Math.PI);
+            ctx.lineTo(centerX - straightLength / 2 - innerRadius, centerY - verticalGap / 2);
+            ctx.arc(centerX - straightLength / 2, centerY - verticalGap / 2, innerRadius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw bounding rectangle outline
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(rectLeft, rectTop, rectWidth, rectHeight);
+            ctx.setLineDash([]);
+
+            // Draw outer track (Set 1 - Gray, thin and dim)
+            ctx.strokeStyle = 'rgba(156, 163, 175, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(centerX - straightLength / 2, centerY - verticalGap / 2 - radius);
+            ctx.lineTo(centerX + straightLength / 2, centerY - verticalGap / 2 - radius);
+            ctx.arc(centerX + straightLength / 2, centerY - verticalGap / 2, radius, -Math.PI / 2, 0);
+            ctx.lineTo(centerX + straightLength / 2 + radius, centerY + verticalGap / 2);
+            ctx.arc(centerX + straightLength / 2, centerY + verticalGap / 2, radius, 0, Math.PI / 2);
+            ctx.lineTo(centerX - straightLength / 2, centerY + verticalGap / 2 + radius);
+            ctx.arc(centerX - straightLength / 2, centerY + verticalGap / 2, radius, Math.PI / 2, Math.PI);
+            ctx.lineTo(centerX - straightLength / 2 - radius, centerY - verticalGap / 2);
+            ctx.arc(centerX - straightLength / 2, centerY - verticalGap / 2, radius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw inner track (Set 1 - Gray, thin and dim)
+            ctx.beginPath();
+            ctx.moveTo(centerX - straightLength / 2, centerY - verticalGap / 2 - innerRadius);
+            ctx.lineTo(centerX + straightLength / 2, centerY - verticalGap / 2 - innerRadius);
+            ctx.arc(centerX + straightLength / 2, centerY - verticalGap / 2, innerRadius, -Math.PI / 2, 0);
+            ctx.lineTo(centerX + straightLength / 2 + innerRadius, centerY + verticalGap / 2);
+            ctx.arc(centerX + straightLength / 2, centerY + verticalGap / 2, innerRadius, 0, Math.PI / 2);
+            ctx.lineTo(centerX - straightLength / 2, centerY + verticalGap / 2 + innerRadius);
+            ctx.arc(centerX - straightLength / 2, centerY + verticalGap / 2, innerRadius, Math.PI / 2, Math.PI);
+            ctx.lineTo(centerX - straightLength / 2 - innerRadius, centerY - verticalGap / 2);
+            ctx.arc(centerX - straightLength / 2, centerY - verticalGap / 2, innerRadius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Calculate radii for circles
+            const set1MidRadius = (radius + innerRadius) / 2;
+            const set1CircleRadius = (radius - innerRadius) / 2;
+
+            // ============ SECOND TRACK SET (displaced to the right) ============
+            const set2CenterX = centerX + xOffset;
+            const set2OuterRadius = radius + radiusExt;
+            const set2InnerRadius = innerRadius - radiusExt;
+
+            // Draw second outer track (Set 2 - Orange)
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(set2CenterX - straightLength / 2, centerY - verticalGap / 2 - set2OuterRadius);
+            ctx.lineTo(set2CenterX + straightLength / 2, centerY - verticalGap / 2 - set2OuterRadius);
+            ctx.arc(set2CenterX + straightLength / 2, centerY - verticalGap / 2, set2OuterRadius, -Math.PI / 2, 0);
+            ctx.lineTo(set2CenterX + straightLength / 2 + set2OuterRadius, centerY + verticalGap / 2);
+            ctx.arc(set2CenterX + straightLength / 2, centerY + verticalGap / 2, set2OuterRadius, 0, Math.PI / 2);
+            ctx.lineTo(set2CenterX - straightLength / 2, centerY + verticalGap / 2 + set2OuterRadius);
+            ctx.arc(set2CenterX - straightLength / 2, centerY + verticalGap / 2, set2OuterRadius, Math.PI / 2, Math.PI);
+            ctx.lineTo(set2CenterX - straightLength / 2 - set2OuterRadius, centerY - verticalGap / 2);
+            ctx.arc(set2CenterX - straightLength / 2, centerY - verticalGap / 2, set2OuterRadius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw second inner track (Set 2 - Orange)
+            ctx.beginPath();
+            ctx.moveTo(set2CenterX - straightLength / 2, centerY - verticalGap / 2 - set2InnerRadius);
+            ctx.lineTo(set2CenterX + straightLength / 2, centerY - verticalGap / 2 - set2InnerRadius);
+            ctx.arc(set2CenterX + straightLength / 2, centerY - verticalGap / 2, set2InnerRadius, -Math.PI / 2, 0);
+            ctx.lineTo(set2CenterX + straightLength / 2 + set2InnerRadius, centerY + verticalGap / 2);
+            ctx.arc(set2CenterX + straightLength / 2, centerY + verticalGap / 2, set2InnerRadius, 0, Math.PI / 2);
+            ctx.lineTo(set2CenterX - straightLength / 2, centerY + verticalGap / 2 + set2InnerRadius);
+            ctx.arc(set2CenterX - straightLength / 2, centerY + verticalGap / 2, set2InnerRadius, Math.PI / 2, Math.PI);
+            ctx.lineTo(set2CenterX - straightLength / 2 - set2InnerRadius, centerY - verticalGap / 2);
+            ctx.arc(set2CenterX - straightLength / 2, centerY - verticalGap / 2, set2InnerRadius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Calculate radii for Set 2 circles
+            const set2MidRadius = (set2OuterRadius + set2InnerRadius) / 2;
+            const set2CircleRadius = (set2OuterRadius - set2InnerRadius) / 2;
+
+            // ============ THIRD TRACK SET (displaced further to the right) ============
+            const set3CenterX = centerX + 2 * xOffset;
+            const set3OuterRadius = radius + 2 * radiusExt;
+            const set3InnerRadius = innerRadius - 2 * radiusExt;
+
+            // Draw third outer track (Set 3 - Purple)
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(set3CenterX - straightLength / 2, centerY - verticalGap / 2 - set3OuterRadius);
+            ctx.lineTo(set3CenterX + straightLength / 2, centerY - verticalGap / 2 - set3OuterRadius);
+            ctx.arc(set3CenterX + straightLength / 2, centerY - verticalGap / 2, set3OuterRadius, -Math.PI / 2, 0);
+            ctx.lineTo(set3CenterX + straightLength / 2 + set3OuterRadius, centerY + verticalGap / 2);
+            ctx.arc(set3CenterX + straightLength / 2, centerY + verticalGap / 2, set3OuterRadius, 0, Math.PI / 2);
+            ctx.lineTo(set3CenterX - straightLength / 2, centerY + verticalGap / 2 + set3OuterRadius);
+            ctx.arc(set3CenterX - straightLength / 2, centerY + verticalGap / 2, set3OuterRadius, Math.PI / 2, Math.PI);
+            ctx.lineTo(set3CenterX - straightLength / 2 - set3OuterRadius, centerY - verticalGap / 2);
+            ctx.arc(set3CenterX - straightLength / 2, centerY - verticalGap / 2, set3OuterRadius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw third inner track (Set 3 - Purple)
+            ctx.beginPath();
+            ctx.moveTo(set3CenterX - straightLength / 2, centerY - verticalGap / 2 - set3InnerRadius);
+            ctx.lineTo(set3CenterX + straightLength / 2, centerY - verticalGap / 2 - set3InnerRadius);
+            ctx.arc(set3CenterX + straightLength / 2, centerY - verticalGap / 2, set3InnerRadius, -Math.PI / 2, 0);
+            ctx.lineTo(set3CenterX + straightLength / 2 + set3InnerRadius, centerY + verticalGap / 2);
+            ctx.arc(set3CenterX + straightLength / 2, centerY + verticalGap / 2, set3InnerRadius, 0, Math.PI / 2);
+            ctx.lineTo(set3CenterX - straightLength / 2, centerY + verticalGap / 2 + set3InnerRadius);
+            ctx.arc(set3CenterX - straightLength / 2, centerY + verticalGap / 2, set3InnerRadius, Math.PI / 2, Math.PI);
+            ctx.lineTo(set3CenterX - straightLength / 2 - set3InnerRadius, centerY - verticalGap / 2);
+            ctx.arc(set3CenterX - straightLength / 2, centerY - verticalGap / 2, set3InnerRadius, Math.PI, 3 * Math.PI / 2);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Calculate radii for Set 3 circles
+            const set3MidRadius = (set3OuterRadius + set3InnerRadius) / 2;
+            const set3CircleRadius = (set3OuterRadius - set3InnerRadius) / 2;
+
+            // Draw n link sets equally spaced around the track
+            for (let i = 0; i < numLinks; i++) {
+                const linkProgress = (progress + (i * 100 / numLinks)) % 100;
+
+                const pos1 = getPositionOnTrack(linkProgress, centerX, set1MidRadius);
+                const pos2 = getPositionOnTrack(linkProgress, set2CenterX, set2MidRadius);
+                const pos3 = getPositionOnTrack(linkProgress, set3CenterX, set3MidRadius);
+
+                // Draw thick lines connecting circle centers
+                ctx.strokeStyle = '#374151';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(pos1.x, pos1.y);
+                ctx.lineTo(pos2.x, pos2.y);
+                ctx.lineTo(pos3.x, pos3.y);
+                ctx.stroke();
+
+                // Draw circle for Set 1 (gray)
+                ctx.fillStyle = 'rgba(156, 163, 175, 0.7)';
+                ctx.beginPath();
+                ctx.arc(pos1.x, pos1.y, set1CircleRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw circle for Set 2 (orange)
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.arc(pos2.x, pos2.y, set2CircleRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw circle for Set 3 (purple)
+                ctx.fillStyle = '#8b5cf6';
+                ctx.beginPath();
+                ctx.arc(pos3.x, pos3.y, set3CircleRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Update info
+            const totalLength = 2 * straightLength + 2 * Math.PI * radius + 2 * verticalGap;
+            document.getElementById('totalLengthValue').textContent = totalLength.toFixed(1);
+        }
+
+        // Event listeners for parameters
+        document.getElementById('straightLengthSlider').addEventListener('input', (e) => {
+            straightLength = parseInt(e.target.value);
+            document.getElementById('straightLengthValue').textContent = straightLength;
+            draw();
+        });
+
+        document.getElementById('radiusSlider').addEventListener('input', (e) => {
+            radius = parseInt(e.target.value);
+            document.getElementById('radiusValue').textContent = radius;
+            draw();
+        });
+
+        document.getElementById('verticalGapSlider').addEventListener('input', (e) => {
+            verticalGap = parseInt(e.target.value);
+            document.getElementById('verticalGapValue').textContent = verticalGap;
+            draw();
+        });
+
+        document.getElementById('trackWidthSlider').addEventListener('input', (e) => {
+            trackWidth = parseInt(e.target.value);
+            document.getElementById('trackWidthValue').textContent = trackWidth;
+            draw();
+        });
+
+        document.getElementById('radiusExtSlider').addEventListener('input', (e) => {
+            radiusExt = parseInt(e.target.value);
+            document.getElementById('radiusExtValue').textContent = radiusExt;
+            draw();
+        });
+
+        document.getElementById('xOffsetSlider').addEventListener('input', (e) => {
+            xOffset = parseInt(e.target.value);
+            document.getElementById('xOffsetValue').textContent = xOffset;
+            draw();
+        });
+
+        document.getElementById('numLinksSlider').addEventListener('input', (e) => {
+            numLinks = parseInt(e.target.value);
+            document.getElementById('numLinksValue').textContent = numLinks;
+            draw();
+        });
+
+        // Animation controls
+        const progressSlider = document.getElementById('progressSlider');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const dirForward = document.getElementById('dirForward');
+        const dirBackward = document.getElementById('dirBackward');
+        const dirPingPong = document.getElementById('dirPingPong');
+
+        progressSlider.addEventListener('input', (e) => {
+            progress = parseFloat(e.target.value);
+            document.getElementById('progressValue').textContent = progress.toFixed(1);
+            draw();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            animationSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playPauseBtn.textContent = '⏸ Pause';
+                playPauseBtn.className = 'px-5 py-2 bg-red-500 text-white rounded hover:bg-red-600 font-medium min-w-24';
+                animate();
+            } else {
+                playPauseBtn.textContent = '▶ Play';
+                playPauseBtn.className = 'px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            }
+        });
+
+        function updateDirectionButtons(activeBtn) {
+            [dirForward, dirBackward, dirPingPong].forEach(btn => {
+                btn.className = btn === activeBtn
+                    ? 'px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600'
+                    : 'px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400';
+            });
+        }
+
+        dirForward.addEventListener('click', () => {
+            animationDirection = 'forward';
+            updateDirectionButtons(dirForward);
+        });
+
+        dirBackward.addEventListener('click', () => {
+            animationDirection = 'backward';
+            updateDirectionButtons(dirBackward);
+        });
+
+        dirPingPong.addEventListener('click', () => {
+            animationDirection = 'pingpong';
+            updateDirectionButtons(dirPingPong);
+        });
+
+        function animate() {
+            if (!isPlaying) return;
+
+            if (animationDirection === 'forward') {
+                progress += animationSpeed;
+                if (progress >= 100) progress = 0;
+            } else if (animationDirection === 'backward') {
+                progress -= animationSpeed;
+                if (progress < 0) progress = 100 + progress;
+            } else if (animationDirection === 'pingpong') {
+                if (pingPongReverse) {
+                    progress -= animationSpeed;
+                    if (progress <= 0) { progress = 0; pingPongReverse = false; }
+                } else {
+                    progress += animationSpeed;
+                    if (progress >= 100) { progress = 100; pingPongReverse = true; }
+                }
+            }
+
+            progressSlider.value = progress;
+            document.getElementById('progressValue').textContent = progress.toFixed(1);
+            draw();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Export functionality
+        const exportFormat = document.getElementById('exportFormat');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportStatus = document.getElementById('exportStatus');
+
+        function exportPNG() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement('a');
+            link.download = 'mechanism55-square-chain-fixed-orientation.png';
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportSVG() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const dataURL = tempCanvas.toDataURL('image/png');
+            const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <image width="${canvas.width}" height="${canvas.height}" xlink:href="${dataURL}"/>
+</svg>`;
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'mechanism55-square-chain-fixed-orientation.svg';
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        function exportGIF() {
+            exportStatus.textContent = 'Generating GIF...';
+            exportStatus.classList.remove('hidden');
+            const totalFrames = 100;
+            let currentFrame = 0;
+            const originalProgress = progress;
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height,
+                workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+            });
+
+            function captureNextFrame() {
+                if (currentFrame >= totalFrames) {
+                    exportStatus.textContent = 'Encoding GIF...';
+                    gif.render();
+                    return;
+                }
+                progress = currentFrame;
+                draw();
+                requestAnimationFrame(() => {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.fillStyle = '#ffffff';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(canvas, 0, 0);
+                    gif.addFrame(tempCanvas, { copy: true, delay: 50 });
+                    currentFrame++;
+                    exportStatus.textContent = `Capturing frame ${currentFrame}/${totalFrames}...`;
+                    setTimeout(captureNextFrame, 10);
+                });
+            }
+            captureNextFrame();
+
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'mechanism55-square-chain-fixed-orientation.gif';
+                link.href = url;
+                link.click();
+                setTimeout(() => { URL.revokeObjectURL(url); exportStatus.classList.add('hidden'); }, 1000);
+                progress = originalProgress;
+                progressSlider.value = progress;
+                draw();
+            });
+
+            gif.on('progress', function(p) { exportStatus.textContent = `Encoding GIF: ${Math.round(p * 100)}%`; });
+            gif.on('error', function(error) {
+                console.error('GIF encoding error:', error);
+                exportStatus.textContent = 'Error encoding GIF';
+                progress = originalProgress;
+                progressSlider.value = progress;
+                draw();
+            });
+        }
+
+        exportBtn.addEventListener('click', () => {
+            const format = exportFormat.value;
+            if (format === 'png') exportPNG();
+            else if (format === 'svg') exportSVG();
+            else if (format === 'gif') exportGIF();
+        });
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
