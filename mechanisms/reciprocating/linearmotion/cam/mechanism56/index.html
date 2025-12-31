@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 56</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Mechanism 56</h1>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-lg shadow-lg mb-6">
+            <div class="flex border-b border-gray-300">
+                <button id="mechanismTab" class="px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50" onclick="switchTab('mechanism')">
+                    Mechanism
+                </button>
+                <button id="velocityTab" class="px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50" onclick="switchTab('velocity')">
+                    Velocity Profile
+                </button>
+                <button id="parametersTab" class="px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50" onclick="switchTab('parameters')">
+                    Parameters
+                </button>
+            </div>
+        </div>
+
+        <!-- Mechanism Tab Content -->
+        <div id="mechanismContent" class="bg-white rounded-lg shadow-lg p-6">
+            <!-- Canvas -->
+            <div class="flex justify-center">
+                <canvas id="mainCanvas" width="800" height="600" class="border border-gray-300 bg-white"></canvas>
+            </div>
+
+            <!-- Animation Controls (under canvas) -->
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-3xl mx-auto">
+                <!-- Row 1: Progress slider -->
+                <div class="flex items-center gap-3 mb-3">
+                    <label class="text-sm font-medium text-gray-700 w-16">Progress:</label>
+                    <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5"
+                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <span id="progressValue" class="text-sm text-gray-600 font-bold w-12 text-right">0</span>%
+                </div>
+
+                <!-- Row 2: Play, Direction, Speed -->
+                <div class="flex items-center gap-4">
+                    <!-- Play/Pause -->
+                    <button id="playPauseBtn" class="px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24">
+                        ▶ Play
+                    </button>
+
+                    <!-- Direction Controls -->
+                    <div class="flex gap-1">
+                        <button id="dirForward" class="px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600" title="Forward">
+                            ➡️
+                        </button>
+                        <button id="dirBackward" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Backward">
+                            ⬅️
+                        </button>
+                        <button id="dirPingPong" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Ping Pong">
+                            🔁
+                        </button>
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-700">Speed:</label>
+                        <input type="range" id="speedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                               class="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="speedValue" class="text-sm text-gray-800 font-bold w-8">0.5</span>
+                    </div>
+
+                    <!-- Export -->
+                    <div class="flex items-center gap-2 ml-auto">
+                        <select id="exportFormat" class="px-2 py-2 border border-gray-300 rounded text-sm">
+                            <option value="png">PNG</option>
+                            <option value="svg">SVG</option>
+                            <option value="gif">GIF</option>
+                        </select>
+                        <button id="exportBtn" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium">
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <p id="exportStatus" class="text-sm text-gray-600 mt-2 text-right hidden"></p>
+
+                <!-- Info display -->
+                <div class="mt-3 p-2 bg-blue-50 rounded text-sm">
+                    <span class="font-medium">θ:</span> <span id="currentAngle">0</span>° |
+                    <span class="font-medium">θ₁:</span> <span id="theta1Angle">--</span>° |
+                    <span class="font-medium">π-θ₁:</span> <span id="theta2Angle">--</span>° |
+                    <span class="font-medium">π+θ₁:</span> <span id="theta4Angle">--</span>° |
+                    <span class="font-medium">2π-θ₁:</span> <span id="theta5Angle">--</span>°
+                </div>
+            </div>
+        </div>
+
+        <!-- Velocity Profile Tab Content -->
+        <div id="velocityContent" class="bg-white rounded-lg shadow-lg p-6 hidden">
+            <div class="flex justify-center">
+                <canvas id="velocityCanvas" width="800" height="500" class="border border-gray-300 bg-white"></canvas>
+            </div>
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-3xl mx-auto">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="p-2 bg-orange-50 rounded">
+                        <span class="font-bold text-orange-600">vx = -R·ω·sin(θ)</span>
+                        <p class="text-gray-600 text-xs mt-1">Horizontal velocity (assuming ω=1)</p>
+                    </div>
+                    <div class="p-2 bg-purple-50 rounded">
+                        <span class="font-bold text-purple-600">vy = R·ω·cos(θ)</span>
+                        <p class="text-gray-600 text-xs mt-1">Vertical velocity (assuming ω=1)</p>
+                    </div>
+                </div>
+                <div class="mt-3 p-2 bg-blue-50 rounded text-sm">
+                    <span class="font-medium">θ₁:</span> <span id="stage1Angle">--</span>° |
+                    <span class="font-medium">Constant vx (S2):</span> <span id="vxAtTheta1">--</span> |
+                    <span class="font-medium">Constant vx (S5):</span> <span id="vxAtStage5">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parameters Tab Content -->
+        <div id="parametersContent" class="bg-white rounded-lg shadow-lg p-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Arm Parameters -->
+                <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Arm Parameters</h3>
+
+                    <!-- Arm Radius R -->
+                    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Arm Radius (R): <span id="radiusValue" class="text-blue-600 font-bold">200</span>
+                        </label>
+                        <input type="range" id="radiusSlider" min="50" max="250" value="200" step="10"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Acceleration Angle -->
+                <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Cam Profile</h3>
+
+                    <!-- Acceleration Angle -->
+                    <div class="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Acceleration Angle (θ₁): <span id="accelAngleValue" class="text-green-600 font-bold">25</span>°
+                        </label>
+                        <input type="range" id="accelAngleSlider" min="5" max="85" value="25" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">Line height L = 2R·sin(θ₁) = <span id="lineLengthCalc">--</span></p>
+                    </div>
+                </div>
+
+                <!-- Number of Arms -->
+                <div class="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Multi-Arm Configuration</h3>
+
+                    <!-- Number of Arms n -->
+                    <div class="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Number of Arms (n): <span id="numArmsValue" class="text-purple-600 font-bold">3</span>
+                        </label>
+                        <input type="range" id="numArmsSlider" min="1" max="8" value="3" step="1"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">Arms are equally spaced at 2π/n intervals</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tab) {
+            const mechanismTab = document.getElementById('mechanismTab');
+            const velocityTab = document.getElementById('velocityTab');
+            const parametersTab = document.getElementById('parametersTab');
+            const mechanismContent = document.getElementById('mechanismContent');
+            const velocityContent = document.getElementById('velocityContent');
+            const parametersContent = document.getElementById('parametersContent');
+
+            const activeClass = 'px-6 py-3 font-semibold text-lg text-blue-600 border-b-4 border-blue-600 bg-blue-50';
+            const inactiveClass = 'px-6 py-3 font-semibold text-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+
+            // Reset all tabs
+            mechanismTab.className = inactiveClass;
+            velocityTab.className = inactiveClass;
+            parametersTab.className = inactiveClass;
+            mechanismContent.classList.add('hidden');
+            velocityContent.classList.add('hidden');
+            parametersContent.classList.add('hidden');
+
+            if (tab === 'mechanism') {
+                mechanismTab.className = activeClass;
+                mechanismContent.classList.remove('hidden');
+            } else if (tab === 'velocity') {
+                velocityTab.className = activeClass;
+                velocityContent.classList.remove('hidden');
+                drawVelocityProfile();
+            } else {
+                parametersTab.className = activeClass;
+                parametersContent.classList.remove('hidden');
+            }
+        }
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const velCanvas = document.getElementById('velocityCanvas');
+        const velCtx = velCanvas.getContext('2d');
+
+        // Parameters
+        let R = 200;  // Arm radius
+        let accelerationAngleDeg = 25;  // Acceleration angle in degrees (0-90)
+        let numArms = 3;  // Number of arms (and cams)
+
+        // Calculate L from acceleration angle
+        function getL() {
+            const accelAngleRad = accelerationAngleDeg * Math.PI / 180;
+            return 2 * R * Math.sin(accelAngleRad);
+        }
+        let L = getL();  // Line length derived from acceleration angle
+
+        // Animation state
+        let progress = 0;
+        let isPlaying = false;
+        let animationSpeed = 0.5;
+        let animationDirection = 'forward';
+        let pingPongReverse = false;
+        let animationId = null;
+
+        // Canvas center (origin O)
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Calculate the angle at which arm tip reaches top of line (end of stage 1)
+        // This is now directly the acceleration angle
+        function getTheta1() {
+            return accelerationAngleDeg * Math.PI / 180;
+        }
+
+        // For backwards compatibility
+        function getMaxAngle() {
+            return getTheta1();
+        }
+
+        // Calculate cam profile x offset for constant velocity transition
+        // y is the arm tip's y-coordinate (R * sin(θ))
+        function getCamProfileX(y, theta1) {
+            // x_profile(y) = √(R² - y²) - R·cos(θ₁) + (L/2)·(arcsin(y/R) - θ₁)
+            const cosTheta1 = Math.cos(theta1);
+            const theta = Math.asin(y / R);
+            return Math.sqrt(R * R - y * y) - R * cosTheta1 + (L / 2) * (theta - theta1);
+        }
+
+        // Get cam baseline (entry edge) x position based on current angle
+        function getCamX(theta, theta1) {
+            const exitOffset = -2 * R * Math.cos(theta1) + (L / 2) * (Math.PI - 2 * theta1);
+
+            if (theta <= theta1) {
+                // Stage 1: entry edge at arm tip x
+                return R * Math.cos(theta);
+            } else if (theta <= Math.PI - theta1) {
+                // Stage 2: constant velocity motion (moving left)
+                return R * Math.cos(theta1) - (L / 2) * (theta - theta1);
+            } else if (theta <= Math.PI + theta1) {
+                // Stage 3 & 4: exit edge follows arm tip
+                return R * Math.cos(theta) - exitOffset;
+            } else if (theta <= 2 * Math.PI - theta1) {
+                // Stage 5: constant velocity motion (moving right)
+                // Baseline at start of Stage 5
+                const baselineAtStage5Start = R * Math.cos(Math.PI + theta1) - exitOffset;
+                return baselineAtStage5Start + (L / 2) * (theta - (Math.PI + theta1));
+            } else {
+                // Stage 6: entry edge at arm tip x
+                return R * Math.cos(theta);
+            }
+        }
+
+        // Get the exit edge x position
+        function getExitEdgeX(theta, theta1) {
+            const baseline = getCamX(theta, theta1);
+            const exitOffset = -2 * R * Math.cos(theta1) + (L / 2) * (Math.PI - 2 * theta1);
+            return baseline + exitOffset;
+        }
+
+        // Colors for different arms
+        const armColors = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#06b6d4', '#ef4444'];
+
+        // Draw a single arm-cam pair
+        function drawArmCam(armIndex, baseAngle, theta1, showLabels) {
+            const theta2 = Math.PI - theta1;
+            const theta4 = Math.PI + theta1;
+            const theta5 = 2 * Math.PI - theta1;
+
+            // Normalize angle to 0-2π range
+            let currentAngle = baseAngle % (2 * Math.PI);
+            if (currentAngle < 0) currentAngle += 2 * Math.PI;
+
+            // Calculate arm endpoint
+            const Ax = centerX + R * Math.cos(baseAngle);
+            const Ay = centerY - R * Math.sin(baseAngle);
+
+            // Get cam positions
+            const camX = centerX + getCamX(currentAngle, theta1);
+            const exitEdgeX = centerX + getExitEdgeX(currentAngle, theta1);
+            const lineTop = centerY - L / 2;
+            const lineBottom = centerY + L / 2;
+
+            const armColor = armColors[armIndex % armColors.length];
+            const numPoints = 40;
+
+            // Draw the cam shape
+            ctx.strokeStyle = armColor;
+            ctx.lineWidth = 1.5;
+            ctx.fillStyle = armColor.replace(')', ', 0.1)').replace('rgb', 'rgba').replace('#', 'rgba(');
+            // Convert hex to rgba for fill
+            const r = parseInt(armColor.slice(1, 3), 16);
+            const g = parseInt(armColor.slice(3, 5), 16);
+            const b = parseInt(armColor.slice(5, 7), 16);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.1)`;
+
+            ctx.beginPath();
+            ctx.moveTo(camX, lineTop);
+
+            // Top curved profile
+            for (let i = 0; i <= numPoints; i++) {
+                const theta = theta1 + (i / numPoints) * (Math.PI - 2 * theta1);
+                const y = R * Math.sin(theta);
+                const profileOffset = R * Math.cos(theta) - R * Math.cos(theta1) + (L / 2) * (theta - theta1);
+                ctx.lineTo(camX + profileOffset, centerY - y);
+            }
+
+            ctx.lineTo(exitEdgeX, lineTop);
+            ctx.lineTo(exitEdgeX, lineBottom);
+
+            // Bottom curved profile
+            for (let i = 0; i <= numPoints; i++) {
+                const theta = (Math.PI + theta1) + (i / numPoints) * (Math.PI - 2 * theta1);
+                const y = R * Math.sin(theta);
+                const profileOffset = R * Math.cos(theta) - R * Math.cos(Math.PI + theta1) - (L / 2) * (theta - (Math.PI + theta1));
+                ctx.lineTo(exitEdgeX + profileOffset, centerY - y);
+            }
+
+            ctx.lineTo(camX, lineBottom);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw edges
+            ctx.strokeStyle = armColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(camX, lineTop);
+            ctx.lineTo(camX, lineBottom);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(exitEdgeX, lineTop);
+            ctx.lineTo(exitEdgeX, lineBottom);
+            ctx.stroke();
+
+            // Draw the arm
+            ctx.strokeStyle = armColor;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(Ax, Ay);
+            ctx.stroke();
+
+            // Draw point A
+            ctx.fillStyle = armColor;
+            ctx.beginPath();
+            ctx.arc(Ax, Ay, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Contact point
+            let contactX, contactY;
+            if (currentAngle <= theta1) {
+                contactX = camX;
+                contactY = Ay;
+            } else if (currentAngle <= theta2) {
+                const profileOffset = R * Math.cos(currentAngle) - R * Math.cos(theta1) + (L / 2) * (currentAngle - theta1);
+                contactX = camX + profileOffset;
+                contactY = Ay;
+            } else if (currentAngle <= theta4) {
+                contactX = exitEdgeX;
+                contactY = Ay;
+            } else if (currentAngle <= theta5) {
+                const profileOffset = R * Math.cos(currentAngle) - R * Math.cos(Math.PI + theta1) - (L / 2) * (currentAngle - (Math.PI + theta1));
+                contactX = exitEdgeX + profileOffset;
+                contactY = Ay;
+            } else {
+                contactX = camX;
+                contactY = Ay;
+            }
+
+            // Draw contact point
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(contactX, contactY, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = armColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw title on canvas (centered)
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = '#1f2937';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Mechanism 56 - Cam with Constant Velocity Profile', canvas.width / 2, 15);
+
+            // Draw watermark
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(-30 * Math.PI / 180);
+            ctx.font = '60px sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.globalAlpha = 0.3;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BrianMechanisms', 0, 0);
+            ctx.restore();
+
+            // Draw coordinate axes
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+
+            // Draw origin O
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('O', centerX + 10, centerY - 10);
+
+            // Calculate stage angles
+            const theta1 = getTheta1();
+            const theta2 = Math.PI - theta1;
+            const theta3 = Math.PI;
+            const theta4 = Math.PI + theta1;
+            const theta5 = 2 * Math.PI - theta1;
+            const theta6 = 2 * Math.PI;
+
+            // Base angle from progress
+            const baseAngle = (progress / 100) * theta6;
+
+            // Draw the arm circle with colored stage sections
+            // Stage 1+6 (entry edge): from 2π-θ₁ to θ₁ (wraps around 0)
+            // Stage 2 (top curve): from θ₁ to π-θ₁
+            // Stage 3+4 (exit edge): from π-θ₁ to π+θ₁
+            // Stage 5 (bottom curve): from π+θ₁ to 2π-θ₁
+
+            ctx.lineWidth = 4;
+
+            // Stage 1+6 (entry edge) - Blue - two arcs: 0 to θ₁ and 2π-θ₁ to 2π
+            ctx.strokeStyle = '#3b82f6';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, R, -theta1, theta1);  // Note: canvas angles are clockwise from right
+            ctx.stroke();
+
+            // Stage 2 (top curve - constant vx) - Green
+            ctx.strokeStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, R, -theta2, -theta1);  // from θ₁ to π-θ₁ (negative because canvas y is flipped)
+            ctx.stroke();
+
+            // Stage 3+4 (exit edge) - Purple
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, R, -theta4, -theta2);  // from π-θ₁ to π+θ₁
+            ctx.stroke();
+
+            // Stage 5 (bottom curve - constant vx) - Orange/Amber
+            ctx.strokeStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, R, -theta5, -theta4);  // from π+θ₁ to 2π-θ₁
+            ctx.stroke();
+
+            // Reset line width
+            ctx.lineWidth = 1;
+
+            // Draw all arm-cam pairs
+            const phaseOffset = (2 * Math.PI) / numArms;
+            for (let i = 0; i < numArms; i++) {
+                const armAngle = baseAngle + i * phaseOffset;
+                drawArmCam(i, armAngle, theta1, i === 0);
+            }
+
+            // For the first arm, determine and show stage
+            let currentAngle = baseAngle % (2 * Math.PI);
+            if (currentAngle < 0) currentAngle += 2 * Math.PI;
+
+            // Draw stage indicator (combined stages shown)
+            let stageName = '';
+            let stageColor = '#10b981';
+            if (currentAngle <= theta1 || currentAngle > theta5) {
+                stageName = 'Entry Edge (Stage 1+6)';
+                stageColor = '#3b82f6';
+            } else if (currentAngle <= theta2) {
+                stageName = 'Top Curve - Constant vx ← (Stage 2)';
+                stageColor = '#10b981';
+            } else if (currentAngle <= theta4) {
+                stageName = 'Exit Edge (Stage 3+4)';
+                stageColor = '#8b5cf6';
+            } else {
+                stageName = 'Bottom Curve - Constant vx → (Stage 5)';
+                stageColor = '#f59e0b';
+            }
+
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillStyle = stageColor;
+            ctx.textAlign = 'center';
+            ctx.fillText(stageName, canvas.width / 2, canvas.height - 20);
+
+            // Update info displays
+            const angleDegrees = (currentAngle * 180 / Math.PI).toFixed(1);
+            const theta1Degrees = (theta1 * 180 / Math.PI).toFixed(1);
+            const theta2Degrees = (theta2 * 180 / Math.PI).toFixed(1);
+            const theta4Degrees = (theta4 * 180 / Math.PI).toFixed(1);
+            const theta5Degrees = (theta5 * 180 / Math.PI).toFixed(1);
+            document.getElementById('currentAngle').textContent = angleDegrees;
+            document.getElementById('theta1Angle').textContent = theta1Degrees;
+            document.getElementById('theta2Angle').textContent = theta2Degrees;
+            document.getElementById('theta4Angle').textContent = theta4Degrees;
+            document.getElementById('theta5Angle').textContent = theta5Degrees;
+        }
+
+        // Draw velocity profile (vx and vy from 0 to 2π)
+        function drawVelocityProfile() {
+            velCtx.clearRect(0, 0, velCanvas.width, velCanvas.height);
+
+            const padding = 60;
+            const graphWidth = velCanvas.width - 2 * padding;
+            const graphHeight = velCanvas.height - 2 * padding;
+            const centerY = velCanvas.height / 2;
+
+            // Calculate max angle for this graph
+            const theta1 = getTheta1();
+            const maxTheta = 2 * Math.PI;
+
+            // Draw title
+            velCtx.font = 'bold 18px sans-serif';
+            velCtx.fillStyle = '#1f2937';
+            velCtx.textAlign = 'center';
+            velCtx.fillText('Velocity Profile: vx and vy vs θ (0 to 2π)', velCanvas.width / 2, 25);
+
+            // Draw axes
+            velCtx.strokeStyle = '#374151';
+            velCtx.lineWidth = 2;
+            velCtx.beginPath();
+            // X-axis (θ)
+            velCtx.moveTo(padding, centerY);
+            velCtx.lineTo(velCanvas.width - padding, centerY);
+            // Y-axis (velocity)
+            velCtx.moveTo(padding, padding);
+            velCtx.lineTo(padding, velCanvas.height - padding);
+            velCtx.stroke();
+
+            // Axis labels
+            velCtx.font = '14px sans-serif';
+            velCtx.fillStyle = '#374151';
+            velCtx.textAlign = 'center';
+            velCtx.fillText('θ (radians)', velCanvas.width / 2, velCanvas.height - 15);
+            velCtx.save();
+            velCtx.translate(20, centerY);
+            velCtx.rotate(-Math.PI / 2);
+            velCtx.fillText('Velocity', 0, 0);
+            velCtx.restore();
+
+            // θ tick marks and labels
+            velCtx.font = '10px sans-serif';
+            const thetaLabels = ['0', 'θ₁', 'π-θ₁', 'π', 'π+θ₁', '2π-θ₁', '2π'];
+            const thetaValues = [0, theta1, Math.PI - theta1, Math.PI, Math.PI + theta1, 2*Math.PI - theta1, 2*Math.PI];
+            for (let i = 0; i < thetaValues.length; i++) {
+                const x = padding + (thetaValues[i] / maxTheta) * graphWidth;
+                velCtx.beginPath();
+                velCtx.moveTo(x, centerY - 5);
+                velCtx.lineTo(x, centerY + 5);
+                velCtx.stroke();
+                velCtx.fillText(thetaLabels[i], x, centerY + 20);
+            }
+
+            // Velocity scale (assuming ω = 1, max velocity = R)
+            const maxV = R;
+            const scale = (graphHeight / 2) / maxV;
+
+            // Y-axis labels
+            velCtx.textAlign = 'right';
+            velCtx.fillText(R.toString(), padding - 10, padding + 5);
+            velCtx.fillText('0', padding - 10, centerY + 5);
+            velCtx.fillText((-R).toString(), padding - 10, velCanvas.height - padding + 5);
+
+            // Calculate stage angles for velocity profile
+            const theta2 = Math.PI - theta1;  // End of Stage 2
+            const theta3 = Math.PI;  // End of Stage 3
+            const theta4 = Math.PI + theta1;  // End of Stage 4
+            const theta5 = 2 * Math.PI - theta1;  // End of Stage 5
+            const vxAtTheta1 = -R * Math.sin(theta1);
+
+            // Draw vertical lines for stage boundaries
+            velCtx.strokeStyle = '#9ca3af';
+            velCtx.lineWidth = 1;
+            velCtx.setLineDash([5, 5]);
+
+            // Stage boundary lines
+            const x1 = padding + (theta1 / maxTheta) * graphWidth;
+            const x2 = padding + (theta2 / maxTheta) * graphWidth;
+            const x3 = padding + (theta3 / maxTheta) * graphWidth;
+            const x4 = padding + (theta4 / maxTheta) * graphWidth;
+            const x5 = padding + (theta5 / maxTheta) * graphWidth;
+
+            [x1, x2, x3, x4, x5].forEach(x => {
+                velCtx.beginPath();
+                velCtx.moveTo(x, padding);
+                velCtx.lineTo(x, velCanvas.height - padding);
+                velCtx.stroke();
+            });
+            velCtx.setLineDash([]);
+
+            // Label stages
+            velCtx.font = '10px sans-serif';
+            velCtx.fillStyle = '#6b7280';
+            velCtx.textAlign = 'center';
+            velCtx.fillText('S1', (padding + x1) / 2, padding + 12);
+            velCtx.fillText('S2', (x1 + x2) / 2, padding + 12);
+            velCtx.fillText('S3', (x2 + x3) / 2, padding + 12);
+            velCtx.fillText('S4', (x3 + x4) / 2, padding + 12);
+            velCtx.fillText('S5', (x4 + x5) / 2, padding + 12);
+            velCtx.fillText('S6', (x5 + velCanvas.width - padding) / 2, padding + 12);
+
+            // Draw vx curve (orange)
+            velCtx.strokeStyle = '#f97316';
+            velCtx.lineWidth = 3;
+            velCtx.beginPath();
+            for (let i = 0; i <= 200; i++) {
+                const theta = (i / 200) * maxTheta;
+                const vx = -R * Math.sin(theta);
+                const x = padding + (theta / maxTheta) * graphWidth;
+                const y = centerY - vx * scale;
+                if (i === 0) velCtx.moveTo(x, y);
+                else velCtx.lineTo(x, y);
+            }
+            velCtx.stroke();
+
+            // Draw vy curve (purple)
+            velCtx.strokeStyle = '#8b5cf6';
+            velCtx.lineWidth = 3;
+            velCtx.beginPath();
+            for (let i = 0; i <= 200; i++) {
+                const theta = (i / 200) * maxTheta;
+                const vy = R * Math.cos(theta);
+                const x = padding + (theta / maxTheta) * graphWidth;
+                const y = centerY - vy * scale;
+                if (i === 0) velCtx.moveTo(x, y);
+                else velCtx.lineTo(x, y);
+            }
+            velCtx.stroke();
+
+            // Draw horizontal lines for constant velocity targets
+            velCtx.strokeStyle = '#10b981';
+            velCtx.lineWidth = 2;
+            velCtx.setLineDash([8, 4]);
+
+            // Stage 2 constant velocity (negative, moving left)
+            const yConstant1 = centerY - vxAtTheta1 * scale;
+            velCtx.beginPath();
+            velCtx.moveTo(x1, yConstant1);
+            velCtx.lineTo(x2, yConstant1);
+            velCtx.stroke();
+
+            // Stage 5 constant velocity (positive, moving right)
+            const vxAtStage5 = R * Math.sin(theta1);  // = L/2
+            const yConstant2 = centerY - vxAtStage5 * scale;
+            velCtx.beginPath();
+            velCtx.moveTo(x4, yConstant2);
+            velCtx.lineTo(x5, yConstant2);
+            velCtx.stroke();
+            velCtx.setLineDash([]);
+
+            // Legend
+            velCtx.font = '12px sans-serif';
+            const legendX = velCanvas.width - padding - 100;
+            const legendY = padding + 40;
+
+            velCtx.fillStyle = '#f97316';
+            velCtx.fillRect(legendX, legendY, 20, 3);
+            velCtx.fillStyle = '#374151';
+            velCtx.textAlign = 'left';
+            velCtx.fillText('vx = -R·sin(θ)', legendX + 25, legendY + 5);
+
+            velCtx.fillStyle = '#8b5cf6';
+            velCtx.fillRect(legendX, legendY + 20, 20, 3);
+            velCtx.fillStyle = '#374151';
+            velCtx.fillText('vy = R·cos(θ)', legendX + 25, legendY + 25);
+
+            velCtx.fillStyle = '#10b981';
+            velCtx.fillRect(legendX, legendY + 40, 20, 3);
+            velCtx.fillStyle = '#374151';
+            velCtx.fillText('Constant vx target', legendX + 25, legendY + 45);
+
+            // Update info displays
+            document.getElementById('stage1Angle').textContent = (theta1 * 180 / Math.PI).toFixed(1);
+            document.getElementById('vxAtTheta1').textContent = vxAtTheta1.toFixed(1);
+            document.getElementById('vxAtStage5').textContent = (R * Math.sin(theta1)).toFixed(1);
+        }
+
+        // Event listeners for parameters
+        document.getElementById('radiusSlider').addEventListener('input', (e) => {
+            R = parseInt(e.target.value);
+            document.getElementById('radiusValue').textContent = R;
+            L = getL();  // Recalculate L when R changes
+            document.getElementById('lineLengthCalc').textContent = L.toFixed(1);
+            draw();
+        });
+
+        document.getElementById('accelAngleSlider').addEventListener('input', (e) => {
+            accelerationAngleDeg = parseInt(e.target.value);
+            document.getElementById('accelAngleValue').textContent = accelerationAngleDeg;
+            L = getL();  // Recalculate L
+            document.getElementById('lineLengthCalc').textContent = L.toFixed(1);
+            draw();
+        });
+
+        document.getElementById('numArmsSlider').addEventListener('input', (e) => {
+            numArms = parseInt(e.target.value);
+            document.getElementById('numArmsValue').textContent = numArms;
+            draw();
+        });
+
+        // Animation controls
+        const progressSlider = document.getElementById('progressSlider');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const dirForward = document.getElementById('dirForward');
+        const dirBackward = document.getElementById('dirBackward');
+        const dirPingPong = document.getElementById('dirPingPong');
+
+        progressSlider.addEventListener('input', (e) => {
+            progress = parseFloat(e.target.value);
+            document.getElementById('progressValue').textContent = progress.toFixed(1);
+            draw();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            animationSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playPauseBtn.textContent = '⏸ Pause';
+                playPauseBtn.className = 'px-5 py-2 bg-red-500 text-white rounded hover:bg-red-600 font-medium min-w-24';
+                animate();
+            } else {
+                playPauseBtn.textContent = '▶ Play';
+                playPauseBtn.className = 'px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            }
+        });
+
+        function updateDirectionButtons(activeBtn) {
+            [dirForward, dirBackward, dirPingPong].forEach(btn => {
+                btn.className = btn === activeBtn
+                    ? 'px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600'
+                    : 'px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400';
+            });
+        }
+
+        dirForward.addEventListener('click', () => {
+            animationDirection = 'forward';
+            updateDirectionButtons(dirForward);
+        });
+
+        dirBackward.addEventListener('click', () => {
+            animationDirection = 'backward';
+            updateDirectionButtons(dirBackward);
+        });
+
+        dirPingPong.addEventListener('click', () => {
+            animationDirection = 'pingpong';
+            updateDirectionButtons(dirPingPong);
+        });
+
+        function animate() {
+            if (!isPlaying) return;
+
+            if (animationDirection === 'forward') {
+                progress += animationSpeed;
+                if (progress >= 100) progress = 0;
+            } else if (animationDirection === 'backward') {
+                progress -= animationSpeed;
+                if (progress < 0) progress = 100 + progress;
+            } else if (animationDirection === 'pingpong') {
+                if (pingPongReverse) {
+                    progress -= animationSpeed;
+                    if (progress <= 0) { progress = 0; pingPongReverse = false; }
+                } else {
+                    progress += animationSpeed;
+                    if (progress >= 100) { progress = 100; pingPongReverse = true; }
+                }
+            }
+
+            progressSlider.value = progress;
+            document.getElementById('progressValue').textContent = progress.toFixed(1);
+            draw();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Export functionality
+        const exportFormat = document.getElementById('exportFormat');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportStatus = document.getElementById('exportStatus');
+
+        function exportPNG() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement('a');
+            link.download = 'mechanism56-cam-constant-velocity.png';
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportSVG() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const dataURL = tempCanvas.toDataURL('image/png');
+            const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <image width="${canvas.width}" height="${canvas.height}" xlink:href="${dataURL}"/>
+</svg>`;
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'mechanism56-cam-constant-velocity.svg';
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        function exportGIF() {
+            exportStatus.textContent = 'Generating GIF...';
+            exportStatus.classList.remove('hidden');
+            const totalFrames = 100;
+            let currentFrame = 0;
+            const originalProgress = progress;
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height,
+                workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+            });
+
+            function captureNextFrame() {
+                if (currentFrame >= totalFrames) {
+                    exportStatus.textContent = 'Encoding GIF...';
+                    gif.render();
+                    return;
+                }
+                progress = currentFrame;
+                draw();
+                requestAnimationFrame(() => {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.fillStyle = '#ffffff';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(canvas, 0, 0);
+                    gif.addFrame(tempCanvas, { copy: true, delay: 50 });
+                    currentFrame++;
+                    exportStatus.textContent = `Capturing frame ${currentFrame}/${totalFrames}...`;
+                    setTimeout(captureNextFrame, 10);
+                });
+            }
+            captureNextFrame();
+
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'mechanism56-cam-constant-velocity.gif';
+                link.href = url;
+                link.click();
+                setTimeout(() => { URL.revokeObjectURL(url); exportStatus.classList.add('hidden'); }, 1000);
+                progress = originalProgress;
+                progressSlider.value = progress;
+                draw();
+            });
+
+            gif.on('progress', function(p) { exportStatus.textContent = `Encoding GIF: ${Math.round(p * 100)}%`; });
+            gif.on('error', function(error) {
+                console.error('GIF encoding error:', error);
+                exportStatus.textContent = 'Error encoding GIF';
+                progress = originalProgress;
+                progressSlider.value = progress;
+                draw();
+            });
+        }
+
+        exportBtn.addEventListener('click', () => {
+            const format = exportFormat.value;
+            if (format === 'png') exportPNG();
+            else if (format === 'svg') exportSVG();
+            else if (format === 'gif') exportGIF();
+        });
+
+        // Initialize calculated values
+        document.getElementById('lineLengthCalc').textContent = L.toFixed(1);
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
