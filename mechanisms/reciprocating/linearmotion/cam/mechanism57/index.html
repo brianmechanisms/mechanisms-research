@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 57 - Quick Return</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-2 text-gray-800">Mechanism 57 - Quick Return</h1>
+        <p class="text-gray-600 mb-4">4-Phase Profile: Constant → Transition → Constant → Transition</p>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-300 mb-6">
+            <button id="tabMechanism" class="px-6 py-3 font-medium text-sm border-b-2 border-blue-500 text-blue-600 bg-white">
+                Mechanism
+            </button>
+            <button id="tabProfiles" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Profiles
+            </button>
+        </div>
+
+        <!-- Mechanism Tab Content -->
+        <div id="mechanismContent">
+            <!-- Parameters (shared) -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Parameters</h2>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="font-medium text-gray-700">Angular Durations</h3>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Forward Stroke (P1)</span>
+                                <span class="text-green-600 font-bold" id="fwdAngleValue">190</span>°
+                            </label>
+                            <input type="range" id="fwdAngleSlider" min="180" max="300" value="190" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Transition Angle (θ_trans)</span>
+                                <span class="text-yellow-600 font-bold" id="transValue">20</span>°
+                            </label>
+                            <input type="range" id="transSlider" min="10" max="90" value="20" step="1" class="w-full">
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="font-medium text-gray-700">Mechanism</h3>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Arm Length (R)</span>
+                                <span class="text-blue-600 font-bold" id="armLengthValue">100</span>
+                            </label>
+                            <input type="range" id="armLengthSlider" min="50" max="150" value="100" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Number of Arms (n)</span>
+                                <span class="text-purple-600 font-bold" id="numArmsValue">2</span>
+                            </label>
+                            <input type="range" id="numArmsSlider" min="1" max="6" value="2" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Offset Arm Angle (δ)</span>
+                                <span class="text-orange-600 font-bold" id="offsetAngleValue">15</span>°
+                            </label>
+                            <input type="range" id="offsetAngleSlider" min="0" max="360" value="15" step="1" class="w-full">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span>P1 (fwd const):</span>
+                                <span class="text-green-600 font-bold" id="p1AngleDisplay">--</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>P3 (ret const):</span>
+                                <span class="text-red-600 font-bold" id="p3AngleDisplay">--</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Return velocity:</span>
+                                <span class="text-red-600 font-bold" id="vReturnDisplay">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase breakdown -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-2">4-Phase Structure</h3>
+                    <div class="grid grid-cols-4 gap-2 text-sm">
+                        <div class="p-2 bg-green-100 rounded text-center">
+                            <div class="font-bold text-green-700">P1</div>
+                            <div class="text-xs">Const +V_f</div>
+                            <div class="text-green-600 font-bold" id="p1Angle">--</div>
+                        </div>
+                        <div class="p-2 bg-yellow-100 rounded text-center">
+                            <div class="font-bold text-yellow-700">P2</div>
+                            <div class="text-xs">+V_f → -V_r</div>
+                            <div class="text-yellow-600 font-bold" id="p2Angle">--</div>
+                        </div>
+                        <div class="p-2 bg-red-100 rounded text-center">
+                            <div class="font-bold text-red-700">P3</div>
+                            <div class="text-xs">Const -V_r</div>
+                            <div class="text-red-600 font-bold" id="p3Angle">--</div>
+                        </div>
+                        <div class="p-2 bg-purple-100 rounded text-center">
+                            <div class="font-bold text-purple-700">P4</div>
+                            <div class="text-xs">-V_r → +V_f</div>
+                            <div class="text-purple-600 font-bold" id="p4Angle">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mechanism Visualization -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Mechanism - Full Cycle</h2>
+                <p class="text-sm text-gray-500 mb-4">P1: forward (+V). P2: trans. P3: return (-V). P4: trans back.</p>
+                <canvas id="mechanismCanvas" width="600" height="500" class="border border-gray-300 bg-gray-900 mx-auto block"></canvas>
+
+                <!-- Animation controls -->
+                <div class="mt-4 flex items-center justify-center gap-4">
+                    <button id="playBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Play
+                    </button>
+                    <button id="pauseBtn" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        Pause
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm">Progress:</label>
+                        <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5" class="w-48">
+                        <span id="progressValue" class="text-sm font-mono w-12">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- X Position Profile during P1+P2+P3 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">X-Position Comparison (P1 + P2 + P3)</h2>
+                <p class="text-sm text-gray-500 mb-4">Arm tip traces sinusoidal path. Cam: linear P1, quintic transition P2, linear reverse P3.</p>
+                <canvas id="xPositionCanvas" width="800" height="200" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Pressure Angle Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Pressure Angle Profile</h2>
+                <p class="text-sm text-gray-500 mb-4">Angle between cam surface normal and direction of motion. Lower = more efficient force transmission.</p>
+                <canvas id="pressureAngleCanvas" width="800" height="200" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+        </div>
+
+        <!-- Profiles Tab Content -->
+        <div id="profilesContent" class="hidden">
+            <!-- Velocity Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-2">Velocity Profile v(θ)</h2>
+                <canvas id="velocityCanvas" width="800" height="220" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Acceleration Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-2">Acceleration Profile a(θ) = dv/dθ</h2>
+                <canvas id="accelCanvas" width="800" height="220" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Jerk Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-2">Jerk Profile j(θ) = d²v/dθ²</h2>
+                <canvas id="jerkCanvas" width="800" height="220" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Analytical Formulas -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Analytical Formulas</h2>
+                <div id="formulaDisplay" class="text-sm font-mono bg-gray-50 p-4 rounded overflow-x-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabMechanism = document.getElementById('tabMechanism');
+        const tabProfiles = document.getElementById('tabProfiles');
+        const mechanismContent = document.getElementById('mechanismContent');
+        const profilesContent = document.getElementById('profilesContent');
+
+        tabMechanism.addEventListener('click', () => {
+            tabMechanism.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+            tabMechanism.classList.remove('border-transparent', 'text-gray-500');
+            tabProfiles.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabProfiles.classList.add('border-transparent', 'text-gray-500');
+            mechanismContent.classList.remove('hidden');
+            profilesContent.classList.add('hidden');
+        });
+
+        tabProfiles.addEventListener('click', () => {
+            tabProfiles.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+            tabProfiles.classList.remove('border-transparent', 'text-gray-500');
+            tabMechanism.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabMechanism.classList.add('border-transparent', 'text-gray-500');
+            profilesContent.classList.remove('hidden');
+            mechanismContent.classList.add('hidden');
+            updateProfiles();
+        });
+
+        // Canvas contexts
+        const mechCanvas = document.getElementById('mechanismCanvas');
+        const mechCtx = mechCanvas.getContext('2d');
+        const xPosCanvas = document.getElementById('xPositionCanvas');
+        const xPosCtx = xPosCanvas.getContext('2d');
+        const pressureCanvas = document.getElementById('pressureAngleCanvas');
+        const pressureCtx = pressureCanvas.getContext('2d');
+        const velCanvas = document.getElementById('velocityCanvas');
+        const velCtx = velCanvas.getContext('2d');
+        const accelCanvas = document.getElementById('accelCanvas');
+        const accelCtx = accelCanvas.getContext('2d');
+        const jerkCanvas = document.getElementById('jerkCanvas');
+        const jerkCtx = jerkCanvas.getContext('2d');
+
+        // Parameters
+        let theta_fwd_deg = 190;
+        let theta_trans_deg = 20;
+        let V_f = 1.0;
+        let R = 100;  // Arm length
+        let numArms = 2;  // Number of arms
+        let offsetAngle_deg = 15;  // Offset angle applied to main arm
+        let transitionType = 'quintic';
+
+        // Animation
+        let animationProgress = 0;  // 0 to 1
+        let isPlaying = false;
+        let animationId = null;
+
+        const phaseColors = ['#10b981', '#eab308', '#ef4444', '#8b5cf6'];
+
+        function degToRad(deg) { return deg * Math.PI / 180; }
+        function radToDeg(rad) { return rad * 180 / Math.PI; }
+
+        // Normalize angle to [0, 2π)
+        function normalizeAngle(angle) {
+            while (angle < 0) angle += 2 * Math.PI;
+            while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
+            return angle;
+        }
+
+        // Calculate 4-phase structure
+        function calculatePhases() {
+            const theta_fwd = degToRad(theta_fwd_deg);
+            const theta_trans = degToRad(theta_trans_deg);
+
+            // P1 = forward stroke (constant +V)
+            // P2 = transition (+V to -V)
+            // P3 = return stroke (constant -V)
+            // P4 = transition (-V to +V)
+            const p1 = theta_fwd;
+            const p2 = theta_trans;
+            const p4 = theta_trans;
+            const p3 = 2 * Math.PI - p1 - p2 - p4;  // Whatever is left
+
+            // V_r calculated so net displacement = 0
+            // With quintic transition, ∫h(s)ds from 0 to 1 = 0.5
+            // P1 contributes: +V_f × p1
+            // P2 contributes: +0.5 × p2 × (V_f - V_r)  [average velocity × duration]
+            // P3 contributes: -V_r × p3
+            // P4 contributes: +0.5 × p4 × (V_f - V_r)
+            // Since p2 = p4:
+            // V_f × (p1 + p2) = V_r × (p2 + p3)
+            const V_r = V_f * (p1 + p2) / (p2 + p3);
+
+            const t1 = p1;
+            const t2 = t1 + p2;
+            const t3 = t2 + p3;
+            const t4 = 2 * Math.PI;
+
+            // P1 is centered at 1.5π (270°, bottom)
+            // P1 goes from 1.5π - p1/2 to 1.5π + p1/2
+            const p1_center = 1.5 * Math.PI;  // 270°
+            const p1_start_cam = normalizeAngle(p1_center - p1 / 2);
+            const p1_end_cam = normalizeAngle(p1_center + p1 / 2);
+
+            // P2 starts where P1 ends, spans p2 radians
+            const p2_start_cam = p1_end_cam;
+            const p2_end_cam = normalizeAngle(p2_start_cam + p2);
+
+            // P3 starts where P2 ends
+            const p3_start_cam = p2_end_cam;
+            const p3_end_cam = normalizeAngle(p3_start_cam + p3);
+
+            // P4 starts where P3 ends, ends where P1 starts
+            const p4_start_cam = p3_end_cam;
+            const p4_end_cam = p1_start_cam;
+
+            return {
+                phases: [p1, p2, p3, p4],
+                cumulative: [t1, t2, t3, t4],
+                V_r: V_r,
+                V_f: V_f,
+                theta_fwd: theta_fwd,
+                theta_ret: p3,  // Return stroke = P3
+                theta_trans: theta_trans,
+                p1_center: p1_center,
+                p1_start_cam: p1_start_cam,
+                p1_end_cam: p1_end_cam,
+                p2_start_cam: p2_start_cam,
+                p2_end_cam: p2_end_cam,
+                p3_start_cam: p3_start_cam,
+                p3_end_cam: p3_end_cam,
+                p4_start_cam: p4_start_cam,
+                p4_end_cam: p4_end_cam
+            };
+        }
+
+        // Transition functions
+        function quinticTransition(s, v0, v1, dTheta) {
+            const dv = v1 - v0;
+            const s2 = s * s;
+            const s3 = s2 * s;
+            const s4 = s3 * s;
+            const s5 = s4 * s;
+            const h = 10*s3 - 15*s4 + 6*s5;
+            const dh_ds = 30*s2 - 60*s3 + 30*s4;
+            const d2h_ds2 = 60*s - 180*s2 + 120*s3;
+            return {
+                v: v0 + dv * h,
+                a: dv * dh_ds / dTheta,
+                j: dv * d2h_ds2 / (dTheta * dTheta)
+            };
+        }
+
+        function getProfile(theta, data) {
+            const { phases, cumulative, V_r } = data;
+            const [p1, p2, p3, p4] = phases;
+            const [t1, t2, t3, t4] = cumulative;
+
+            if (theta <= t1) {
+                return { v: V_f, a: 0, j: 0, phase: 0 };
+            } else if (theta <= t2) {
+                const s = (theta - t1) / p2;
+                const result = quinticTransition(s, V_f, -V_r, p2);
+                result.phase = 1;
+                return result;
+            } else if (theta <= t3) {
+                return { v: -V_r, a: 0, j: 0, phase: 2 };
+            } else {
+                const s = (theta - t3) / p4;
+                const result = quinticTransition(s, -V_r, V_f, p4);
+                result.phase = 3;
+                return result;
+            }
+        }
+
+        // Convert velocity profile theta to cam angle
+        // P1 in velocity profile is [0, t1]
+        // P1 on cam is centered at 1.5π, spans [p1_start_cam, p1_end_cam]
+        function velocityThetaToCamAngle(velTheta, data) {
+            const { phases, cumulative, p1_start_cam } = data;
+            const [p1, p2, p3, p4] = phases;
+            const [t1, t2, t3, t4] = cumulative;
+
+            // Map velocity theta [0, 2π] to cam angle starting from p1_start_cam
+            // velTheta = 0 corresponds to cam angle = p1_start_cam
+            const camAngle = normalizeAngle(p1_start_cam + velTheta);
+            return camAngle;
+        }
+
+        // Convert angle to canvas coordinates (flip Y for standard math convention)
+        // Standard: 0° right, 90° up, 180° left, 270° down (counter-clockwise)
+        function angleToCanvas(cx, cy, radius, angle) {
+            return {
+                x: cx + radius * Math.cos(angle),
+                y: cy - radius * Math.sin(angle)  // Flip Y for standard convention
+            };
+        }
+
+        // Cam profile for constant velocity during P1
+        // As arm rotates through P1, the cam profile ensures follower x-position changes linearly
+        // Equation: x(θ) = R·cos(θ_start) + V_normalized · (θ - θ_start)
+        //           y(θ) = R·sin(θ)
+        // where V_normalized = L / p1_duration, and L is total x-travel during P1
+        function getCamProfilePoint(theta, theta_start, p1_duration) {
+            // Calculate angle offset (handling wrap-around)
+            let dTheta = theta - theta_start;
+            if (dTheta < 0) dTheta += 2 * Math.PI;
+            if (dTheta > p1_duration) dTheta = p1_duration;
+
+            // For constant velocity, we want linear x-motion
+            // Total x-travel is arbitrary - we'll normalize it
+            // Use V_normalized = R (gives reasonable visual scale)
+            const V_normalized = R * 0.8;  // Scale factor for visual clarity
+
+            const x = R * Math.cos(theta_start) + V_normalized * dTheta;
+            const y = R * Math.sin(theta);
+
+            return { x, y };
+        }
+
+        // Alternative: Get cam profile in polar coordinates (r as function of theta)
+        // For constant x-velocity: x = x_start + k·(θ - θ_start), y = R·sin(θ)
+        // radius r = sqrt(x² + y²)
+        function getCamRadius(theta, theta_start, p1_duration) {
+            const point = getCamProfilePoint(theta, theta_start, p1_duration);
+            return Math.sqrt(point.x * point.x + point.y * point.y);
+        }
+
+        // Draw arc with flipped Y (standard math convention)
+        function drawArcStandard(ctx, cx, cy, radius, startAngle, endAngle) {
+            // Canvas arc goes clockwise with increasing angle when Y is down
+            // We want counter-clockwise with Y up, so we negate angles and swap start/end
+            ctx.arc(cx, cy, radius, -startAngle, -endAngle, true);
+        }
+
+        // Helper function to calculate cam offset for a given animation angle
+        function calculateCamOffset(animAngle, phases, V_r, V_norm) {
+            const [p1, p2, p3, p4] = phases;
+            const dv_p2 = -V_r - V_f;
+            const H_full = 0.5;
+            const p2_disp = V_f * p2 + dv_p2 * p2 * H_full;
+            const p3_disp = -V_r * p3;
+            const dv_p4 = V_f - (-V_r);
+
+            let camXOffset, currentPhase;
+
+            if (animAngle <= p1) {
+                currentPhase = 1;
+                camXOffset = V_norm * animAngle;
+            } else if (animAngle <= p1 + p2) {
+                currentPhase = 2;
+                const s = (animAngle - p1) / p2;
+                const H_integral = 2.5*s*s*s*s - 3*s*s*s*s*s + s*s*s*s*s*s;
+                const p2_x = V_f * p2 * s + dv_p2 * p2 * H_integral;
+                camXOffset = V_norm * p1 + (V_norm / V_f) * p2_x;
+            } else if (animAngle <= p1 + p2 + p3) {
+                currentPhase = 3;
+                const p2EndOffset = V_norm * p1 + (V_norm / V_f) * p2_disp;
+                const p3Progress = animAngle - p1 - p2;
+                camXOffset = p2EndOffset + (V_norm / V_f) * (-V_r) * p3Progress;
+            } else {
+                currentPhase = 4;
+                const p2EndOffset = V_norm * p1 + (V_norm / V_f) * p2_disp;
+                const p3EndOffset = p2EndOffset + (V_norm / V_f) * p3_disp;
+                const s = (animAngle - p1 - p2 - p3) / p4;
+                const H_integral = 2.5*s*s*s*s - 3*s*s*s*s*s + s*s*s*s*s*s;
+                const p4_x = -V_r * p4 * s + dv_p4 * p4 * H_integral;
+                camXOffset = p3EndOffset + (V_norm / V_f) * p4_x;
+            }
+
+            return { camXOffset, currentPhase };
+        }
+
+        function drawMechanism() {
+            const data = calculatePhases();
+            const { phases, p1_start_cam, p1_end_cam, p2_start_cam, p2_end_cam, p3_start_cam, p3_end_cam, p4_start_cam, p4_end_cam, V_r } = data;
+            const [p1, p2, p3, p4] = phases;
+            const totalAnimationAngle = 2 * Math.PI;
+
+            const ctx = mechCtx;
+            const canvas = mechCanvas;
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // Clear
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw cam circle
+            const camRadius = R;
+            ctx.strokeStyle = '#4b5563';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, camRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            const V_norm = R * 0.5;
+            const armSpacing = (2 * Math.PI) / numArms;
+
+            // Calculate displacement values for profile drawing
+            const dv_p2 = -V_r - V_f;
+            const H_full = 0.5;
+            const p2_disp = V_f * p2 + dv_p2 * p2 * H_full;
+            const p3_disp = -V_r * p3;
+            const dv_p4 = V_f - (-V_r);
+
+            // Calculate reference cam profile ONCE (with offset applied)
+            // All arms use the SAME profile shape, just translated differently
+            const numPoints = 360;  // High resolution for accurate phase boundaries
+            const referenceProfile = [];
+            const offsetAngle = degToRad(offsetAngle_deg);
+
+            for (let i = 0; i <= numPoints; i++) {
+                const localAngle = (i / numPoints) * totalAnimationAngle;
+                const theta = p1_start_cam + localAngle + offsetAngle;  // Include offset
+
+                // Calculate camOffset for this local angle (defines the profile shape)
+                let camOffset, phase;
+                if (localAngle <= p1) {
+                    phase = 1;
+                    camOffset = V_norm * localAngle;
+                } else if (localAngle <= p1 + p2) {
+                    phase = 2;
+                    const s = (localAngle - p1) / p2;
+                    const H_integral = 2.5*s*s*s*s - 3*s*s*s*s*s + s*s*s*s*s*s;
+                    const p2_x = V_f * p2 * s + dv_p2 * p2 * H_integral;
+                    camOffset = V_norm * p1 + (V_norm / V_f) * p2_x;
+                } else if (localAngle <= p1 + p2 + p3) {
+                    phase = 3;
+                    const p2EndOffset = V_norm * p1 + (V_norm / V_f) * p2_disp;
+                    const p3Progress = localAngle - p1 - p2;
+                    camOffset = p2EndOffset + (V_norm / V_f) * (-V_r) * p3Progress;
+                } else {
+                    phase = 4;
+                    const p2EndOffset = V_norm * p1 + (V_norm / V_f) * p2_disp;
+                    const p3EndOffset = p2EndOffset + (V_norm / V_f) * p3_disp;
+                    const s = (localAngle - p1 - p2 - p3) / p4;
+                    const H_integral = 2.5*s*s*s*s - 3*s*s*s*s*s + s*s*s*s*s*s;
+                    const p4_x = -V_r * p4 * s + dv_p4 * p4 * H_integral;
+                    camOffset = p3EndOffset + (V_norm / V_f) * p4_x;
+                }
+
+                // Profile shape: x = R*cos(θ) - camOffset, y = R*sin(θ)
+                const profileX = R * Math.cos(theta) - camOffset;
+                const profileY = R * Math.sin(theta);
+                referenceProfile.push({ x: profileX, y: profileY, phase, camOffset });
+            }
+
+            // Draw each arm and its cam (same profile shape, different x-translation)
+            for (let armIndex = 0; armIndex < numArms; armIndex++) {
+                const armOffset = armIndex * armSpacing;
+                const baseAnimAngle = animationProgress * totalAnimationAngle;
+
+                // Arm's local angle in the velocity cycle
+                const armLocalAngle = (baseAnimAngle + armOffset) % totalAnimationAngle;
+
+                // Cam x-translation for this arm (based on where it is in the cycle)
+                const { camXOffset, currentPhase } = calculateCamOffset(armLocalAngle, phases, V_r, V_norm);
+
+                // Calculate arm angle (with offset applied)
+                const camAngle = normalizeAngle(p1_start_cam + baseAnimAngle + armOffset + offsetAngle);
+                const armEnd = angleToCanvas(cx, cy, camRadius, camAngle);
+
+                // Draw cam profile (colored by phase, solid)
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = armIndex === 0 ? 1.0 : 0.5;
+                let prevCanvasX = null, prevCanvasY = null;
+
+                for (let i = 0; i < referenceProfile.length; i++) {
+                    const ref = referenceProfile[i];
+
+                    // Same profile shape, translated horizontally by camXOffset
+                    const canvasX = cx + ref.x + camXOffset;
+                    const canvasY = cy - ref.y;
+
+                    if (prevCanvasX !== null) {
+                        const colors = ['#10b981', '#eab308', '#ef4444', '#8b5cf6'];
+                        ctx.strokeStyle = colors[ref.phase - 1];
+                        ctx.beginPath();
+                        ctx.moveTo(prevCanvasX, prevCanvasY);
+                        ctx.lineTo(canvasX, canvasY);
+                        ctx.stroke();
+                    }
+                    prevCanvasX = canvasX;
+                    prevCanvasY = canvasY;
+                }
+                ctx.globalAlpha = 1.0;
+
+                // Draw arm
+                ctx.strokeStyle = phaseColors[currentPhase - 1];
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = armIndex === 0 ? 1.0 : 0.6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(armEnd.x, armEnd.y);
+                ctx.stroke();
+
+                // Highlight contact point
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(armEnd.x, armEnd.y, 6, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Draw phase arcs (only once, for reference)
+            ctx.setLineDash([6, 4]);
+            ctx.lineWidth = 2;
+
+            // P1 arc
+            ctx.strokeStyle = phaseColors[0];
+            ctx.beginPath();
+            if (p1_end_cam < p1_start_cam) {
+                drawArcStandard(ctx, cx, cy, camRadius, p1_start_cam, 0);
+                ctx.stroke();
+                ctx.beginPath();
+                drawArcStandard(ctx, cx, cy, camRadius, 2 * Math.PI, p1_end_cam);
+            } else {
+                drawArcStandard(ctx, cx, cy, camRadius, p1_start_cam, p1_end_cam);
+            }
+            ctx.stroke();
+
+            // P2 arc
+            ctx.strokeStyle = phaseColors[1];
+            ctx.beginPath();
+            if (p2_end_cam < p2_start_cam) {
+                drawArcStandard(ctx, cx, cy, camRadius, p2_start_cam, 0);
+                ctx.stroke();
+                ctx.beginPath();
+                drawArcStandard(ctx, cx, cy, camRadius, 2 * Math.PI, p2_end_cam);
+            } else {
+                drawArcStandard(ctx, cx, cy, camRadius, p2_start_cam, p2_end_cam);
+            }
+            ctx.stroke();
+
+            // P3 arc
+            ctx.strokeStyle = phaseColors[2];
+            ctx.beginPath();
+            if (p3_end_cam < p3_start_cam) {
+                drawArcStandard(ctx, cx, cy, camRadius, p3_start_cam, 0);
+                ctx.stroke();
+                ctx.beginPath();
+                drawArcStandard(ctx, cx, cy, camRadius, 2 * Math.PI, p3_end_cam);
+            } else {
+                drawArcStandard(ctx, cx, cy, camRadius, p3_start_cam, p3_end_cam);
+            }
+            ctx.stroke();
+
+            // P4 arc
+            ctx.strokeStyle = phaseColors[3];
+            ctx.beginPath();
+            if (p4_end_cam < p4_start_cam) {
+                drawArcStandard(ctx, cx, cy, camRadius, p4_start_cam, 0);
+                ctx.stroke();
+                ctx.beginPath();
+                drawArcStandard(ctx, cx, cy, camRadius, 2 * Math.PI, p4_end_cam);
+            } else {
+                drawArcStandard(ctx, cx, cy, camRadius, p4_start_cam, p4_end_cam);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw center point
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Angle markers
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#9ca3af';
+            ctx.textAlign = 'center';
+            ctx.fillText('0°', cx + camRadius + 25, cy + 5);
+            ctx.fillText('90°', cx, cy - camRadius - 10);
+            ctx.fillText('180°', cx - camRadius - 25, cy + 5);
+            ctx.fillText('270°', cx, cy + camRadius + 20);
+
+            // Info display (for first arm)
+            const baseAnimAngle = animationProgress * totalAnimationAngle;
+            const { currentPhase } = calculateCamOffset(baseAnimAngle, phases, V_r, V_norm);
+            const camAngle = normalizeAngle(p1_start_cam + baseAnimAngle);
+
+            ctx.fillStyle = '#e5e7eb';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Arms: ${numArms}`, 20, 30);
+            ctx.fillText(`Arm 1 angle: ${radToDeg(camAngle).toFixed(1)}°`, 20, 50);
+            const phaseNames = ['Const +V', 'Trans +V→-V', 'Const -V', 'Trans -V→+V'];
+            ctx.fillText(`Arm 1 phase: P${currentPhase}`, 20, 70);
+            ctx.fillText(`Progress: ${(animationProgress * 100).toFixed(0)}%`, 20, 90);
+
+            // Legend
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = phaseColors[0];
+            ctx.fillText('P1 +V', 20, canvas.height - 55);
+            ctx.fillStyle = phaseColors[1];
+            ctx.fillText('P2 trans', 70, canvas.height - 55);
+            ctx.fillStyle = phaseColors[2];
+            ctx.fillText('P3 -V', 130, canvas.height - 55);
+            ctx.fillStyle = phaseColors[3];
+            ctx.fillText('P4 trans', 175, canvas.height - 55);
+        }
+
+        function updateDisplays() {
+            const data = calculatePhases();
+
+            document.getElementById('fwdAngleValue').textContent = theta_fwd_deg;
+            document.getElementById('transValue').textContent = theta_trans_deg;
+            document.getElementById('armLengthValue').textContent = R;
+            document.getElementById('numArmsValue').textContent = numArms;
+            document.getElementById('offsetAngleValue').textContent = offsetAngle_deg;
+
+            data.phases.forEach((p, i) => {
+                document.getElementById(`p${i + 1}Angle`).textContent = radToDeg(p).toFixed(1) + '°';
+            });
+
+            // P1 = forward stroke, P3 = return stroke
+            document.getElementById('p1AngleDisplay').textContent = radToDeg(data.phases[0]).toFixed(1) + '°';
+            document.getElementById('p3AngleDisplay').textContent = radToDeg(data.phases[2]).toFixed(1) + '°';
+            document.getElementById('vReturnDisplay').textContent = data.V_r.toFixed(2) + ' V_f';
+
+            document.getElementById('progressValue').textContent = (animationProgress * 100).toFixed(0) + '%';
+        }
+
+        function drawXPositionProfile() {
+            const data = calculatePhases();
+            const { phases, p1_start_cam, p1_end_cam, V_r } = data;
+            const [p1, p2, p3, p4] = phases;
+            const totalAngle = 2 * Math.PI;  // Full cycle
+
+            const ctx = xPosCtx;
+            const canvas = xPosCanvas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = { left: 60, right: 20, top: 30, bottom: 40 };
+            const graphWidth = canvas.width - padding.left - padding.right;
+            const graphHeight = canvas.height - padding.top - padding.bottom;
+
+            // X-axis: theta through P1 + P2
+            // Y-axis: x-position
+
+            // Calculate ranges
+            let minX = Infinity, maxX = -Infinity;
+            const numPoints = 100;
+
+            const armPoints = [];
+            const camPoints = [];
+            const V_norm = R * 0.5;
+
+            for (let i = 0; i <= numPoints; i++) {
+                const animAngle = (i / numPoints) * totalAngle;
+                const theta = normalizeAngle(p1_start_cam + animAngle);
+
+                // Arm tip x (circular)
+                const armX = R * Math.cos(theta);
+                const phase = animAngle <= p1 ? 1 : animAngle <= p1 + p2 ? 2 : animAngle <= p1 + p2 + p3 ? 3 : 4;
+                armPoints.push({ t: i / numPoints, x: armX, theta, phase });
+
+                // Displacement calculations
+                const dv_p2 = -V_r - V_f;
+                const H_full = 0.5;
+                const p2_disp = V_f * p2 + dv_p2 * p2 * H_full;
+                const p3_disp = -V_r * p3;
+                const dv_p4 = V_f + V_r;
+
+                // Cam x-position
+                let camX;
+                if (animAngle <= p1) {
+                    camX = R * Math.cos(p1_start_cam) + V_norm * animAngle;
+                } else if (animAngle <= p1 + p2) {
+                    const s = (animAngle - p1) / p2;
+                    const H_integral = 2.5*s*s*s*s - 3*s*s*s*s*s + s*s*s*s*s*s;
+                    const p2_x = V_f * p2 * s + dv_p2 * p2 * H_integral;
+                    camX = R * Math.cos(p1_start_cam) + V_norm * p1 + (V_norm / V_f) * p2_x;
+                } else if (animAngle <= p1 + p2 + p3) {
+                    const p2EndX = R * Math.cos(p1_start_cam) + V_norm * p1 + (V_norm / V_f) * p2_disp;
+                    const p3Progress = animAngle - p1 - p2;
+                    camX = p2EndX + (V_norm / V_f) * (-V_r) * p3Progress;
+                } else {
+                    const p2EndX = R * Math.cos(p1_start_cam) + V_norm * p1 + (V_norm / V_f) * p2_disp;
+                    const p3EndX = p2EndX + (V_norm / V_f) * p3_disp;
+                    const s = (animAngle - p1 - p2 - p3) / p4;
+                    const H_integral = 2.5*s*s*s*s - 3*s*s*s*s*s + s*s*s*s*s*s;
+                    const p4_x = -V_r * p4 * s + dv_p4 * p4 * H_integral;
+                    camX = p3EndX + (V_norm / V_f) * p4_x;
+                }
+                camPoints.push({ t: i / numPoints, x: camX, theta, phase });
+
+                minX = Math.min(minX, armX, camX);
+                maxX = Math.max(maxX, armX, camX);
+            }
+
+            // Add margin
+            const xRange = maxX - minX;
+            minX -= xRange * 0.1;
+            maxX += xRange * 0.1;
+
+            // Draw axes
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, padding.top);
+            ctx.lineTo(padding.left, canvas.height - padding.bottom);
+            ctx.lineTo(canvas.width - padding.right, canvas.height - padding.bottom);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#374151';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('θ through P1 + P2', canvas.width / 2, canvas.height - 5);
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('x-position', 0, 0);
+            ctx.restore();
+
+            // Y-axis labels
+            ctx.textAlign = 'right';
+            ctx.fillText(maxX.toFixed(0), padding.left - 5, padding.top + 5);
+            ctx.fillText(minX.toFixed(0), padding.left - 5, canvas.height - padding.bottom);
+
+            // X-axis labels
+            ctx.textAlign = 'center';
+            ctx.fillText('0°', padding.left, canvas.height - padding.bottom + 15);
+            ctx.fillText('360°', canvas.width - padding.right, canvas.height - padding.bottom + 15);
+
+            // Draw P1/P2 boundary
+            const p1Fraction = p1 / totalAngle;
+            const boundaryX1 = padding.left + p1Fraction * graphWidth;
+            ctx.strokeStyle = '#eab308';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(boundaryX1, padding.top);
+            ctx.lineTo(boundaryX1, canvas.height - padding.bottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#eab308';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText('P1|P2', boundaryX1, padding.top - 5);
+
+            // Draw P2/P3 boundary
+            const p2Fraction = (p1 + p2) / totalAngle;
+            const boundaryX2 = padding.left + p2Fraction * graphWidth;
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(boundaryX2, padding.top);
+            ctx.lineTo(boundaryX2, canvas.height - padding.bottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText('P2|P3', boundaryX2, padding.top - 5);
+
+            // Draw P3/P4 boundary
+            const p3Fraction = (p1 + p2 + p3) / totalAngle;
+            const boundaryX3 = padding.left + p3Fraction * graphWidth;
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(boundaryX3, padding.top);
+            ctx.lineTo(boundaryX3, canvas.height - padding.bottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#8b5cf6';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillText('P3|P4', boundaryX3, padding.top - 5);
+
+            // Draw arm tip curve (colored by phase)
+            ctx.lineWidth = 2;
+            let prevPx = null, prevPy = null;
+            for (let i = 0; i < armPoints.length; i++) {
+                const px = padding.left + armPoints[i].t * graphWidth;
+                const py = padding.top + (1 - (armPoints[i].x - minX) / (maxX - minX)) * graphHeight;
+                const phase = armPoints[i].phase;
+
+                if (prevPx !== null) {
+                    const colors = ['#10b981', '#eab308', '#ef4444', '#8b5cf6'];
+                    ctx.strokeStyle = colors[phase - 1];
+                    ctx.beginPath();
+                    ctx.moveTo(prevPx, prevPy);
+                    ctx.lineTo(px, py);
+                    ctx.stroke();
+                }
+                prevPx = px;
+                prevPy = py;
+            }
+
+            // Draw cam x-position curve (cyan)
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < camPoints.length; i++) {
+                const px = padding.left + camPoints[i].t * graphWidth;
+                const py = padding.top + (1 - (camPoints[i].x - minX) / (maxX - minX)) * graphHeight;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Legend
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#10b981';
+            ctx.fillText('P1', padding.left + 10, padding.top + 12);
+            ctx.fillStyle = '#eab308';
+            ctx.fillText('P2', padding.left + 35, padding.top + 12);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText('P3', padding.left + 60, padding.top + 12);
+            ctx.fillStyle = '#8b5cf6';
+            ctx.fillText('P4', padding.left + 85, padding.top + 12);
+            ctx.fillStyle = '#06b6d4';
+            ctx.fillText('Cam', padding.left + 115, padding.top + 12);
+
+            // Draw current position markers
+            const currentArmX = armPoints[Math.floor(animationProgress * numPoints)]?.x || 0;
+            const currentCamX = camPoints[Math.floor(animationProgress * numPoints)]?.x || 0;
+            const currentPx = padding.left + animationProgress * graphWidth;
+
+            // Vertical line for current position
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(currentPx, padding.top);
+            ctx.lineTo(currentPx, canvas.height - padding.bottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Dots at current positions
+            const armPy = padding.top + (1 - (currentArmX - minX) / (maxX - minX)) * graphHeight;
+            const camPy = padding.top + (1 - (currentCamX - minX) / (maxX - minX)) * graphHeight;
+
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(currentPx, armPy, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#06b6d4';
+            ctx.beginPath();
+            ctx.arc(currentPx, camPy, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function drawPressureAngleProfile() {
+            const data = calculatePhases();
+            const { phases, p1_start_cam, V_r } = data;
+            const [p1, p2, p3, p4] = phases;
+            const totalAngle = 2 * Math.PI;
+
+            const ctx = pressureCtx;
+            const canvas = pressureCanvas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = { left: 60, right: 20, top: 30, bottom: 40 };
+            const graphWidth = canvas.width - padding.left - padding.right;
+            const graphHeight = canvas.height - padding.top - padding.bottom;
+
+            const V_norm = R * 0.5;
+            const offsetAngle = degToRad(offsetAngle_deg);
+
+            // Calculate pressure angle at each point
+            // Pressure angle = angle between cam surface normal and x-axis (horizontal)
+            const pressureAngles = [];
+            const numPoints = 360;
+
+            // Pre-calculate displacement values
+            const dv_p2 = -V_r - V_f;
+            const H_full = 0.5;
+            const p2_disp = V_f * p2 + dv_p2 * p2 * H_full;
+            const p3_disp = -V_r * p3;
+
+            for (let i = 0; i <= numPoints; i++) {
+                const localAngle = (i / numPoints) * totalAngle;
+                const theta = p1_start_cam + localAngle + offsetAngle;
+
+                // Calculate velocity (derivative of camOffset) at this point
+                let velocity, phase;
+                if (localAngle <= p1) {
+                    phase = 1;
+                    velocity = V_norm;  // Constant velocity in P1
+                } else if (localAngle <= p1 + p2) {
+                    phase = 2;
+                    const s = (localAngle - p1) / p2;
+                    // Derivative of quintic: h'(s) = 30s² - 60s³ + 30s⁴
+                    const h_prime = 30*s*s - 60*s*s*s + 30*s*s*s*s;
+                    // v(s) = V_f + (−V_r − V_f) * h(s), so dv/ds = (−V_r − V_f) * h'(s)
+                    // But we need dv/dθ = dv/ds * ds/dθ = dv/ds / p2
+                    const h = 10*s*s*s - 15*s*s*s*s + 6*s*s*s*s*s;
+                    const v_current = V_f + dv_p2 * h;
+                    velocity = (V_norm / V_f) * v_current;
+                } else if (localAngle <= p1 + p2 + p3) {
+                    phase = 3;
+                    velocity = (V_norm / V_f) * (-V_r);  // Constant velocity in P3
+                } else {
+                    phase = 4;
+                    const s = (localAngle - p1 - p2 - p3) / p4;
+                    const h = 10*s*s*s - 15*s*s*s*s + 6*s*s*s*s*s;
+                    const dv_p4 = V_f - (-V_r);
+                    const v_current = -V_r + dv_p4 * h;
+                    velocity = (V_norm / V_f) * v_current;
+                }
+
+                // Profile derivatives:
+                // profile_x = R*cos(θ) - camOffset
+                // profile_y = R*sin(θ)
+                // d(profile_x)/dθ = -R*sin(θ) - velocity
+                // d(profile_y)/dθ = R*cos(θ)
+                const dx_dtheta = -R * Math.sin(theta) - velocity;
+                const dy_dtheta = R * Math.cos(theta);
+
+                // Tangent vector: (dx_dtheta, dy_dtheta)
+                // Normal vector (perpendicular, pointing outward): (dy_dtheta, -dx_dtheta)
+                // Pressure angle = angle between normal and x-axis
+                const nx = dy_dtheta;
+                const ny = -dx_dtheta;
+                const normalMag = Math.sqrt(nx*nx + ny*ny);
+
+                // Angle between normal and positive x-axis
+                let pressureAngle = Math.acos(Math.abs(nx) / normalMag);
+                pressureAngle = radToDeg(pressureAngle);
+
+                pressureAngles.push({ t: i / numPoints, angle: pressureAngle, phase });
+            }
+
+            // Find max pressure angle for scaling
+            let maxAngle = 0;
+            for (const p of pressureAngles) {
+                if (p.angle > maxAngle) maxAngle = p.angle;
+            }
+            maxAngle = Math.max(maxAngle * 1.1, 45);  // At least 45° for scale
+
+            // Draw axes
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, padding.top);
+            ctx.lineTo(padding.left, canvas.height - padding.bottom);
+            ctx.lineTo(canvas.width - padding.right, canvas.height - padding.bottom);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#374151';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('θ (degrees)', canvas.width / 2, canvas.height - 5);
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Pressure Angle (°)', 0, 0);
+            ctx.restore();
+
+            // Y-axis labels
+            ctx.textAlign = 'right';
+            ctx.fillText(maxAngle.toFixed(0) + '°', padding.left - 5, padding.top + 5);
+            ctx.fillText('0°', padding.left - 5, canvas.height - padding.bottom);
+
+            // X-axis labels
+            ctx.textAlign = 'center';
+            ctx.fillText('0°', padding.left, canvas.height - padding.bottom + 15);
+            ctx.fillText('360°', canvas.width - padding.right, canvas.height - padding.bottom + 15);
+
+            // Draw phase boundaries
+            const p1Fraction = p1 / totalAngle;
+            const p2Fraction = (p1 + p2) / totalAngle;
+            const p3Fraction = (p1 + p2 + p3) / totalAngle;
+
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1;
+
+            // P1|P2 boundary
+            const bx1 = padding.left + p1Fraction * graphWidth;
+            ctx.strokeStyle = '#eab308';
+            ctx.beginPath();
+            ctx.moveTo(bx1, padding.top);
+            ctx.lineTo(bx1, canvas.height - padding.bottom);
+            ctx.stroke();
+
+            // P2|P3 boundary
+            const bx2 = padding.left + p2Fraction * graphWidth;
+            ctx.strokeStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(bx2, padding.top);
+            ctx.lineTo(bx2, canvas.height - padding.bottom);
+            ctx.stroke();
+
+            // P3|P4 boundary
+            const bx3 = padding.left + p3Fraction * graphWidth;
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.beginPath();
+            ctx.moveTo(bx3, padding.top);
+            ctx.lineTo(bx3, canvas.height - padding.bottom);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+
+            // Draw pressure angle curve (colored by phase)
+            ctx.lineWidth = 2;
+            let prevPx = null, prevPy = null;
+            for (let i = 0; i < pressureAngles.length; i++) {
+                const p = pressureAngles[i];
+                const px = padding.left + p.t * graphWidth;
+                const py = canvas.height - padding.bottom - (p.angle / maxAngle) * graphHeight;
+
+                if (prevPx !== null) {
+                    const colors = ['#10b981', '#eab308', '#ef4444', '#8b5cf6'];
+                    ctx.strokeStyle = colors[p.phase - 1];
+                    ctx.beginPath();
+                    ctx.moveTo(prevPx, prevPy);
+                    ctx.lineTo(px, py);
+                    ctx.stroke();
+                }
+                prevPx = px;
+                prevPy = py;
+            }
+
+            // Draw 30° reference line (common max acceptable pressure angle)
+            if (maxAngle >= 30) {
+                const refY = canvas.height - padding.bottom - (30 / maxAngle) * graphHeight;
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([8, 4]);
+                ctx.beginPath();
+                ctx.moveTo(padding.left, refY);
+                ctx.lineTo(canvas.width - padding.right, refY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#dc2626';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('30° (typical max)', padding.left + 5, refY - 3);
+            }
+
+            // Legend
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#10b981';
+            ctx.fillText('P1', padding.left + 10, padding.top + 12);
+            ctx.fillStyle = '#eab308';
+            ctx.fillText('P2', padding.left + 35, padding.top + 12);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText('P3', padding.left + 60, padding.top + 12);
+            ctx.fillStyle = '#8b5cf6';
+            ctx.fillText('P4', padding.left + 85, padding.top + 12);
+
+            // Draw current position marker
+            const currentT = animationProgress;
+            const currentPx = padding.left + currentT * graphWidth;
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(currentPx, padding.top);
+            ctx.lineTo(currentPx, canvas.height - padding.bottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function updateAll() {
+            updateDisplays();
+            drawMechanism();
+            drawXPositionProfile();
+            drawPressureAngleProfile();
+        }
+
+        function updateProfiles() {
+            const data = calculatePhases();
+            drawProfile(velCtx, velCanvas, 'Velocity', (theta, d) => getProfile(theta, d).v, data);
+            drawProfile(accelCtx, accelCanvas, 'Acceleration', (theta, d) => getProfile(theta, d).a, data);
+            drawProfile(jerkCtx, jerkCanvas, 'Jerk', (theta, d) => getProfile(theta, d).j, data);
+            updateFormulas();
+        }
+
+        function drawProfile(ctx, canvas, title, getValue, data) {
+            const { cumulative } = data;
+            const [t1, t2, t3, t4] = cumulative;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = 50;
+            const graphWidth = canvas.width - 2 * padding;
+            const graphHeight = canvas.height - 2 * padding;
+            const centerY = canvas.height / 2;
+            const maxTheta = 2 * Math.PI;
+
+            let maxVal = 0.001;
+            const samples = [];
+            for (let i = 0; i <= 500; i++) {
+                const theta = (i / 500) * maxTheta;
+                const val = getValue(theta, data);
+                samples.push({ theta, val });
+                if (Math.abs(val) > maxVal && isFinite(val)) maxVal = Math.abs(val);
+            }
+            maxVal *= 1.2;
+            const scale = (graphHeight / 2) / maxVal;
+
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(padding, centerY);
+            ctx.lineTo(canvas.width - padding, centerY);
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.stroke();
+
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = '#374151';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxVal.toFixed(2), padding - 5, padding + 5);
+            ctx.fillText('0', padding - 5, centerY + 3);
+            ctx.fillText((-maxVal).toFixed(2), padding - 5, canvas.height - padding + 5);
+
+            ctx.textAlign = 'center';
+            ctx.fillText('0', padding, canvas.height - padding + 15);
+            ctx.fillText('2π', canvas.width - padding, canvas.height - padding + 15);
+
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            const boundaries = [0, t1, t2, t3, t4];
+            for (let i = 0; i < 4; i++) {
+                const x1 = padding + (boundaries[i] / maxTheta) * graphWidth;
+                const x2 = padding + (boundaries[i+1] / maxTheta) * graphWidth;
+                if (i < 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(x2, padding);
+                    ctx.lineTo(x2, canvas.height - padding);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = phaseColors[i];
+                ctx.font = 'bold 10px sans-serif';
+                ctx.fillText(`P${i+1}`, (x1 + x2) / 2, padding - 5);
+            }
+            ctx.setLineDash([]);
+
+            ctx.lineWidth = 2.5;
+            let prevX = null, prevY = null;
+
+            for (const sample of samples) {
+                const { theta, val } = sample;
+                const x = padding + (theta / maxTheta) * graphWidth;
+                const y = centerY - val * scale;
+                const clampedY = Math.max(padding, Math.min(canvas.height - padding, y));
+
+                let color;
+                if (theta <= t1) color = phaseColors[0];
+                else if (theta <= t2) color = phaseColors[1];
+                else if (theta <= t3) color = phaseColors[2];
+                else color = phaseColors[3];
+
+                if (prevX !== null && isFinite(val)) {
+                    ctx.strokeStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(x, clampedY);
+                    ctx.stroke();
+                }
+
+                prevX = x;
+                prevY = clampedY;
+            }
+        }
+
+        function updateFormulas() {
+            const formulaDiv = document.getElementById('formulaDisplay');
+            formulaDiv.innerHTML = `<pre>
+<b>4-Phase Structure:</b>
+P1: v = +V_f (constant)           a = 0      j = 0
+P2: v transitions +V_f → -V_r     a: smooth curve
+P3: v = -V_r (constant)           a = 0      j = 0
+P4: v transitions -V_r → +V_f     a: smooth curve
+
+<b>Quintic transition:</b>
+h(s) = 10s³ - 15s⁴ + 6s⁵
+
+<span class="text-green-600">✓ a = 0 at phase boundaries</span>
+<span class="text-green-600">✓ j = 0 at phase boundaries</span>
+</pre>`;
+        }
+
+        // Animation
+        function animate() {
+            if (isPlaying) {
+                animationProgress += 0.002;
+                if (animationProgress > 1) animationProgress = 0;
+                document.getElementById('progressSlider').value = animationProgress * 100;
+                updateAll();
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            isPlaying = true;
+            animate();
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPlaying = false;
+            if (animationId) cancelAnimationFrame(animationId);
+        });
+
+        document.getElementById('progressSlider').addEventListener('input', (e) => {
+            animationProgress = e.target.value / 100;
+            updateAll();
+        });
+
+        // Parameter controls
+        document.getElementById('fwdAngleSlider').addEventListener('input', (e) => {
+            theta_fwd_deg = parseInt(e.target.value);
+            // Update transition slider max: (360 - P1) / 2
+            const maxTrans = Math.floor((360 - theta_fwd_deg) / 2);
+            document.getElementById('transSlider').max = maxTrans;
+            // Clamp current value if it exceeds new max
+            if (theta_trans_deg > maxTrans) {
+                theta_trans_deg = maxTrans;
+                document.getElementById('transSlider').value = maxTrans;
+            }
+            updateAll();
+        });
+
+        document.getElementById('transSlider').addEventListener('input', (e) => {
+            theta_trans_deg = parseInt(e.target.value);
+            updateAll();
+        });
+
+        document.getElementById('armLengthSlider').addEventListener('input', (e) => {
+            R = parseInt(e.target.value);
+            updateAll();
+        });
+
+        document.getElementById('numArmsSlider').addEventListener('input', (e) => {
+            numArms = parseInt(e.target.value);
+            updateAll();
+        });
+
+        document.getElementById('offsetAngleSlider').addEventListener('input', (e) => {
+            offsetAngle_deg = parseInt(e.target.value);
+            updateAll();
+        });
+
+        // Set initial transition slider max based on P1
+        const initialMaxTrans = Math.floor((360 - theta_fwd_deg) / 2);
+        document.getElementById('transSlider').max = initialMaxTrans;
+
+        // Initial draw
+        updateAll();
+    </script>
+</body>
+</html>
