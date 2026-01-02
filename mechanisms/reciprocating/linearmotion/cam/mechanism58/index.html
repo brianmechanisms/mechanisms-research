@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 58 - Multi-Arm Sectional Cam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-2 text-gray-800">Mechanism 58 - Multi-Arm Sectional Cam</h1>
+        <p class="text-gray-600 mb-4">P1 divided into m sections, m arms spaced by angle a = P1/m</p>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-300 mb-6">
+            <button id="tabMechanism" class="px-6 py-3 font-medium text-sm border-b-2 border-blue-500 text-blue-600 bg-white">
+                Mechanism
+            </button>
+            <button id="tabProfiles" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Profiles
+            </button>
+        </div>
+
+        <!-- Mechanism Tab Content -->
+        <div id="mechanismContent">
+            <!-- Parameters -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">Parameters</h2>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="font-medium text-gray-700">Angular Durations</h3>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Forward Stroke (P1)</span>
+                                <span class="text-green-600 font-bold" id="fwdAngleValue">220</span>deg
+                            </label>
+                            <input type="range" id="fwdAngleSlider" min="180" max="300" value="220" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Transition Angle (theta_trans)</span>
+                                <span class="text-yellow-600 font-bold" id="transValue">70</span>deg
+                            </label>
+                            <input type="range" id="transSlider" min="10" max="90" value="70" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Number of Arms (m)</span>
+                                <span class="text-purple-600 font-bold" id="numArmsValue">16</span>
+                            </label>
+                            <input type="range" id="numArmsSlider" min="1" max="200" value="16" step="1" class="w-full">
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="font-medium text-gray-700">Mechanism</h3>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Arm Length (R)</span>
+                                <span class="text-blue-600 font-bold" id="armLengthValue">100</span>
+                            </label>
+                            <input type="range" id="armLengthSlider" min="50" max="150" value="100" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Clearance Angle</span>
+                                <span class="text-cyan-600 font-bold" id="clearanceValue">5</span>deg
+                            </label>
+                            <input type="range" id="clearanceSlider" min="0" max="30" value="5" step="1" class="w-full">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span>Section angle (a = P1/m):</span>
+                                <span class="text-blue-600 font-bold" id="sectionAngleDisplay">--</span>deg
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Section start:</span>
+                                <span class="text-green-600 font-bold" id="sectionStartDisplay">--</span>deg
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Section end:</span>
+                                <span class="text-green-600 font-bold" id="sectionEndDisplay">--</span>deg
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>P3 (return const):</span>
+                                <span class="text-red-600 font-bold" id="p3AngleDisplay">--</span>deg
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>Return velocity:</span>
+                                <span class="text-red-600 font-bold" id="vReturnDisplay">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase breakdown -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-2">4-Phase Structure</h3>
+                    <div class="grid grid-cols-4 gap-2 text-sm">
+                        <div class="p-2 bg-green-100 rounded text-center">
+                            <div class="font-bold text-green-700">P1</div>
+                            <div class="text-xs">Const +V_f</div>
+                            <div class="text-green-600 font-bold" id="p1Angle">--</div>
+                        </div>
+                        <div class="p-2 bg-yellow-100 rounded text-center">
+                            <div class="font-bold text-yellow-700">P2</div>
+                            <div class="text-xs">+V_f -> -V_r</div>
+                            <div class="text-yellow-600 font-bold" id="p2Angle">--</div>
+                        </div>
+                        <div class="p-2 bg-red-100 rounded text-center">
+                            <div class="font-bold text-red-700">P3</div>
+                            <div class="text-xs">Const -V_r</div>
+                            <div class="text-red-600 font-bold" id="p3Angle">--</div>
+                        </div>
+                        <div class="p-2 bg-purple-100 rounded text-center">
+                            <div class="font-bold text-purple-700">P4</div>
+                            <div class="text-xs">-V_r -> +V_f</div>
+                            <div class="text-purple-600 font-bold" id="p4Angle">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mechanism Visualization -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <canvas id="mechanismCanvas" width="600" height="500" class="border border-gray-300 bg-gray-900 mx-auto block"></canvas>
+
+                <!-- Animation controls -->
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <!-- Row 1: Progress slider -->
+                    <div class="flex items-center gap-3 mb-3">
+                        <label class="text-sm font-medium text-gray-700 w-16">Progress:</label>
+                        <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5"
+                               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="progressValue" class="text-sm text-gray-600 font-bold w-12 text-right">0%</span>
+                    </div>
+
+                    <!-- Row 2: Play, Direction, Speed, Export -->
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <!-- Play/Pause -->
+                        <button id="playPauseBtn" class="px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24">
+                            Play
+                        </button>
+
+                        <!-- Direction Controls -->
+                        <div class="flex gap-1">
+                            <button id="dirForward" class="px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600" title="Forward">
+                                ->
+                            </button>
+                            <button id="dirBackward" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Backward">
+                                <-
+                            </button>
+                            <button id="dirPingPong" class="px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400" title="Ping Pong">
+                                <->
+                            </button>
+                        </div>
+
+                        <!-- Speed Control -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-700">Speed:</label>
+                            <input type="range" id="speedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                                   class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="speedValue" class="text-sm text-gray-800 font-bold w-8">0.5</span>
+                        </div>
+
+                        <!-- Export -->
+                        <div class="flex items-center gap-2 ml-auto">
+                            <select id="exportFormat" class="px-2 py-2 border border-gray-300 rounded text-sm">
+                                <option value="png">PNG</option>
+                                <option value="svg">SVG</option>
+                                <option value="gif">GIF</option>
+                            </select>
+                            <button id="exportBtn" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    <p id="exportStatus" class="text-sm text-gray-600 mt-2 text-right hidden"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profiles Tab Content -->
+        <div id="profilesContent" class="hidden">
+            <!-- Velocity Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-2">Velocity Profile v(θ)</h2>
+                <canvas id="velocityCanvas" width="800" height="220" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Acceleration Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-2">Acceleration Profile a(θ) = dv/dθ</h2>
+                <canvas id="accelCanvas" width="800" height="220" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Jerk Profile -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-2">Jerk Profile j(θ) = d²v/dθ²</h2>
+                <canvas id="jerkCanvas" width="800" height="220" class="border border-gray-300 bg-white w-full"></canvas>
+            </div>
+
+            <!-- Analytical Formulas -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Analytical Formulas</h2>
+                <div id="formulaDisplay" class="text-sm font-mono bg-gray-50 p-4 rounded overflow-x-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabMechanism = document.getElementById('tabMechanism');
+        const tabProfiles = document.getElementById('tabProfiles');
+        const mechanismContent = document.getElementById('mechanismContent');
+        const profilesContent = document.getElementById('profilesContent');
+
+        tabMechanism.addEventListener('click', () => {
+            tabMechanism.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+            tabMechanism.classList.remove('border-transparent', 'text-gray-500');
+            tabProfiles.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabProfiles.classList.add('border-transparent', 'text-gray-500');
+            mechanismContent.classList.remove('hidden');
+            profilesContent.classList.add('hidden');
+        });
+
+        tabProfiles.addEventListener('click', () => {
+            tabProfiles.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+            tabProfiles.classList.remove('border-transparent', 'text-gray-500');
+            tabMechanism.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabMechanism.classList.add('border-transparent', 'text-gray-500');
+            profilesContent.classList.remove('hidden');
+            mechanismContent.classList.add('hidden');
+            updateProfiles();
+        });
+
+        // Canvas contexts
+        const mechCanvas = document.getElementById('mechanismCanvas');
+        const mechCtx = mechCanvas.getContext('2d');
+        const velCanvas = document.getElementById('velocityCanvas');
+        const velCtx = velCanvas.getContext('2d');
+        const accelCanvas = document.getElementById('accelCanvas');
+        const accelCtx = accelCanvas.getContext('2d');
+        const jerkCanvas = document.getElementById('jerkCanvas');
+        const jerkCtx = jerkCanvas.getContext('2d');
+
+        // Parameters
+        let theta_fwd_deg = 220;
+        let theta_trans_deg = 70;
+        let m = 16;
+        let R = 100;
+        let V_f = 1.0;
+        let clearance_deg = 5;
+
+        // Animation
+        let animationProgress = 0;
+        let isPlaying = false;
+        let animationId = null;
+        let animationSpeed = 0.5;
+        let animationDirection = 'forward';
+        let pingPongReverse = false;
+
+        const phaseColors = ['#10b981', '#eab308', '#ef4444', '#8b5cf6'];
+
+        function degToRad(deg) { return deg * Math.PI / 180; }
+        function radToDeg(rad) { return rad * 180 / Math.PI; }
+
+        function normalizeAngle(angle) {
+            while (angle < 0) angle += 2 * Math.PI;
+            while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
+            return angle;
+        }
+
+        function calculatePhases() {
+            const theta_fwd = degToRad(theta_fwd_deg);
+            const theta_trans = degToRad(theta_trans_deg);
+
+            const p1 = theta_fwd;
+            const p2 = theta_trans;
+            const p4 = theta_trans;
+            const p3 = 2 * Math.PI - p1 - p2 - p4;
+
+            const V_r = V_f * (p1 + p2) / (p2 + p3);
+
+            const a = p1 / m;
+
+            const p1_center = 1.5 * Math.PI;
+            const p1_start_cam = normalizeAngle(p1_center - p1 / 2);
+            const p1_end_cam = normalizeAngle(p1_center + p1 / 2);
+
+            const section_start = normalizeAngle(p1_center - a / 2);
+            const section_end = normalizeAngle(p1_center + a / 2);
+
+            const t1 = p1;
+            const t2 = t1 + p2;
+            const t3 = t2 + p3;
+            const t4 = 2 * Math.PI;
+
+            return {
+                phases: [p1, p2, p3, p4],
+                cumulative: [t1, t2, t3, t4],
+                V_r: V_r,
+                V_f: V_f,
+                a: a,
+                p1_start_cam: p1_start_cam,
+                p1_end_cam: p1_end_cam,
+                section_start: section_start,
+                section_end: section_end,
+                p1_center: p1_center
+            };
+        }
+
+        function quinticTransition(s, v0, v1, dTheta) {
+            const dv = v1 - v0;
+            const s2 = s * s;
+            const s3 = s2 * s;
+            const s4 = s3 * s;
+            const s5 = s4 * s;
+            const h = 10*s3 - 15*s4 + 6*s5;
+            const dh_ds = 30*s2 - 60*s3 + 30*s4;
+            const d2h_ds2 = 60*s - 180*s2 + 120*s3;
+            return {
+                v: v0 + dv * h,
+                a: dv * dh_ds / dTheta,
+                j: dv * d2h_ds2 / (dTheta * dTheta)
+            };
+        }
+
+        function getProfile(theta, data) {
+            const { phases, cumulative, V_r } = data;
+            const [p1, p2, p3, p4] = phases;
+            const [t1, t2, t3, t4] = cumulative;
+
+            if (theta <= t1) {
+                return { v: V_f, a: 0, j: 0, phase: 0 };
+            } else if (theta <= t2) {
+                const s = (theta - t1) / p2;
+                const result = quinticTransition(s, V_f, -V_r, p2);
+                result.phase = 1;
+                return result;
+            } else if (theta <= t3) {
+                return { v: -V_r, a: 0, j: 0, phase: 2 };
+            } else {
+                const s = (theta - t3) / p4;
+                const result = quinticTransition(s, -V_r, V_f, p4);
+                result.phase = 3;
+                return result;
+            }
+        }
+
+        function angleToCanvas(cx, cy, radius, angle) {
+            return {
+                x: cx + radius * Math.cos(angle),
+                y: cy - radius * Math.sin(angle)
+            };
+        }
+
+        function drawArcStandard(ctx, cx, cy, radius, startAngle, endAngle, counterClockwise = false) {
+            ctx.arc(cx, cy, radius, -startAngle, -endAngle, !counterClockwise);
+        }
+
+        function quinticIntegral(s) {
+            const s4 = s * s * s * s;
+            const s5 = s4 * s;
+            const s6 = s5 * s;
+            return 2.5 * s4 - 3 * s5 + s6;
+        }
+
+        function drawMechanism() {
+            const data = calculatePhases();
+            const { phases, V_r, a, section_start, section_end, p1_center, p1_start_cam, p1_end_cam } = data;
+            const [p1, p2, p3, p4] = phases;
+
+            const ctx = mechCtx;
+            const canvas = mechCanvas;
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            const V_norm = R * 0.5;
+
+            // Clear
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw reference circle
+            ctx.strokeStyle = '#4b5563';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Animation progress 0->1 covers P4 + P1 + P2
+            const totalAnimationAngle = p4 + p1 + p2;
+            const firstArmAngle = normalizeAngle(section_start - p4 + animationProgress * totalAnimationAngle);
+
+            // Calculate cam displacement
+            let camXOffset;
+            const progressAngle = animationProgress * totalAnimationAngle;
+
+            if (progressAngle <= p4) {
+                const s = progressAngle / p4;
+                const H_s = quinticIntegral(s);
+                const D_s = -V_r * p4 * s + (V_f + V_r) * p4 * H_s;
+                const D_1 = -V_r * p4 + (V_f + V_r) * p4 * 0.5;
+                camXOffset = (V_norm / V_f) * (D_s - D_1);
+            } else if (progressAngle <= p4 + p1) {
+                const p1Progress = progressAngle - p4;
+                camXOffset = V_norm * p1Progress;
+            } else {
+                const p2Progress = progressAngle - p4 - p1;
+                const s = p2Progress / p2;
+                const dv = -V_r - V_f;
+                const p2Displacement = V_f * p2 * s + dv * p2 * quinticIntegral(s);
+                camXOffset = V_norm * p1 + (V_norm / V_f) * p2Displacement;
+            }
+
+            const activeZoneStart = section_start;
+            const activeZoneEnd = section_end;
+            const clearance = degToRad(clearance_deg);
+
+            // Draw cam sections
+            const camColors = ['#10b981', '#06b6d4', '#8b5cf6', '#ec4899', '#f97316', '#84cc16'];
+            const numPoints = 100;
+
+            for (let camIndex = 0; camIndex < m; camIndex++) {
+                const camColor = camColors[camIndex % camColors.length];
+
+                let trailingExtension = 0;
+                let leadingExtension = 0;
+                let useP2OnLeading = false;
+                let useP4OnTrailing = false;
+
+                if (m === 1) {
+                    trailingExtension = 0;
+                    leadingExtension = p2;
+                    useP2OnLeading = true;
+                } else if (camIndex === 0) {
+                    trailingExtension = p4;
+                    leadingExtension = clearance;
+                    useP4OnTrailing = true;
+                } else if (camIndex === m - 1) {
+                    trailingExtension = clearance;
+                    leadingExtension = p2;
+                    useP2OnLeading = true;
+                } else {
+                    trailingExtension = clearance;
+                    leadingExtension = clearance;
+                }
+
+                const profileStart = section_start - trailingExtension;
+                const profileEnd = section_end + leadingExtension;
+                const profileAngle = a + trailingExtension + leadingExtension;
+
+                const camProfile = [];
+                for (let i = 0; i <= numPoints; i++) {
+                    const theta = profileStart + (i / numPoints) * profileAngle;
+                    const normalizedTheta = normalizeAngle(theta);
+                    let localDTheta = theta - section_start;
+
+                    let camOffset;
+                    if (localDTheta < 0) {
+                        if (useP4OnTrailing) {
+                            const s = (localDTheta + p4) / p4;
+                            const H_s = quinticIntegral(s);
+                            const D_s = -V_r * p4 * s + (V_f + V_r) * p4 * H_s;
+                            const D_1 = -V_r * p4 + (V_f + V_r) * p4 * 0.5;
+                            camOffset = (V_norm / V_f) * (D_s - D_1);
+                        } else {
+                            camOffset = V_norm * localDTheta;
+                        }
+                    } else if (localDTheta <= a) {
+                        camOffset = V_norm * localDTheta;
+                    } else if (useP2OnLeading) {
+                        const p2Progress = localDTheta - a;
+                        const s = p2Progress / p2;
+                        const dv = -V_r - V_f;
+                        const p2Displacement = V_f * p2 * s + dv * p2 * quinticIntegral(s);
+                        camOffset = V_norm * a + (V_norm / V_f) * p2Displacement;
+                    } else {
+                        camOffset = V_norm * localDTheta;
+                    }
+
+                    const profileX = R * Math.cos(normalizedTheta) - camOffset;
+                    const profileY = R * Math.sin(normalizedTheta);
+                    camProfile.push({ x: profileX, y: profileY });
+                }
+
+                const thisCamXOffset = camXOffset - camIndex * V_norm * a;
+
+                ctx.strokeStyle = camColor;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = camIndex === 0 ? 1.0 : 0.7;
+
+                let prevCanvasX = null, prevCanvasY = null;
+                for (let i = 0; i < camProfile.length; i++) {
+                    const p = camProfile[i];
+                    const canvasX = cx + p.x + thisCamXOffset;
+                    const canvasY = cy - p.y;
+
+                    if (prevCanvasX !== null) {
+                        ctx.beginPath();
+                        ctx.moveTo(prevCanvasX, prevCanvasY);
+                        ctx.lineTo(canvasX, canvasY);
+                        ctx.stroke();
+                    }
+                    prevCanvasX = canvasX;
+                    prevCanvasY = canvasY;
+                }
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Draw section arc indicator
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 3]);
+            ctx.beginPath();
+            drawArcStandard(ctx, cx, cy, R, section_start, section_end);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Arm colors
+            const armColors = ['#fbbf24', '#f97316', '#ef4444', '#ec4899', '#a855f7', '#6366f1'];
+
+            function isInActiveZone(angle) {
+                let relAngle = angle - activeZoneStart;
+                if (relAngle < 0) relAngle += 2 * Math.PI;
+                return relAngle <= a;
+            }
+
+            // Draw all m arms
+            let activeArmIndex = -1;
+            for (let i = 0; i < m; i++) {
+                const armAngle = normalizeAngle(firstArmAngle - i * a);
+                const armEnd = angleToCanvas(cx, cy, R, armAngle);
+                const armColor = armColors[i % armColors.length];
+                const isActive = isInActiveZone(armAngle);
+
+                if (isActive) activeArmIndex = i;
+
+                ctx.strokeStyle = armColor;
+                ctx.lineWidth = isActive ? 4 : 2;
+                ctx.lineCap = 'round';
+                ctx.globalAlpha = isActive ? 1.0 : 0.5;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(armEnd.x, armEnd.y);
+                ctx.stroke();
+
+                ctx.strokeStyle = armColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(armEnd.x, armEnd.y, isActive ? 10 : 6, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                if (isActive) {
+                    ctx.fillStyle = armColor;
+                    ctx.beginPath();
+                    ctx.arc(armEnd.x, armEnd.y, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Draw center point
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Watermark
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(-30 * Math.PI / 180);
+            ctx.font = '60px sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.globalAlpha = 0.3;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BrianMechanisms', 0, 0);
+            ctx.restore();
+        }
+
+        function updateDisplays() {
+            const data = calculatePhases();
+            const [p1, p2, p3, p4] = data.phases;
+
+            document.getElementById('fwdAngleValue').textContent = theta_fwd_deg;
+            document.getElementById('transValue').textContent = theta_trans_deg;
+            document.getElementById('numArmsValue').textContent = m;
+            document.getElementById('armLengthValue').textContent = R;
+            document.getElementById('clearanceValue').textContent = clearance_deg;
+
+            document.getElementById('sectionAngleDisplay').textContent = radToDeg(data.a).toFixed(1);
+            document.getElementById('sectionStartDisplay').textContent = radToDeg(data.section_start).toFixed(1);
+            document.getElementById('sectionEndDisplay').textContent = radToDeg(data.section_end).toFixed(1);
+
+            document.getElementById('p1Angle').textContent = radToDeg(p1).toFixed(1) + 'deg';
+            document.getElementById('p2Angle').textContent = radToDeg(p2).toFixed(1) + 'deg';
+            document.getElementById('p3Angle').textContent = radToDeg(p3).toFixed(1) + 'deg';
+            document.getElementById('p4Angle').textContent = radToDeg(p4).toFixed(1) + 'deg';
+
+            document.getElementById('p3AngleDisplay').textContent = radToDeg(p3).toFixed(1);
+            document.getElementById('vReturnDisplay').textContent = data.V_r.toFixed(2) + ' V_f';
+
+            document.getElementById('progressValue').textContent = (animationProgress * 100).toFixed(0) + '%';
+        }
+
+        function updateAll() {
+            updateDisplays();
+            drawMechanism();
+        }
+
+        function updateProfiles() {
+            const data = calculatePhases();
+            drawProfile(velCtx, velCanvas, 'Velocity', (theta, d) => getProfile(theta, d).v, data);
+            drawProfile(accelCtx, accelCanvas, 'Acceleration', (theta, d) => getProfile(theta, d).a, data);
+            drawProfile(jerkCtx, jerkCanvas, 'Jerk', (theta, d) => getProfile(theta, d).j, data);
+            updateFormulas();
+        }
+
+        function drawProfile(ctx, canvas, title, getValue, data) {
+            const { cumulative } = data;
+            const [t1, t2, t3, t4] = cumulative;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = 50;
+            const graphWidth = canvas.width - 2 * padding;
+            const graphHeight = canvas.height - 2 * padding;
+            const centerY = canvas.height / 2;
+            const maxTheta = 2 * Math.PI;
+
+            let maxVal = 0.001;
+            const samples = [];
+            for (let i = 0; i <= 500; i++) {
+                const theta = (i / 500) * maxTheta;
+                const val = getValue(theta, data);
+                samples.push({ theta, val });
+                if (Math.abs(val) > maxVal && isFinite(val)) maxVal = Math.abs(val);
+            }
+            maxVal *= 1.2;
+            const scale = (graphHeight / 2) / maxVal;
+
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(padding, centerY);
+            ctx.lineTo(canvas.width - padding, centerY);
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.stroke();
+
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = '#374151';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxVal.toFixed(2), padding - 5, padding + 5);
+            ctx.fillText('0', padding - 5, centerY + 3);
+            ctx.fillText((-maxVal).toFixed(2), padding - 5, canvas.height - padding + 5);
+
+            ctx.textAlign = 'center';
+            ctx.fillText('0', padding, canvas.height - padding + 15);
+            ctx.fillText('2π', canvas.width - padding, canvas.height - padding + 15);
+
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            const boundaries = [0, t1, t2, t3, t4];
+            for (let i = 0; i < 4; i++) {
+                const x1 = padding + (boundaries[i] / maxTheta) * graphWidth;
+                const x2 = padding + (boundaries[i+1] / maxTheta) * graphWidth;
+                if (i < 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(x2, padding);
+                    ctx.lineTo(x2, canvas.height - padding);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = phaseColors[i];
+                ctx.font = 'bold 10px sans-serif';
+                ctx.fillText(`P${i+1}`, (x1 + x2) / 2, padding - 5);
+            }
+            ctx.setLineDash([]);
+
+            ctx.lineWidth = 2.5;
+            let prevX = null, prevY = null;
+
+            for (const sample of samples) {
+                const { theta, val } = sample;
+                const x = padding + (theta / maxTheta) * graphWidth;
+                const y = centerY - val * scale;
+                const clampedY = Math.max(padding, Math.min(canvas.height - padding, y));
+
+                let color;
+                if (theta <= t1) color = phaseColors[0];
+                else if (theta <= t2) color = phaseColors[1];
+                else if (theta <= t3) color = phaseColors[2];
+                else color = phaseColors[3];
+
+                if (prevX !== null && isFinite(val)) {
+                    ctx.strokeStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(x, clampedY);
+                    ctx.stroke();
+                }
+
+                prevX = x;
+                prevY = clampedY;
+            }
+        }
+
+        function updateFormulas() {
+            const formulaDiv = document.getElementById('formulaDisplay');
+            formulaDiv.innerHTML = `<pre>
+<b>4-Phase Structure:</b>
+P1: v = +V_f (constant)           a = 0      j = 0
+P2: v transitions +V_f → -V_r     a: smooth curve
+P3: v = -V_r (constant)           a = 0      j = 0
+P4: v transitions -V_r → +V_f     a: smooth curve
+
+<b>Quintic transition:</b>
+h(s) = 10s³ - 15s⁴ + 6s⁵
+
+<b>Multi-arm sectional cam:</b>
+Section angle: a = P1/m
+Each arm handles one section of the P1 stroke.
+
+<span class="text-green-600">✓ a = 0 at phase boundaries</span>
+<span class="text-green-600">✓ j = 0 at phase boundaries</span>
+</pre>`;
+        }
+
+        // Animation
+        function animate() {
+            if (!isPlaying) return;
+
+            if (animationDirection === 'forward') {
+                animationProgress += animationSpeed / 100;
+                if (animationProgress >= 1) animationProgress = 0;
+            } else if (animationDirection === 'backward') {
+                animationProgress -= animationSpeed / 100;
+                if (animationProgress < 0) animationProgress = 1 + animationProgress;
+            } else if (animationDirection === 'pingpong') {
+                if (pingPongReverse) {
+                    animationProgress -= animationSpeed / 100;
+                    if (animationProgress <= 0) { animationProgress = 0; pingPongReverse = false; }
+                } else {
+                    animationProgress += animationSpeed / 100;
+                    if (animationProgress >= 1) { animationProgress = 1; pingPongReverse = true; }
+                }
+            }
+
+            document.getElementById('progressSlider').value = animationProgress * 100;
+            document.getElementById('progressValue').textContent = (animationProgress * 100).toFixed(0) + '%';
+            updateAll();
+            animationId = requestAnimationFrame(animate);
+        }
+
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const dirForward = document.getElementById('dirForward');
+        const dirBackward = document.getElementById('dirBackward');
+        const dirPingPong = document.getElementById('dirPingPong');
+
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                playPauseBtn.textContent = 'Pause';
+                playPauseBtn.className = 'px-5 py-2 bg-red-500 text-white rounded hover:bg-red-600 font-medium min-w-24';
+                animate();
+            } else {
+                playPauseBtn.textContent = 'Play';
+                playPauseBtn.className = 'px-5 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium min-w-24';
+                if (animationId) cancelAnimationFrame(animationId);
+            }
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            animationSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
+        });
+
+        function updateDirectionButtons(activeBtn) {
+            [dirForward, dirBackward, dirPingPong].forEach(btn => {
+                btn.className = btn === activeBtn
+                    ? 'px-3 py-2 bg-blue-500 text-white text-lg rounded hover:bg-blue-600'
+                    : 'px-3 py-2 bg-gray-300 text-gray-700 text-lg rounded hover:bg-gray-400';
+            });
+        }
+
+        dirForward.addEventListener('click', () => {
+            animationDirection = 'forward';
+            updateDirectionButtons(dirForward);
+        });
+
+        dirBackward.addEventListener('click', () => {
+            animationDirection = 'backward';
+            updateDirectionButtons(dirBackward);
+        });
+
+        dirPingPong.addEventListener('click', () => {
+            animationDirection = 'pingpong';
+            updateDirectionButtons(dirPingPong);
+        });
+
+        document.getElementById('progressSlider').addEventListener('input', (e) => {
+            animationProgress = e.target.value / 100;
+            document.getElementById('progressValue').textContent = (animationProgress * 100).toFixed(0) + '%';
+            updateAll();
+        });
+
+        // Export functionality
+        const exportFormat = document.getElementById('exportFormat');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportStatus = document.getElementById('exportStatus');
+
+        function exportPNG() {
+            const canvas = mechCanvas;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = '#1a1a2e';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement('a');
+            link.download = 'mechanism58-multi-arm-sectional-cam.png';
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportSVG() {
+            const canvas = mechCanvas;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = '#1a1a2e';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const dataURL = tempCanvas.toDataURL('image/png');
+            const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <image width="${canvas.width}" height="${canvas.height}" xlink:href="${dataURL}"/>
+</svg>`;
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'mechanism58-multi-arm-sectional-cam.svg';
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        function exportGIF() {
+            const canvas = mechCanvas;
+            exportStatus.textContent = 'Generating GIF...';
+            exportStatus.classList.remove('hidden');
+            const totalFrames = 100;
+            let currentFrame = 0;
+            const originalProgress = animationProgress;
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height,
+                workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+            });
+
+            function captureNextFrame() {
+                if (currentFrame >= totalFrames) {
+                    exportStatus.textContent = 'Encoding GIF...';
+                    gif.render();
+                    return;
+                }
+                animationProgress = currentFrame / totalFrames;
+                drawMechanism();
+                requestAnimationFrame(() => {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(canvas, 0, 0);
+                    gif.addFrame(tempCanvas, { copy: true, delay: 50 });
+                    currentFrame++;
+                    exportStatus.textContent = `Capturing frame ${currentFrame}/${totalFrames}...`;
+                    setTimeout(captureNextFrame, 10);
+                });
+            }
+            captureNextFrame();
+
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'mechanism58-multi-arm-sectional-cam.gif';
+                link.href = url;
+                link.click();
+                setTimeout(() => { URL.revokeObjectURL(url); exportStatus.classList.add('hidden'); }, 1000);
+                animationProgress = originalProgress;
+                document.getElementById('progressSlider').value = animationProgress * 100;
+                drawMechanism();
+            });
+
+            gif.on('progress', function(p) { exportStatus.textContent = `Encoding GIF: ${Math.round(p * 100)}%`; });
+            gif.on('error', function(error) {
+                console.error('GIF encoding error:', error);
+                exportStatus.textContent = 'Error encoding GIF';
+                animationProgress = originalProgress;
+                document.getElementById('progressSlider').value = animationProgress * 100;
+                drawMechanism();
+            });
+        }
+
+        exportBtn.addEventListener('click', () => {
+            const format = exportFormat.value;
+            if (format === 'png') exportPNG();
+            else if (format === 'svg') exportSVG();
+            else if (format === 'gif') exportGIF();
+        });
+
+        // Parameter controls
+        document.getElementById('fwdAngleSlider').addEventListener('input', (e) => {
+            theta_fwd_deg = parseInt(e.target.value);
+            const maxTrans = Math.floor((360 - theta_fwd_deg) / 2);
+            document.getElementById('transSlider').max = maxTrans;
+            if (theta_trans_deg > maxTrans) {
+                theta_trans_deg = maxTrans;
+                document.getElementById('transSlider').value = maxTrans;
+            }
+            updateAll();
+        });
+
+        document.getElementById('transSlider').addEventListener('input', (e) => {
+            theta_trans_deg = parseInt(e.target.value);
+            updateAll();
+        });
+
+        document.getElementById('numArmsSlider').addEventListener('input', (e) => {
+            m = parseInt(e.target.value);
+            updateAll();
+        });
+
+        document.getElementById('armLengthSlider').addEventListener('input', (e) => {
+            R = parseInt(e.target.value);
+            updateAll();
+        });
+
+        document.getElementById('clearanceSlider').addEventListener('input', (e) => {
+            clearance_deg = parseInt(e.target.value);
+            updateAll();
+        });
+
+        // Set initial transition slider max
+        const initialMaxTrans = Math.floor((360 - theta_fwd_deg) / 2);
+        document.getElementById('transSlider').max = initialMaxTrans;
+
+        // Initial draw
+        updateAll();
+    </script>
+</body>
+</html>
