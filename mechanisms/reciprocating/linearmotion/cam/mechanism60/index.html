@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Powered Long Range Linear Motion Mechanism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-2 text-gray-800">Self-Powered Long Range Linear Motion Mechanism</h1>
+        <p class="text-gray-600 mb-4">1DOF locomotion via sequential gripping - no rack or teeth required</p>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-300 mb-4">
+            <button id="tabLocus" class="px-6 py-3 font-medium text-sm border-b-2 border-blue-500 text-blue-600 bg-white">
+                Foot Locus
+            </button>
+            <button id="tabProfiles" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Motion Profiles
+            </button>
+            <button id="tabCam" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Cam Mechanism
+            </button>
+            <button id="tabScad" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                OpenSCAD
+            </button>
+            <button id="tabMechanism" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                3D Mechanism
+            </button>
+            <button id="tabTodo" class="px-6 py-3 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                TODO
+            </button>
+        </div>
+
+        <!-- Tab 1: Foot Locus -->
+        <div id="locusContent">
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Left: Parameters -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Parameters</h2>
+
+                    <h3 class="font-medium text-gray-700 mb-2">Mechanism Mode</h3>
+                    <div class="mb-4">
+                        <div class="flex gap-2">
+                            <button id="modeLeggedBtn" class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-sm rounded font-medium">
+                                Legged
+                            </button>
+                            <button id="modeGripperBtn" class="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded font-medium">
+                                Gripper
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="modeDescription">Symmetric gripper with A and A' mirrored</p>
+                    </div>
+
+                    <h3 class="font-medium text-gray-700 mb-2">Phase Durations (%)</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Stance</span>
+                                <span class="text-green-600 font-bold" id="stancePercentValue">60</span>%
+                            </label>
+                            <input type="range" id="stancePercentSlider" min="40" max="80" value="60" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Lift = Drop</span>
+                                <span class="text-blue-600 font-bold" id="liftDropPercentValue">15</span>%
+                            </label>
+                            <input type="range" id="liftDropPercentSlider" min="5" max="25" value="15" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Swing (computed)</span>
+                                <span class="text-orange-600 font-bold" id="swingPercentValue">20</span>%
+                            </label>
+                        </div>
+                    </div>
+
+                    <h3 class="font-medium text-gray-700 mt-4 mb-2">Vx Overlap</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Overlap</span>
+                                <span class="text-purple-600 font-bold" id="overlapPercentValue">50</span>%
+                            </label>
+                            <input type="range" id="overlapPercentSlider" min="0" max="100" value="50" step="5" class="w-full">
+                            <p class="text-xs text-gray-500">% of Lift/Drop where Vx=forward</p>
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Type</span>
+                            </label>
+                            <select id="transitionTypeSelect" class="w-full border rounded p-1 text-sm">
+                                <option value="quintic" selected>Quintic Polynomial</option>
+                                <option value="sine">Sine Wave</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="font-medium text-gray-700 mt-4 mb-2">Amplitudes</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Vx (forward velocity)</span>
+                                <span class="text-blue-600 font-bold" id="vxValue">1.0</span>
+                            </label>
+                            <input type="range" id="vxSlider" min="0.5" max="2" value="1" step="0.1" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Vy amplitude</span>
+                                <span class="text-green-600 font-bold" id="vyValue">2.0</span>
+                            </label>
+                            <input type="range" id="vySlider" min="0.5" max="3" value="2" step="0.1" class="w-full">
+                        </div>
+                    </div>
+
+                    <h3 class="font-medium text-gray-700 mt-4 mb-2">Trammel Link</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>Link length (L)</span>
+                                <span class="text-cyan-600 font-bold" id="linkLengthValue">0.5</span>
+                            </label>
+                            <input type="range" id="linkLengthSlider" min="0.2" max="1.5" value="0.5" step="0.05" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>B height (By)</span>
+                                <span class="text-cyan-600 font-bold" id="bHeightValue">-0.3</span>
+                            </label>
+                            <input type="range" id="bHeightSlider" min="-0.5" max="0.5" value="-0.3" step="0.05" class="w-full">
+                        </div>
+                    </div>
+
+                    <h3 class="font-medium text-gray-700 mt-4 mb-2">Point C (on board)</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>C offset X (from B)</span>
+                                <span class="text-purple-600 font-bold" id="cOffsetXValue">0.0</span>
+                            </label>
+                            <input type="range" id="cOffsetXSlider" min="-0.5" max="0.5" value="0" step="0.05" class="w-full">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-sm mb-1">
+                                <span>C offset Y (from B)</span>
+                                <span class="text-purple-600 font-bold" id="cOffsetYValue">0.0</span>
+                            </label>
+                            <input type="range" id="cOffsetYSlider" min="-0.5" max="0.5" value="0" step="0.05" class="w-full">
+                        </div>
+                    </div>
+
+                    <!-- Computed Values -->
+                    <div class="mt-4 p-2 bg-gray-100 rounded text-xs space-y-1">
+                        <div class="flex justify-between">
+                            <span>Return Vx:</span>
+                            <span id="returnVxValue" class="font-mono font-bold">-2.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Current Vx:</span>
+                            <span id="currentVxValue" class="font-mono">0.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Current Vy:</span>
+                            <span id="currentVyValue" class="font-mono">0.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>A position:</span>
+                            <span id="currentPosValue" class="font-mono">(0.0, 0.0)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>B position:</span>
+                            <span id="currentBPosValue" class="font-mono text-cyan-600">(0.0, 0.0)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>C position:</span>
+                            <span id="currentCPosValue" class="font-mono text-purple-600">(0.0, 0.0)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>|AB| (verify):</span>
+                            <span id="currentLinkLength" class="font-mono">0.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center: Locus Animation -->
+                <div class="col-span-2 bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Trammel Mechanism (Link AB)</h2>
+                    <canvas id="locusCanvas" width="800" height="450" class="border border-gray-300 bg-gray-50 mx-auto block"></canvas>
+
+                    <!-- Animation Controls (below canvas) -->
+                    <div class="mt-4 border-t pt-4">
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <!-- Play/Pause -->
+                            <button id="playBtn" class="px-3 py-2 bg-green-500 text-white text-lg rounded hover:bg-green-600" title="Play">
+                                &#x25B6;
+                            </button>
+
+                            <!-- Direction Controls -->
+                            <div class="flex gap-1">
+                                <button id="dirForward" class="px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600" title="Forward">
+                                    &#x25B6;
+                                </button>
+                                <button id="dirBackward" class="px-2 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400" title="Backward">
+                                    &#x25C0;
+                                </button>
+                                <button id="dirPingPong" class="px-2 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400" title="Ping Pong">
+                                    &#x21C4;
+                                </button>
+                            </div>
+
+                            <!-- Progress slider -->
+                            <div class="flex items-center gap-2 flex-1">
+                                <label class="text-sm font-medium text-gray-700">Progress:</label>
+                                <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5"
+                                       class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="progressValue" class="text-sm text-gray-600 font-bold w-12 text-right">0%</span>
+                            </div>
+
+                            <!-- Speed Control -->
+                            <div class="flex items-center gap-1">
+                                <label class="text-xs text-gray-600">Speed:</label>
+                                <input type="range" id="speedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                                       class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="speedValue" class="text-xs text-gray-800 font-bold w-6">0.5</span>
+                            </div>
+
+                            <!-- Phase Display -->
+                            <div class="text-sm">
+                                Phase: <span id="phaseDisplay" class="font-bold text-green-600">Stance</span>
+                            </div>
+                        </div>
+
+                        <!-- Second Set Controls -->
+                        <div class="mt-3 pt-3 border-t flex items-center gap-4 flex-wrap">
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm font-medium text-gray-700">Sets:</label>
+                                <button id="setOneBtn" class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded font-medium">1</button>
+                                <button id="setTwoBtn" class="px-3 py-1 bg-blue-500 text-white text-sm rounded font-medium">2</button>
+                            </div>
+
+                            <div id="set2Controls" class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm text-gray-600">Phase Offset:</label>
+                                    <input type="range" id="phaseOffsetSlider" min="-100" max="100" value="50" step="5"
+                                           class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <span id="phaseOffsetValue" class="text-sm text-gray-800 font-bold w-12">50%</span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm text-gray-600">Mirror:</label>
+                                    <input type="checkbox" id="mirrorSet2" class="w-4 h-4 rounded" checked>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Motion Profiles -->
+        <div id="profilesContent" class="hidden">
+            <!-- Mechanism Overview -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">Mechanism Overview</h2>
+                <div class="text-sm text-gray-700 space-y-3">
+                    <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                        <strong class="text-blue-800">Self-Powered Long Range Linear Motion</strong>
+                        <p class="mt-1 text-xs">1DOF locomotion via sequential gripping - no rack or teeth required.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-2 rounded">
+                            <strong>Elliptical Trammel Mechanism:</strong>
+                            <ul class="ml-4 mt-1 text-xs space-y-1">
+                                <li><strong>Point A</strong> (foot) - moves in X and Y (the locus we define)</li>
+                                <li><strong>Point B</strong> - slides on horizontal guide (X only, fixed Y)</li>
+                                <li><strong>Link AB</strong> - rigid bar of length L</li>
+                            </ul>
+                            <div class="mt-2 text-xs text-gray-600">
+                                A accounts for all Y movement.<br>
+                                Constraint |AB| = L determines B<sub>x</sub>:<br>
+                                B<sub>x</sub> = A<sub>x</sub> ± √(L² - (A<sub>y</sub> - B<sub>y</sub>)²)
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-2 rounded">
+                            <strong>Walking Gait Phases:</strong>
+                            <ul class="ml-4 mt-1 text-xs space-y-1">
+                                <li><span class="bg-green-200 px-1">STANCE</span>: Foot on ground, pushing body forward</li>
+                                <li><span class="bg-blue-200 px-1">LIFT</span>: Foot rises off ground</li>
+                                <li><span class="bg-orange-200 px-1">SWING</span>: Foot in air, moving backward (relative)</li>
+                                <li><span class="bg-yellow-200 px-1">DROP</span>: Foot descends to ground</li>
+                            </ul>
+                            <div class="mt-2 text-xs text-gray-600">
+                                Net displacement = 0 over full cycle.<br>
+                                V<sub>return</sub> auto-calculated for this constraint.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase Formulas -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-3">Phase Layout & Formulas</h2>
+                <div class="text-sm text-gray-700 space-y-3">
+                    <div>
+                        <strong>Cycle order:</strong> STANCE → LIFT → SWING → DROP → (repeat)
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-2 rounded">
+                            <strong class="text-rose-600">Vx (horizontal velocity):</strong>
+                            <ul class="ml-4 mt-1 text-xs space-y-1">
+                                <li><span class="bg-green-200 px-1">STANCE</span>: Vx = V<sub>forward</sub> (constant)</li>
+                                <li><span class="bg-blue-200 px-1">LIFT</span>: Early part has Vx = V<sub>forward</sub></li>
+                                <li class="ml-4">Then Trans1: V<sub>forward</sub> → V<sub>return</sub></li>
+                                <li><span class="bg-orange-200 px-1">SWING</span>: Vx = V<sub>return</sub> (constant, negative)</li>
+                                <li><span class="bg-yellow-200 px-1">DROP</span>: Trans2: V<sub>return</sub> → V<sub>forward</sub></li>
+                                <li class="ml-4">Then late part has Vx = V<sub>forward</sub></li>
+                            </ul>
+                            <div class="mt-2 text-xs">
+                                <strong>Overlap:</strong> % of Lift/Drop where Vx = V<sub>forward</sub><br>
+                                <strong>Transition curves:</strong><br>
+                                Quintic: h(s) = 10s³ - 15s⁴ + 6s⁵<br>
+                                Sine: h(s) = (sin(πs - π/2) + 1) / 2
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-2 rounded">
+                            <strong class="text-violet-600">Vy (vertical velocity):</strong>
+                            <ul class="ml-4 mt-1 text-xs space-y-1">
+                                <li><span class="bg-green-200 px-1">STANCE</span>: Vy = 0</li>
+                                <li><span class="bg-blue-200 px-1">LIFT</span>: Vy = V<sub>y,amp</sub> · 16s²(1-s)²</li>
+                                <li class="ml-4">Peaks at s=0.5, foot rises</li>
+                                <li><span class="bg-orange-200 px-1">SWING</span>: Vy = 0</li>
+                                <li><span class="bg-yellow-200 px-1">DROP</span>: Vy = -V<sub>y,amp</sub> · 16s²(1-s)²</li>
+                                <li class="ml-4">Peaks at s=0.5, foot descends</li>
+                            </ul>
+                            <div class="mt-2 text-xs">
+                                <strong>Symmetric curve:</strong> 16s²(1-s)²<br>
+                                ∫₀¹ = 8/15, peaks at s=0.5 with value 1
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-xs bg-red-50 p-2 rounded border border-red-200">
+                        <strong class="text-red-600">Red dashed lines</strong> = Vx transition boundaries<br>
+                        Vx = V<sub>forward</sub> spans: late DROP → STANCE → early LIFT<br>
+                        V<sub>return</sub> is auto-calculated so net displacement = 0 over full cycle.
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-medium text-gray-700 mt-4 mb-2">Point A Profiles</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-medium mb-2">A Velocity</h3>
+                    <canvas id="velocityCanvas" width="400" height="200" class="border border-gray-300 w-full"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-medium mb-2">A Position</h3>
+                    <canvas id="positionCanvas" width="400" height="200" class="border border-gray-300 w-full"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-medium mb-2">A Acceleration</h3>
+                    <canvas id="accelerationCanvas" width="400" height="200" class="border border-gray-300 w-full"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-medium mb-2">A Jerk</h3>
+                    <canvas id="jerkCanvas" width="400" height="200" class="border border-gray-300 w-full"></canvas>
+                </div>
+            </div>
+
+            <h3 class="font-medium text-gray-700 mt-6 mb-2">Points B & C Profiles</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-medium mb-2">B & C Position</h3>
+                    <canvas id="bcPositionCanvas" width="400" height="200" class="border border-gray-300 w-full"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-medium mb-2">B & C Velocity</h3>
+                    <canvas id="bcVelocityCanvas" width="400" height="200" class="border border-gray-300 w-full"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Cam Mechanism -->
+        <div id="camContent" class="hidden">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h2 class="text-lg font-semibold">Disc Cam Mechanism</h2>
+                        <p class="text-sm text-gray-600">
+                            4-profile disc cam driving B1, C1 (left) and B2, C2 (right) followers.
+                        </p>
+                    </div>
+                    <button id="exportSvgBtn" class="px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                        Export SVG
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4">
+                    <!-- Canvas -->
+                    <div class="col-span-3">
+                        <canvas id="camCanvas" width="700" height="500" class="border border-gray-300 bg-gray-50 block"></canvas>
+                    </div>
+
+                    <!-- Cam Stats Panel -->
+                    <div class="col-span-1 bg-gray-50 rounded p-3 text-xs">
+                        <h3 class="font-semibold text-sm mb-2">Cam Profile Analysis</h3>
+                        <div id="camStats" class="space-y-3">
+                            <!-- Stats will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cam Animation Controls -->
+                <div class="mt-4 border-t pt-4">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <button id="camPlayBtn" class="px-3 py-2 bg-green-500 text-white text-lg rounded hover:bg-green-600" title="Play">
+                            &#x25B6;
+                        </button>
+
+                        <div class="flex items-center gap-2 flex-1">
+                            <label class="text-sm font-medium text-gray-700">Cam Angle:</label>
+                            <input type="range" id="camAngleSlider" min="0" max="360" value="0" step="1"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camAngleValue" class="text-sm text-gray-600 font-bold w-12 text-right">0°</span>
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            <label class="text-xs text-gray-600">Speed:</label>
+                            <input type="range" id="camSpeedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camSpeedValue" class="text-xs text-gray-800 font-bold w-6">0.5</span>
+                        </div>
+                    </div>
+
+                    <!-- Disc Configuration -->
+                    <div class="flex items-center gap-4 mt-3 flex-wrap">
+                        <label class="text-sm text-gray-700">Disc Config:</label>
+                        <button id="twoDiscBtn" class="px-3 py-1 bg-blue-500 text-white text-sm rounded font-medium">2 Discs</button>
+                        <button id="oneDiscBtn" class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded font-medium">1 Disc</button>
+                        <button id="twoSplitBtn" class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded font-medium">1 Disc (L/R)</button>
+                    </div>
+
+                    <!-- Min Radius Controls (Two Disc Mode) -->
+                    <div id="twoDiscControls" class="flex items-center gap-4 mt-3 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">B1 Min R:</label>
+                            <input type="range" id="camMinRB1Slider" min="0.1" max="3.0" value="1.0" step="0.1"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camMinRB1Value" class="text-sm text-cyan-600 font-bold w-10">1.0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">C1 Min R:</label>
+                            <input type="range" id="camMinRC1Slider" min="0.1" max="3.0" value="2.0" step="0.1"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camMinRC1Value" class="text-sm text-purple-600 font-bold w-10">2.0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">B2 Min R:</label>
+                            <input type="range" id="camMinRB2Slider" min="0.1" max="3.0" value="1.0" step="0.1"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camMinRB2Value" class="text-sm text-orange-600 font-bold w-10">1.0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">C2 Min R:</label>
+                            <input type="range" id="camMinRC2Slider" min="0.1" max="3.0" value="2.0" step="0.1"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camMinRC2Value" class="text-sm text-pink-600 font-bold w-10">2.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Min Radius Controls (One Disc Mode) -->
+                    <div id="oneDiscControls" class="hidden items-center gap-4 mt-3 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">B1 Min R:</label>
+                            <input type="range" id="oneDiscMinRSlider" min="0.1" max="2.0" value="1.0" step="0.1"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="oneDiscMinRValue" class="text-sm text-cyan-600 font-bold w-10">1.0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">Gap:</label>
+                            <input type="range" id="profileGapSlider" min="0.05" max="0.5" value="0.15" step="0.05"
+                                   class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="profileGapValue" class="text-sm text-gray-800 font-bold w-10">0.15</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            Order: B1 → C1 → B2 → C2 (inner to outer)
+                        </div>
+                    </div>
+
+                    <!-- Roller Radius Control -->
+                    <div class="flex items-center gap-4 mt-3">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">Roller Radius:</label>
+                            <input type="range" id="rollerRadiusSlider" min="0.05" max="0.5" value="0.15" step="0.01"
+                                   class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="rollerRadiusValue" class="text-sm text-gray-800 font-bold w-12">0.15</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-700">Show Grooves:</label>
+                            <input type="checkbox" id="showGroovesCheckbox" class="w-4 h-4 rounded" checked>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: OpenSCAD -->
+        <div id="scadContent" class="hidden">
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Left: Controls -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Cam Design</h2>
+
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700">Configuration:</label>
+                        <p id="scadConfigDisplay" class="text-sm text-blue-600 font-bold mt-1">2 Discs</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-sm font-medium text-gray-700">Cam Thickness (mm):</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="range" id="camThicknessSlider" min="5" max="30" value="10" step="1"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="camThicknessValue" class="text-sm text-gray-800 font-bold w-10">10</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-sm font-medium text-gray-700">Scale Factor:</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="range" id="scadScaleSlider" min="10" max="100" value="50" step="5"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="scadScaleValue" class="text-sm text-gray-800 font-bold w-10">50</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-sm font-medium text-gray-700">Center Hole (mm):</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="range" id="centerHoleSlider" min="0" max="20" value="8" step="1"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="centerHoleValue" class="text-sm text-gray-800 font-bold w-10">8</span>
+                        </div>
+                    </div>
+
+                    <button id="copyScadBtn" class="w-full px-4 py-2 bg-blue-500 text-white rounded font-medium hover:bg-blue-600 mb-2 text-sm">
+                        Copy Code
+                    </button>
+
+                    <button id="downloadScadBtn" class="w-full px-4 py-2 bg-gray-500 text-white rounded font-medium hover:bg-gray-600 text-sm">
+                        Download .scad
+                    </button>
+
+                    <div class="mt-4 pt-3 border-t">
+                        <p class="text-xs text-gray-500">Drag to rotate, scroll to zoom</p>
+                    </div>
+                </div>
+
+                <!-- Middle: 3D Preview -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">3D Preview</h2>
+                    <div id="threejsContainer" class="w-full h-96 bg-gray-800 rounded"></div>
+                </div>
+
+                <!-- Right: Code Preview -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">OpenSCAD Code</h2>
+                    <textarea id="scadCodeArea" class="w-full h-96 font-mono text-xs bg-gray-900 text-green-400 p-3 rounded border" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: 3D Mechanism -->
+        <div id="mechanismContent" class="hidden">
+            <div class="grid grid-cols-4 gap-4">
+                <!-- Left: Controls -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Cam Animation</h2>
+
+                    <!-- Play/Pause -->
+                    <div class="mb-4">
+                        <button id="mechPlayBtn" class="w-full px-4 py-2 bg-green-500 text-white text-lg rounded hover:bg-green-600" title="Play">
+                            &#x25B6;
+                        </button>
+                    </div>
+
+                    <!-- Cam Angle Slider -->
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700">Cam Angle:</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="range" id="mechCamAngleSlider" min="0" max="360" value="0" step="1"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="mechCamAngleValue" class="text-sm text-gray-800 font-bold w-12">0&deg;</span>
+                        </div>
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700">Speed:</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="range" id="mechSpeedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                                   class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="mechSpeedValue" class="text-sm text-gray-800 font-bold w-10">0.5</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h3 class="font-medium text-gray-700 mb-2">View Options</h3>
+
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" id="showCamDiscCheck" class="w-4 h-4 rounded" checked>
+                            <span>Show Cam Disc</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" id="showFollowersCheck" class="w-4 h-4 rounded" checked>
+                            <span>Show Followers</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" id="showTrammelsCheck" class="w-4 h-4 rounded" checked>
+                            <span>Show Trammel Boards</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" id="showRailsCheck" class="w-4 h-4 rounded" checked>
+                            <span>Show Rails</span>
+                        </label>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <button id="resetMechCameraBtn" class="w-full px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600">
+                        Reset Camera
+                    </button>
+
+                    <div class="mt-4 pt-3 border-t">
+                        <p class="text-xs text-gray-500">Drag to rotate, scroll to zoom</p>
+                    </div>
+                </div>
+
+                <!-- Right: 3D Viewer (3 columns) -->
+                <div class="col-span-3 bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">3D Mechanism Preview</h2>
+                    <div id="mechanismThreeContainer" style="height: 600px;" class="bg-gray-800 rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 6: TODO -->
+        <div id="todoContent" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Project TODO List</h2>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Optimizations for the cam</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Actual cam design</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Cam simulation</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Cam fabrication</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Mechanism design</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Mechanism parts fabrication</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Mechanism assembly</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Testing</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Barrel cam design</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 w-4 h-4 rounded border-gray-300">
+                        <span class="text-gray-700">Gear design</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import {
+            getPhases,
+            calculateReturnVx,
+            getVy,
+            getVx,
+            getAy,
+            getAx,
+            getJy,
+            getJx,
+            getPosY,
+            getPosX,
+            getPhaseName
+        } from './js/motion.js';
+
+        // Import OpenSCAD/Three.js module
+        import {
+            initScadModule,
+            initThreeJS,
+            updateThreeJS,
+            updateScadTab,
+            generateScadCode,
+            copyToClipboard,
+            downloadScadFile,
+            setupScadEventListeners,
+            setCamThickness,
+            setScadScale,
+            setCenterHole
+        } from './js/scad.js';
+
+        // Import 3D Mechanism module
+        import {
+            initMechanismModule,
+            initMechanismThreeJS,
+            updateMechanism,
+            setupMechanismEventListeners
+        } from './js/mechanism.js';
+
+        // =============================================
+        // PARAMETERS
+        // =============================================
+        let stancePercent = 60;
+        let liftDropPercent = 15;
+        let overlapPercent = 50;
+        let transitionType = 'quintic';
+        let vxAmp = 1.0;
+        let vyAmp = 2.0;
+        let linkLength = 0.5;  // Trammel link length L
+        let bHeight = -0.3;    // Point B's fixed Y position (negative = below A)
+        let cOffsetX = 0.0;    // Point C X offset from B (on the board)
+        let cOffsetY = 0.0;    // Point C Y offset from B (on the board)
+        let mechanismMode = 'gripper';  // 'legged' or 'gripper'
+        let numSets = 2;  // 1 or 2 trammel sets
+        let phaseOffset = 50;  // Phase offset for second set (-100 to 100 %)
+        let mirrorSet2 = true;  // If true, second set has A to the right of B
+        let camMinRadiusB1 = 1.0;  // Minimum radius for B1 cam profile
+        let camMinRadiusC1 = 2.0;  // Minimum radius for C1 cam profile
+        let camMinRadiusB2 = 1.0;  // Minimum radius for B2 cam profile
+        let camMinRadiusC2 = 2.0;  // Minimum radius for C2 cam profile
+        let rollerRadius = 0.15;  // Roller follower radius
+        let showGrooves = true;   // Show groove walls instead of pitch curve
+        let discConfig = 'two';   // 'one', 'two', or 'twoSplit' disc configuration
+        let oneDiscMinR = 1.0;    // B1 min radius for one-disc mode (shared by 1 Disc and 1 Disc L/R)
+        let profileGap = 0.15;    // Gap between profiles in one-disc modes
+        let progress = 0;
+        let playing = false;
+        let animationId = null;
+        let animationSpeed = 0.5;
+        let animationDirection = 1;  // 1 = forward, -1 = backward
+        let animationMode = 'forward';  // 'forward', 'backward', 'pingpong'
+
+        // Cam tab
+        let camAngle = 0;  // Cam rotation angle in degrees
+        let camPlaying = false;
+        let camAnimationId = null;
+        let camSpeed = 0.5;
+
+        // =============================================
+        // DOM ELEMENTS
+        // =============================================
+        const tabLocus = document.getElementById('tabLocus');
+        const tabProfiles = document.getElementById('tabProfiles');
+        const tabCam = document.getElementById('tabCam');
+        const tabScad = document.getElementById('tabScad');
+        const tabMechanism = document.getElementById('tabMechanism');
+        const tabTodo = document.getElementById('tabTodo');
+        const locusContent = document.getElementById('locusContent');
+        const profilesContent = document.getElementById('profilesContent');
+        const camContent = document.getElementById('camContent');
+        const scadContent = document.getElementById('scadContent');
+        const mechanismContent = document.getElementById('mechanismContent');
+        const todoContent = document.getElementById('todoContent');
+
+        const stancePercentSlider = document.getElementById('stancePercentSlider');
+        const liftDropPercentSlider = document.getElementById('liftDropPercentSlider');
+        const overlapPercentSlider = document.getElementById('overlapPercentSlider');
+        const transitionTypeSelect = document.getElementById('transitionTypeSelect');
+        const vxSlider = document.getElementById('vxSlider');
+        const vySlider = document.getElementById('vySlider');
+        const linkLengthSlider = document.getElementById('linkLengthSlider');
+        const bHeightSlider = document.getElementById('bHeightSlider');
+        const cOffsetXSlider = document.getElementById('cOffsetXSlider');
+        const cOffsetYSlider = document.getElementById('cOffsetYSlider');
+        const progressSlider = document.getElementById('progressSlider');
+        const playBtn = document.getElementById('playBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const dirForward = document.getElementById('dirForward');
+        const dirBackward = document.getElementById('dirBackward');
+        const dirPingPong = document.getElementById('dirPingPong');
+        const modeLeggedBtn = document.getElementById('modeLeggedBtn');
+        const modeGripperBtn = document.getElementById('modeGripperBtn');
+        const modeDescription = document.getElementById('modeDescription');
+        const setOneBtn = document.getElementById('setOneBtn');
+        const setTwoBtn = document.getElementById('setTwoBtn');
+        const set2Controls = document.getElementById('set2Controls');
+        const phaseOffsetSlider = document.getElementById('phaseOffsetSlider');
+        const mirrorSet2Checkbox = document.getElementById('mirrorSet2');
+
+        // =============================================
+        // NUMBER OF SETS
+        // =============================================
+        function updateSetButtons() {
+            setOneBtn.classList.toggle('bg-blue-500', numSets === 1);
+            setOneBtn.classList.toggle('text-white', numSets === 1);
+            setOneBtn.classList.toggle('bg-gray-300', numSets !== 1);
+            setOneBtn.classList.toggle('text-gray-700', numSets !== 1);
+
+            setTwoBtn.classList.toggle('bg-blue-500', numSets === 2);
+            setTwoBtn.classList.toggle('text-white', numSets === 2);
+            setTwoBtn.classList.toggle('bg-gray-300', numSets !== 2);
+            setTwoBtn.classList.toggle('text-gray-700', numSets !== 2);
+
+            // Enable/disable set 2 controls
+            set2Controls.classList.toggle('opacity-50', numSets === 1);
+            set2Controls.classList.toggle('pointer-events-none', numSets === 1);
+        }
+
+        setOneBtn.addEventListener('click', () => {
+            numSets = 1;
+            updateSetButtons();
+            drawLocus();
+        });
+
+        setTwoBtn.addEventListener('click', () => {
+            numSets = 2;
+            updateSetButtons();
+            drawLocus();
+        });
+
+        phaseOffsetSlider.addEventListener('input', (e) => {
+            phaseOffset = parseInt(e.target.value);
+            document.getElementById('phaseOffsetValue').textContent = phaseOffset + '%';
+            drawLocus();
+        });
+
+        mirrorSet2Checkbox.addEventListener('change', (e) => {
+            mirrorSet2 = e.target.checked;
+            drawLocus();
+        });
+
+        // =============================================
+        // MECHANISM MODE
+        // =============================================
+        function updateModeButtons() {
+            modeLeggedBtn.classList.toggle('bg-blue-500', mechanismMode === 'legged');
+            modeLeggedBtn.classList.toggle('text-white', mechanismMode === 'legged');
+            modeLeggedBtn.classList.toggle('bg-gray-300', mechanismMode !== 'legged');
+            modeLeggedBtn.classList.toggle('text-gray-700', mechanismMode !== 'legged');
+
+            modeGripperBtn.classList.toggle('bg-blue-500', mechanismMode === 'gripper');
+            modeGripperBtn.classList.toggle('text-white', mechanismMode === 'gripper');
+            modeGripperBtn.classList.toggle('bg-gray-300', mechanismMode !== 'gripper');
+            modeGripperBtn.classList.toggle('text-gray-700', mechanismMode !== 'gripper');
+
+            modeDescription.textContent = mechanismMode === 'legged'
+                ? 'Single foot for walking motion'
+                : 'Symmetric gripper with A and A\' mirrored';
+        }
+
+        modeLeggedBtn.addEventListener('click', () => {
+            mechanismMode = 'legged';
+            updateModeButtons();
+            drawLocus();
+        });
+
+        modeGripperBtn.addEventListener('click', () => {
+            mechanismMode = 'gripper';
+            updateModeButtons();
+            drawLocus();
+        });
+
+        // =============================================
+        // TAB SWITCHING
+        // =============================================
+        function switchTab(tab) {
+            // Hide all content
+            locusContent.classList.add('hidden');
+            profilesContent.classList.add('hidden');
+            camContent.classList.add('hidden');
+            scadContent.classList.add('hidden');
+            mechanismContent.classList.add('hidden');
+            todoContent.classList.add('hidden');
+
+            // Reset all tab styles
+            tabLocus.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabLocus.classList.add('border-transparent', 'text-gray-500');
+            tabProfiles.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabProfiles.classList.add('border-transparent', 'text-gray-500');
+            tabCam.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabCam.classList.add('border-transparent', 'text-gray-500');
+            tabScad.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabScad.classList.add('border-transparent', 'text-gray-500');
+            tabMechanism.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabMechanism.classList.add('border-transparent', 'text-gray-500');
+            tabTodo.classList.remove('border-blue-500', 'text-blue-600', 'bg-white');
+            tabTodo.classList.add('border-transparent', 'text-gray-500');
+
+            // Show selected tab
+            if (tab === 'locus') {
+                locusContent.classList.remove('hidden');
+                tabLocus.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+                tabLocus.classList.remove('border-transparent', 'text-gray-500');
+                drawLocus();
+            } else if (tab === 'profiles') {
+                profilesContent.classList.remove('hidden');
+                tabProfiles.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+                tabProfiles.classList.remove('border-transparent', 'text-gray-500');
+                drawProfiles();
+            } else if (tab === 'cam') {
+                camContent.classList.remove('hidden');
+                tabCam.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+                tabCam.classList.remove('border-transparent', 'text-gray-500');
+                drawCam();
+            } else if (tab === 'scad') {
+                scadContent.classList.remove('hidden');
+                tabScad.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+                tabScad.classList.remove('border-transparent', 'text-gray-500');
+                updateScadTab();
+            } else if (tab === 'mechanism') {
+                mechanismContent.classList.remove('hidden');
+                tabMechanism.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+                tabMechanism.classList.remove('border-transparent', 'text-gray-500');
+                updateMechanism();
+            } else if (tab === 'todo') {
+                todoContent.classList.remove('hidden');
+                tabTodo.classList.add('border-blue-500', 'text-blue-600', 'bg-white');
+                tabTodo.classList.remove('border-transparent', 'text-gray-500');
+            }
+
+            // Update URL hash
+            window.location.hash = tab;
+        }
+
+        tabLocus.addEventListener('click', () => switchTab('locus'));
+        tabProfiles.addEventListener('click', () => switchTab('profiles'));
+        tabCam.addEventListener('click', () => switchTab('cam'));
+        tabScad.addEventListener('click', () => switchTab('scad'));
+        tabMechanism.addEventListener('click', () => switchTab('mechanism'));
+        tabTodo.addEventListener('click', () => switchTab('todo'));
+
+        // Persist tab in URL hash
+        function getTabFromHash() {
+            const hash = window.location.hash.slice(1);
+            if (['locus', 'profiles', 'cam', 'scad', 'mechanism', 'todo'].includes(hash)) return hash;
+            return 'locus';
+        }
+
+        window.addEventListener('hashchange', () => {
+            switchTab(getTabFromHash());
+        });
+
+        // =============================================
+        // PARAMETER UPDATES
+        // =============================================
+        function updateParams() {
+            const p = getPhases(stancePercent, liftDropPercent, overlapPercent);
+            const returnVx = calculateReturnVx(p, vxAmp, transitionType);
+
+            document.getElementById('stancePercentValue').textContent = stancePercent;
+            document.getElementById('liftDropPercentValue').textContent = liftDropPercent;
+            document.getElementById('swingPercentValue').textContent = Math.round(p.swing * 100);
+            document.getElementById('overlapPercentValue').textContent = overlapPercent;
+            document.getElementById('vxValue').textContent = vxAmp.toFixed(1);
+            document.getElementById('vyValue').textContent = vyAmp.toFixed(1);
+            document.getElementById('linkLengthValue').textContent = linkLength.toFixed(2);
+            document.getElementById('bHeightValue').textContent = bHeight.toFixed(2);
+            document.getElementById('cOffsetXValue').textContent = cOffsetX.toFixed(2);
+            document.getElementById('cOffsetYValue').textContent = cOffsetY.toFixed(2);
+            document.getElementById('returnVxValue').textContent = returnVx.toFixed(3);
+        }
+
+        function updatePhaseDisplay() {
+            const p = getPhases(stancePercent, liftDropPercent, overlapPercent);
+            const t = progress / 100;
+            const phase = getPhaseName(t, p);
+
+            const phaseColors = {
+                stance: 'text-green-600',
+                lift: 'text-blue-600',
+                swing: 'text-orange-600',
+                drop: 'text-yellow-600'
+            };
+
+            document.getElementById('phaseDisplay').textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
+            document.getElementById('phaseDisplay').className = 'font-bold ' + phaseColors[phase];
+
+            // Update current values display
+            const vx = getVx(t, p, vxAmp, transitionType);
+            const vy = getVy(t, p, vyAmp);
+            const posX = getPosX(t, p, vxAmp, transitionType);
+            const posY = getPosY(t, p, vyAmp);
+            const posBx = getBx(posX, posY);
+
+            document.getElementById('currentVxValue').textContent = vx.toFixed(3);
+            document.getElementById('currentVyValue').textContent = vy.toFixed(3);
+            document.getElementById('currentPosValue').textContent = `(${posX.toFixed(3)}, ${posY.toFixed(3)})`;
+            document.getElementById('currentBPosValue').textContent = `(${posBx.toFixed(3)}, ${bHeight.toFixed(3)})`;
+
+            // C is fixed on the board (moves with trammel, which is A's X)
+            const posCx = posX + cOffsetX;
+            const posCy = bHeight + cOffsetY;
+            document.getElementById('currentCPosValue').textContent = `(${posCx.toFixed(3)}, ${posCy.toFixed(3)})`;
+
+            // Verify link length stays constant
+            const actualLength = getLinkLength(posX, posY, posBx, bHeight);
+            document.getElementById('currentLinkLength').textContent = actualLength.toFixed(4);
+        }
+
+        stancePercentSlider.addEventListener('input', (e) => {
+            stancePercent = parseInt(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        liftDropPercentSlider.addEventListener('input', (e) => {
+            liftDropPercent = parseInt(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        overlapPercentSlider.addEventListener('input', (e) => {
+            overlapPercent = parseInt(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        transitionTypeSelect.addEventListener('change', (e) => {
+            transitionType = e.target.value;
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        vxSlider.addEventListener('input', (e) => {
+            vxAmp = parseFloat(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        vySlider.addEventListener('input', (e) => {
+            vyAmp = parseFloat(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        linkLengthSlider.addEventListener('input', (e) => {
+            linkLength = parseFloat(e.target.value);
+            updateParams();
+            drawLocus();
+        });
+
+        bHeightSlider.addEventListener('input', (e) => {
+            bHeight = parseFloat(e.target.value);
+            updateParams();
+            drawLocus();
+        });
+
+        cOffsetXSlider.addEventListener('input', (e) => {
+            cOffsetX = parseFloat(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        cOffsetYSlider.addEventListener('input', (e) => {
+            cOffsetY = parseFloat(e.target.value);
+            updateParams();
+            if (!locusContent.classList.contains('hidden')) drawLocus();
+            else drawProfiles();
+        });
+
+        progressSlider.addEventListener('input', (e) => {
+            progress = parseFloat(e.target.value);
+            document.getElementById('progressValue').textContent = Math.round(progress) + '%';
+            updatePhaseDisplay();
+            drawLocus();
+        });
+
+        // =============================================
+        // ANIMATION
+        // =============================================
+        function updateDirectionButtons() {
+            dirForward.classList.toggle('bg-blue-500', animationMode === 'forward');
+            dirForward.classList.toggle('text-white', animationMode === 'forward');
+            dirForward.classList.toggle('bg-gray-300', animationMode !== 'forward');
+            dirForward.classList.toggle('text-gray-700', animationMode !== 'forward');
+
+            dirBackward.classList.toggle('bg-blue-500', animationMode === 'backward');
+            dirBackward.classList.toggle('text-white', animationMode === 'backward');
+            dirBackward.classList.toggle('bg-gray-300', animationMode !== 'backward');
+            dirBackward.classList.toggle('text-gray-700', animationMode !== 'backward');
+
+            dirPingPong.classList.toggle('bg-blue-500', animationMode === 'pingpong');
+            dirPingPong.classList.toggle('text-white', animationMode === 'pingpong');
+            dirPingPong.classList.toggle('bg-gray-300', animationMode !== 'pingpong');
+            dirPingPong.classList.toggle('text-gray-700', animationMode !== 'pingpong');
+        }
+
+        dirForward.addEventListener('click', () => {
+            animationMode = 'forward';
+            animationDirection = 1;
+            updateDirectionButtons();
+        });
+
+        dirBackward.addEventListener('click', () => {
+            animationMode = 'backward';
+            animationDirection = -1;
+            updateDirectionButtons();
+        });
+
+        dirPingPong.addEventListener('click', () => {
+            animationMode = 'pingpong';
+            updateDirectionButtons();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            animationSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
+        });
+
+        playBtn.addEventListener('click', () => {
+            playing = !playing;
+            playBtn.innerHTML = playing ? '&#x23F8;' : '&#x25B6;';  // Pause ⏸ or Play ▶
+            playBtn.title = playing ? 'Pause' : 'Play';
+            playBtn.classList.toggle('bg-green-500', !playing);
+            playBtn.classList.toggle('bg-red-500', playing);
+            if (playing) animate();
+        });
+
+        function animate() {
+            if (!playing) return;
+
+            // Calculate direction based on mode
+            let dir = animationDirection;
+            if (animationMode === 'pingpong') {
+                if (progress >= 100) animationDirection = -1;
+                else if (progress <= 0) animationDirection = 1;
+                dir = animationDirection;
+            }
+
+            progress += dir * animationSpeed;
+
+            // Wrap or clamp based on mode
+            if (animationMode === 'forward') {
+                if (progress > 100) progress = 0;
+            } else if (animationMode === 'backward') {
+                if (progress < 0) progress = 100;
+            } else {
+                // pingpong: clamp
+                progress = Math.max(0, Math.min(100, progress));
+            }
+
+            progressSlider.value = progress;
+            document.getElementById('progressValue').textContent = Math.round(progress) + '%';
+            updatePhaseDisplay();
+            drawLocus();
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // =============================================
+        // TRAMMEL GEOMETRY
+        // =============================================
+        // Calculate Point B's X position given Point A's position
+        // B slides on horizontal guide at fixed height bHeight
+        // Link AB has fixed length linkLength
+        // |AB|² = (Bx - Ax)² + (By - Ay)²
+        // Since By = bHeight is fixed and |AB| = L:
+        // L² = (Bx - Ax)² + (bHeight - Ay)²
+        // (Bx - Ax)² = L² - (Ay - bHeight)²
+        // Bx = Ax ± sqrt(L² - (Ay - bHeight)²)
+        // mirror=false: B to the RIGHT of A (+), mirror=true: B to the LEFT of A (-)
+        function getBx(ax, ay, mirror = false) {
+            const dy = ay - bHeight;
+            const discriminant = linkLength * linkLength - dy * dy;
+            if (discriminant < 0) {
+                return NaN;
+            }
+            const offset = Math.sqrt(discriminant);
+            return mirror ? ax - offset : ax + offset;
+        }
+
+        // Calculate actual link length for verification
+        function getLinkLength(ax, ay, bx, by) {
+            const dx = bx - ax;
+            const dy = by - ay;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // =============================================
+        // SHARED GEOMETRY CALCULATIONS
+        // =============================================
+        // Compute locus points and geometry for reuse across tabs
+        function computeLocusGeometry() {
+            const p = getPhases(stancePercent, liftDropPercent, overlapPercent);
+
+            // Compute locus path for A and B (for one set, without offset)
+            const points = [];
+            const numPoints = 200;
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i / numPoints;
+                const ax = getPosX(t, p, vxAmp, transitionType);
+                const ay = getPosY(t, p, vyAmp);
+                const bx = getBx(ax, ay);
+                const phase = getPhaseName(t, p);
+                points.push({ t, ax, ay, bx, phase });
+            }
+
+            // Find bounds for a single set (include A, B, and C)
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            for (const pt of points) {
+                const cx = pt.ax + cOffsetX;
+                const cy = bHeight + cOffsetY;
+                minX = Math.min(minX, pt.ax, pt.bx, cx);
+                maxX = Math.max(maxX, pt.ax, pt.bx, cx);
+                minY = Math.min(minY, pt.ay, bHeight, cy);
+                maxY = Math.max(maxY, pt.ay, cy);
+
+                if (mechanismMode === 'gripper') {
+                    const apY = 2 * bHeight - pt.ay;
+                    minY = Math.min(minY, apY);
+                    maxY = Math.max(maxY, apY);
+                }
+            }
+
+            // Add extra padding for trammel board
+            const rangeX = maxX - minX || 1;
+            const rangeY = maxY - minY || 1;
+            const paddingFrac = 0.25;
+            minX -= rangeX * paddingFrac;
+            maxX += rangeX * paddingFrac;
+            minY -= rangeY * paddingFrac;
+            maxY += rangeY * paddingFrac;
+
+            // Calculate set spacing
+            const singleSetWidth = maxX - minX;
+            const setSpacing = singleSetWidth * 0.5;
+            const set2Offset = numSets === 2 ? singleSetWidth + setSpacing : 0;
+
+            // Cam center position - midpoint between set 1 and set 2
+            const camCenterX = set2Offset / 2;
+            const camCenterY = bHeight;
+
+            return {
+                p,
+                points,
+                minX, maxX, minY, maxY,
+                singleSetWidth,
+                setSpacing,
+                set2Offset,
+                camCenterX,
+                camCenterY
+            };
+        }
+
+        // =============================================
+        // DRAW LOCUS
+        // =============================================
+        function drawLocus() {
+            const canvas = document.getElementById('locusCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const margin = 50;
+            const plotW = w - 2 * margin;
+            const plotH = h - 2 * margin;
+
+            ctx.fillStyle = '#f9fafb';
+            ctx.fillRect(0, 0, w, h);
+
+            // Get shared geometry
+            const geo = computeLocusGeometry();
+            const { p, points, singleSetWidth, setSpacing, set2Offset } = geo;
+            let { minX, maxX, minY, maxY } = geo;
+
+            // Expand bounds if we have 2 sets
+            if (numSets === 2) {
+                maxX += set2Offset;
+            }
+
+            // Use uniform scaling to preserve geometry (link length appears constant)
+            const scaleX = plotW / (maxX - minX);
+            const scaleY = plotH / (maxY - minY);
+            const scale = Math.min(scaleX, scaleY);
+
+            // Center the plot
+            const usedW = (maxX - minX) * scale;
+            const usedH = (maxY - minY) * scale;
+            const offsetX = margin + (plotW - usedW) / 2;
+            const offsetY = margin + (plotH - usedH) / 2;
+
+            function toScreen(x, y) {
+                return {
+                    sx: offsetX + (x - minX) * scale,
+                    sy: offsetY + (maxY - y) * scale  // Flip Y
+                };
+            }
+
+            // Draw axes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            const origin = toScreen(0, 0);
+            ctx.beginPath();
+            ctx.moveTo(margin, origin.sy);
+            ctx.lineTo(w - margin, origin.sy);
+            ctx.moveTo(origin.sx, margin);
+            ctx.lineTo(origin.sx, h - margin);
+            ctx.stroke();
+
+            // =============================================
+            // HELPER: Draw one trammel set
+            // =============================================
+            function drawTrammelSet(setProgress, xOffset, setIndex, mirror = false) {
+                const tSet = setProgress / 100;
+                const currAx = getPosX(tSet, p, vxAmp, transitionType) + xOffset;
+                const currAy = getPosY(tSet, p, vyAmp);
+                const currBx = getBx(currAx - xOffset, currAy, mirror) + xOffset;
+                const currA = toScreen(currAx, currAy);
+                const currB = toScreen(currBx, bHeight);
+
+                // Point C is fixed on the board (trammel moves with A's X)
+                // When mirrored, flip the X offset
+                const cXOff = mirror ? -cOffsetX : cOffsetX;
+                const currCx = currAx + cXOff;  // C moves with trammel (A's X)
+                const currCy = bHeight + cOffsetY;
+                const currC = toScreen(currCx, currCy);
+
+                // For gripper mode: A' is mirrored below B
+                const currApY = 2 * bHeight - currAy;
+                const currAp = toScreen(currAx, currApY);
+
+                // Trammel frame position (moves with A's X)
+                const trammelX = currAx;
+
+                // Calculate slot dimensions
+                const slotAMinY = Math.min(...points.map(pt => pt.ay));
+                const slotAMaxY = Math.max(...points.map(pt => pt.ay));
+                const slotAPadding = 0.08;
+
+                // B relative positions depend on mirror mode
+                const bRelativeXs = points.map(pt => getBx(pt.ax, pt.ay, mirror) - pt.ax);
+                const slotBMinRel = Math.min(...bRelativeXs);
+                const slotBMaxRel = Math.max(...bRelativeXs);
+                const slotBPadding = 0.05;
+
+                // For gripper mode: A' slot mirrors A slot around B's height
+                const slotApMinY = 2 * bHeight - slotAMaxY;
+                const slotApMaxY = 2 * bHeight - slotAMinY;
+
+                // Board dimensions - must extend to cover both A slot and B slot
+                const boardPadding = 0.08;
+                // Board extends from leftmost slot edge to rightmost slot edge
+                const boardLeft = trammelX + Math.min(slotBMinRel - slotBPadding, 0) - boardPadding;
+                const boardRight = trammelX + Math.max(slotBMaxRel + slotBPadding, 0) + boardPadding;
+                let boardTop, boardBottom;
+
+                if (mechanismMode === 'gripper') {
+                    const sectionAboveB = slotAMaxY + slotAPadding - bHeight;
+                    boardTop = bHeight + sectionAboveB + boardPadding;
+                    boardBottom = bHeight - sectionAboveB - boardPadding;
+                } else {
+                    boardTop = slotAMaxY + slotAPadding + boardPadding;
+                    boardBottom = Math.min(slotAMinY - slotAPadding, bHeight) - boardPadding;
+                }
+
+                // Draw horizontal rails (trammel slides on these)
+                const railY1 = boardTop + 0.02;
+                const railY2 = boardBottom - 0.02;
+                const railScreen1 = toScreen(0, railY1);
+                const railScreen2 = toScreen(0, railY2);
+
+                ctx.strokeStyle = '#6b7280';
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(margin, railScreen1.sy);
+                ctx.lineTo(w - margin, railScreen1.sy);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(margin, railScreen2.sy);
+                ctx.lineTo(w - margin, railScreen2.sy);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#9ca3af';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(margin, railScreen1.sy - 2);
+                ctx.lineTo(w - margin, railScreen1.sy - 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(margin, railScreen2.sy - 2);
+                ctx.lineTo(w - margin, railScreen2.sy - 2);
+                ctx.stroke();
+                ctx.lineCap = 'butt';
+
+                const boardTL = toScreen(boardLeft, boardTop);
+                const boardBR = toScreen(boardRight, boardBottom);
+                const boardWidth = boardBR.sx - boardTL.sx;
+                const boardHeight = boardBR.sy - boardTL.sy;
+
+                // Draw trammel board
+                ctx.fillStyle = '#d4a574';
+                ctx.strokeStyle = '#8b5a2b';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(boardTL.sx, boardTL.sy, boardWidth, boardHeight, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Wood grain effect
+                ctx.strokeStyle = '#c4956a';
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.3;
+                for (let i = 0; i < 5; i++) {
+                    const yGrain = boardTL.sy + (i + 0.5) * boardHeight / 5;
+                    ctx.beginPath();
+                    ctx.moveTo(boardTL.sx + 10, yGrain);
+                    ctx.lineTo(boardBR.sx - 10, yGrain);
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1.0;
+
+                // Slot dimensions in screen coords
+                const slotWidth = 10;
+                const slotATop = toScreen(trammelX, slotAMaxY + slotAPadding);
+                const slotABottom = toScreen(trammelX, slotAMinY - slotAPadding);
+                const slotBLeft = toScreen(trammelX + slotBMinRel - slotBPadding, bHeight);
+                const slotBRight = toScreen(trammelX + slotBMaxRel + slotBPadding, bHeight);
+
+                // Draw vertical slot for A
+                ctx.fillStyle = '#1f2937';
+                ctx.beginPath();
+                ctx.roundRect(slotATop.sx - slotWidth/2, slotATop.sy, slotWidth, slotABottom.sy - slotATop.sy, 3);
+                ctx.fill();
+                ctx.strokeStyle = '#4b5563';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw horizontal slot for B
+                ctx.fillStyle = '#1f2937';
+                ctx.beginPath();
+                ctx.roundRect(slotBLeft.sx, slotBLeft.sy - slotWidth/2, slotBRight.sx - slotBLeft.sx, slotWidth, 3);
+                ctx.fill();
+                ctx.strokeStyle = '#4b5563';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // In gripper mode, draw A' slot
+                if (mechanismMode === 'gripper') {
+                    const slotApTop = toScreen(trammelX, slotApMaxY + slotAPadding);
+                    const slotApBottom = toScreen(trammelX, slotApMinY - slotAPadding);
+
+                    ctx.fillStyle = '#1f2937';
+                    ctx.beginPath();
+                    ctx.roundRect(slotApTop.sx - slotWidth/2, slotApTop.sy, slotWidth, slotApBottom.sy - slotApTop.sy, 3);
+                    ctx.fill();
+                    ctx.strokeStyle = '#4b5563';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                // In gripper mode, draw A' locus path
+                if (mechanismMode === 'gripper') {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#f472b6';
+                    ctx.globalAlpha = 0.4;
+                    ctx.beginPath();
+                    for (let i = 0; i < points.length; i++) {
+                        const pt = points[i];
+                        const apY = 2 * bHeight - pt.ay;
+                        const s = toScreen(pt.ax + xOffset, apY);
+                        if (i === 0) ctx.moveTo(s.sx, s.sy);
+                        else ctx.lineTo(s.sx, s.sy);
+                    }
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                }
+
+                // Draw phase-colored path for A (with offset)
+                ctx.lineWidth = 3;
+                const phaseColors = {
+                    stance: '#22c55e',
+                    lift: '#3b82f6',
+                    swing: '#f97316',
+                    drop: '#eab308'
+                };
+
+                for (let i = 0; i < points.length - 1; i++) {
+                    const pt1 = points[i];
+                    const pt2 = points[i + 1];
+
+                    const s1 = toScreen(pt1.ax + xOffset, pt1.ay);
+                    const s2 = toScreen(pt2.ax + xOffset, pt2.ay);
+
+                    ctx.strokeStyle = phaseColors[pt1.phase];
+                    ctx.beginPath();
+                    ctx.moveTo(s1.sx, s1.sy);
+                    ctx.lineTo(s2.sx, s2.sy);
+                    ctx.stroke();
+                }
+
+                // Draw Vx transition markers on locus
+                const vxMarkerColor = '#dc2626';
+                const vxMarkers = [
+                    { t: p.trans1Start, label: 'T1s' },
+                    { t: p.trans1End, label: 'T1e' },
+                    { t: p.trans2Start, label: 'T2s' },
+                    { t: p.trans2End, label: 'T2e' }
+                ];
+
+                for (const marker of vxMarkers) {
+                    const mx = getPosX(marker.t, p, vxAmp, transitionType) + xOffset;
+                    const my = getPosY(marker.t, p, vyAmp);
+                    const ms = toScreen(mx, my);
+
+                    ctx.fillStyle = vxMarkerColor;
+                    ctx.beginPath();
+                    ctx.moveTo(ms.sx, ms.sy - 6);
+                    ctx.lineTo(ms.sx + 6, ms.sy);
+                    ctx.lineTo(ms.sx, ms.sy + 6);
+                    ctx.lineTo(ms.sx - 6, ms.sy);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.fillStyle = vxMarkerColor;
+                    ctx.font = '10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(marker.label, ms.sx, ms.sy - 10);
+                }
+
+                // Draw link AB
+                ctx.strokeStyle = '#374151';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(currA.sx, currA.sy);
+                ctx.lineTo(currB.sx, currB.sy);
+                ctx.stroke();
+                ctx.strokeStyle = '#9ca3af';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(currA.sx, currA.sy);
+                ctx.lineTo(currB.sx, currB.sy);
+                ctx.stroke();
+
+                // In gripper mode, draw link A'B
+                if (mechanismMode === 'gripper') {
+                    ctx.strokeStyle = '#374151';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(currAp.sx, currAp.sy);
+                    ctx.lineTo(currB.sx, currB.sy);
+                    ctx.stroke();
+                    ctx.strokeStyle = '#9ca3af';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(currAp.sx, currAp.sy);
+                    ctx.lineTo(currB.sx, currB.sy);
+                    ctx.stroke();
+                }
+
+                // Draw point B
+                ctx.fillStyle = '#06b6d4';
+                ctx.beginPath();
+                ctx.arc(currB.sx, currB.sy, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#06b6d4';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('B' + (setIndex > 0 ? setIndex + 1 : ''), currB.sx + 12, currB.sy + 5);
+
+                // Draw point C
+                ctx.fillStyle = '#8b5cf6';  // purple
+                ctx.beginPath();
+                ctx.arc(currC.sx, currC.sy, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#8b5cf6';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('C' + (setIndex > 0 ? setIndex + 1 : ''), currC.sx + 12, currC.sy + 5);
+
+                // Draw point A
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(currA.sx, currA.sy, 10, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('A' + (setIndex > 0 ? setIndex + 1 : ''), currA.sx + 15, currA.sy + 5);
+
+                // In gripper mode, draw point A'
+                if (mechanismMode === 'gripper') {
+                    ctx.fillStyle = '#ec4899';
+                    ctx.beginPath();
+                    ctx.arc(currAp.sx, currAp.sy, 10, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ec4899';
+                    ctx.font = 'bold 14px sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.fillText("A'" + (setIndex > 0 ? setIndex + 1 : ''), currAp.sx + 15, currAp.sy + 5);
+                }
+            }
+
+            // =============================================
+            // Draw trammel set(s)
+            // =============================================
+            // Draw first set (never mirrored)
+            drawTrammelSet(progress, 0, 0, false);
+
+            // Draw second set if enabled (with phase offset and optional mirror)
+            if (numSets === 2) {
+                // Wrap progress with offset to 0-100 range
+                let set2Progress = (progress + phaseOffset) % 100;
+                if (set2Progress < 0) set2Progress += 100;
+                drawTrammelSet(set2Progress, set2Offset, 1, mirrorSet2);
+
+                // Draw dashed line connecting C1 to C2 when progress=0
+                // C1 at t=0
+                const ax1_t0 = getPosX(0, p, vxAmp, transitionType);
+                const c1x = ax1_t0 + cOffsetX;
+                const c1y = bHeight + cOffsetY;
+
+                // C2 at t=phaseOffset (because Set 2 has phase offset applied when progress=0)
+                let t2_at_0 = (phaseOffset % 100) / 100;
+                if (t2_at_0 < 0) t2_at_0 += 1;
+                const ax2_t0 = getPosX(t2_at_0, p, vxAmp, transitionType) + set2Offset;
+                const c2x = ax2_t0 + (mirrorSet2 ? -cOffsetX : cOffsetX);
+                const c2y = bHeight + cOffsetY;
+
+                const lineStart = toScreen(c1x, c1y);
+                const lineEnd = toScreen(c2x, c2y);
+                const midpoint = toScreen((c1x + c2x) / 2, (c1y + c2y) / 2);
+
+                ctx.strokeStyle = '#ef4444';
+                ctx.globalAlpha = 0.2;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(lineStart.sx, lineStart.sy);
+                ctx.lineTo(lineEnd.sx, lineEnd.sy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw dot at center (cam position)
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(midpoint.sx, midpoint.sy, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // =============================================
+            // Legend and labels (drawn once, outside helper)
+            // =============================================
+            const phaseColors = {
+                stance: '#22c55e',
+                lift: '#3b82f6',
+                swing: '#f97316',
+                drop: '#eab308'
+            };
+
+            ctx.font = '12px sans-serif';
+            const legendY = h - 20;
+            let legendX = margin;
+            for (const [phase, color] of Object.entries(phaseColors)) {
+                ctx.fillStyle = color;
+                ctx.fillRect(legendX, legendY - 10, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.fillText(phase.charAt(0).toUpperCase() + phase.slice(1), legendX + 20, legendY + 2);
+                legendX += 80;
+            }
+
+            // Vx transition legend
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.moveTo(legendX + 7, legendY - 10);
+            ctx.lineTo(legendX + 14, legendY - 3);
+            ctx.lineTo(legendX + 7, legendY + 4);
+            ctx.lineTo(legendX, legendY - 3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('Vx trans', legendX + 18, legendY + 2);
+
+            // Axis labels
+            ctx.fillStyle = '#666';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('X (horizontal)', w / 2, h - 5);
+            ctx.save();
+            ctx.translate(15, h / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Y (vertical)', 0, 0);
+            ctx.restore();
+
+            // Watermark
+            ctx.save();
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(-30 * Math.PI / 180);
+            ctx.font = '50px sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.globalAlpha = 0.15;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BrianMechanisms', 0, 0);
+            ctx.restore();
+        }
+
+        // =============================================
+        // DRAW PROFILES
+        // =============================================
+        function drawProfiles() {
+            const p = getPhases(stancePercent, liftDropPercent, overlapPercent);
+            drawVelocityProfile(p);
+            drawPositionProfile(p);
+            drawAccelerationProfile(p);
+            drawJerkProfile(p);
+            drawBCPositionProfile(p);
+            drawBCVelocityProfile(p);
+        }
+
+        function drawProfileCanvas(canvasId, getData, label, curveStyles) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const marginLeft = 50;
+            const marginRight = 20;
+            const marginTop = 25;
+            const marginBottom = 35;
+            const plotW = w - marginLeft - marginRight;
+            const plotH = h - marginTop - marginBottom;
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, w, h);
+
+            const p = getPhases(stancePercent, liftDropPercent, overlapPercent);
+            const numPoints = 200;
+            const data = [];
+
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i / numPoints;
+                const values = getData(t, p);
+                data.push({ t, ...values });
+            }
+
+            // Find bounds
+            let minV = Infinity, maxV = -Infinity;
+            for (const d of data) {
+                for (const key of Object.keys(curveStyles)) {
+                    minV = Math.min(minV, d[key]);
+                    maxV = Math.max(maxV, d[key]);
+                }
+            }
+            const range = maxV - minV || 1;
+            minV -= range * 0.1;
+            maxV += range * 0.1;
+            const scale = plotH / (maxV - minV);
+
+            // Draw phase backgrounds - use legend colors with alpha
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = '#22c55e';  // Stance - green
+            ctx.fillRect(marginLeft, marginTop, p.stanceEnd * plotW, plotH);
+            ctx.fillStyle = '#3b82f6';  // Lift - blue
+            ctx.fillRect(marginLeft + p.stanceEnd * plotW, marginTop, (p.liftEnd - p.stanceEnd) * plotW, plotH);
+            ctx.fillStyle = '#f97316';  // Swing - orange
+            ctx.fillRect(marginLeft + p.liftEnd * plotW, marginTop, (p.swingEnd - p.liftEnd) * plotW, plotH);
+            ctx.fillStyle = '#eab308';  // Drop - yellow
+            ctx.fillRect(marginLeft + p.swingEnd * plotW, marginTop, (1 - p.swingEnd) * plotW, plotH);
+            ctx.globalAlpha = 1.0;
+
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            // Y axis
+            ctx.moveTo(marginLeft, marginTop);
+            ctx.lineTo(marginLeft, h - marginBottom);
+            // X axis
+            ctx.lineTo(w - marginRight, h - marginBottom);
+            ctx.stroke();
+
+            // Y-axis tick marks and labels
+            ctx.font = '9px sans-serif';
+            ctx.fillStyle = '#555';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            // Calculate nice tick values
+            const yTickCount = 5;
+            const yTickStep = (maxV - minV) / yTickCount;
+            for (let i = 0; i <= yTickCount; i++) {
+                const val = minV + i * yTickStep;
+                const y = marginTop + (maxV - val) * scale;
+
+                // Tick mark
+                ctx.beginPath();
+                ctx.moveTo(marginLeft - 4, y);
+                ctx.lineTo(marginLeft, y);
+                ctx.stroke();
+
+                // Label
+                ctx.fillText(val.toFixed(1), marginLeft - 6, y);
+            }
+
+            // X-axis tick marks and labels (time 0 to 1)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const xTicks = [0, 0.25, 0.5, 0.75, 1.0];
+            for (const val of xTicks) {
+                const x = marginLeft + val * plotW;
+
+                // Tick mark
+                ctx.beginPath();
+                ctx.moveTo(x, h - marginBottom);
+                ctx.lineTo(x, h - marginBottom + 4);
+                ctx.stroke();
+
+                // Label
+                ctx.fillText(val.toFixed(2), x, h - marginBottom + 6);
+            }
+
+            // X-axis label
+            ctx.font = '10px sans-serif';
+            ctx.fillText('t (normalized)', marginLeft + plotW / 2, h - 5);
+
+            // Draw phase boundary lines
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            for (const boundary of [p.stanceEnd, p.liftEnd, p.swingEnd]) {
+                const bx = marginLeft + boundary * plotW;
+                ctx.beginPath();
+                ctx.moveTo(bx, marginTop);
+                ctx.lineTo(bx, h - marginBottom);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Draw Vx transition boundary lines (red, dashed)
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([2, 2]);
+            for (const boundary of [p.trans1Start, p.trans1End, p.trans2Start, p.trans2End]) {
+                const bx = marginLeft + boundary * plotW;
+                ctx.beginPath();
+                ctx.moveTo(bx, marginTop);
+                ctx.lineTo(bx, h - marginBottom);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Draw zero line (if in range)
+            if (minV < 0 && maxV > 0) {
+                const zeroY = marginTop + (maxV - 0) * scale;
+                ctx.strokeStyle = '#666';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.moveTo(marginLeft, zeroY);
+                ctx.lineTo(w - marginRight, zeroY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw curves - each curve has its own fixed color
+            for (const [key, style] of Object.entries(curveStyles)) {
+                ctx.strokeStyle = style.color;
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([]);
+
+                ctx.beginPath();
+                for (let i = 0; i < data.length; i++) {
+                    const x = marginLeft + data[i].t * plotW;
+                    const y = marginTop + (maxV - data[i][key]) * scale;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            // Legend for curves (X vs Y) with their colors - top right
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'left';
+            let legendX = w - marginRight - 80;
+            for (const [key, style] of Object.entries(curveStyles)) {
+                ctx.strokeStyle = style.color;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(legendX, marginTop + 8);
+                ctx.lineTo(legendX + 15, marginTop + 8);
+                ctx.stroke();
+
+                ctx.fillStyle = style.color;
+                ctx.fillText(key, legendX + 18, marginTop + 11);
+                legendX += 40;
+            }
+        }
+
+        function drawVelocityProfile(p) {
+            drawProfileCanvas('velocityCanvas',
+                (t, p) => ({ Vx: getVx(t, p, vxAmp, transitionType), Vy: getVy(t, p, vyAmp) }),
+                'Velocity',
+                { Vx: { color: '#e11d48' }, Vy: { color: '#7c3aed' } }  // rose-600, violet-600
+            );
+        }
+
+        function drawPositionProfile(p) {
+            drawProfileCanvas('positionCanvas',
+                (t, p) => ({ X: getPosX(t, p, vxAmp, transitionType), Y: getPosY(t, p, vyAmp) }),
+                'Position',
+                { X: { color: '#e11d48' }, Y: { color: '#7c3aed' } }
+            );
+        }
+
+        function drawAccelerationProfile(p) {
+            drawProfileCanvas('accelerationCanvas',
+                (t, p) => ({ Ax: getAx(t, p, vxAmp, transitionType), Ay: getAy(t, p, vyAmp) }),
+                'Acceleration',
+                { Ax: { color: '#e11d48' }, Ay: { color: '#7c3aed' } }
+            );
+        }
+
+        function drawJerkProfile(p) {
+            drawProfileCanvas('jerkCanvas',
+                (t, p) => ({ Jx: getJx(t, p, vxAmp, transitionType), Jy: getJy(t, p, vyAmp) }),
+                'Jerk',
+                { Jx: { color: '#e11d48' }, Jy: { color: '#7c3aed' } }
+            );
+        }
+
+        function drawBCPositionProfile(p) {
+            // B slides on the trammel, C is fixed on the trammel board
+            // Trammel board moves with A's X position
+            // C position in world frame: Cx = Ax + cOffsetX (Cy is constant)
+            drawProfileCanvas('bcPositionCanvas',
+                (t, p) => {
+                    const ax = getPosX(t, p, vxAmp, transitionType);
+                    const ay = getPosY(t, p, vyAmp);
+                    const bx = getBx(ax, ay);
+                    // C is fixed on the board which moves with trammel (A's X)
+                    const cx = ax + cOffsetX;
+                    return { Bx: bx, Cx: cx };
+                },
+                'B & C Position',
+                { Bx: { color: '#06b6d4' }, Cx: { color: '#8b5cf6' } }
+            );
+        }
+
+        function drawBCVelocityProfile(p) {
+            // Compute B and C velocities numerically
+            // B slides on trammel, C moves with trammel (A's X velocity)
+            const dt = 0.001;
+            drawProfileCanvas('bcVelocityCanvas',
+                (t, p) => {
+                    const ax1 = getPosX(t, p, vxAmp, transitionType);
+                    const ay1 = getPosY(t, p, vyAmp);
+                    const bx1 = getBx(ax1, ay1);
+                    const cx1 = ax1 + cOffsetX;
+
+                    const t2 = Math.min(t + dt, 1);
+                    const ax2 = getPosX(t2, p, vxAmp, transitionType);
+                    const ay2 = getPosY(t2, p, vyAmp);
+                    const bx2 = getBx(ax2, ay2);
+                    const cx2 = ax2 + cOffsetX;
+
+                    const vBx = (bx2 - bx1) / dt;
+                    const vCx = (cx2 - cx1) / dt;  // C moves with trammel (A's X)
+                    return { VBx: vBx, VCx: vCx };
+                },
+                'B & C Velocity',
+                { VBx: { color: '#06b6d4' }, VCx: { color: '#8b5cf6' } }
+            );
+        }
+
+        // =============================================
+        // CAM MECHANISM
+        // =============================================
+        const camPlayBtn = document.getElementById('camPlayBtn');
+        const camAngleSlider = document.getElementById('camAngleSlider');
+        const camSpeedSlider = document.getElementById('camSpeedSlider');
+        const exportSvgBtn = document.getElementById('exportSvgBtn');
+        const camMinRB1Slider = document.getElementById('camMinRB1Slider');
+        const camMinRC1Slider = document.getElementById('camMinRC1Slider');
+        const camMinRB2Slider = document.getElementById('camMinRB2Slider');
+        const camMinRC2Slider = document.getElementById('camMinRC2Slider');
+
+        camMinRB1Slider.addEventListener('input', (e) => {
+            camMinRadiusB1 = parseFloat(e.target.value);
+            document.getElementById('camMinRB1Value').textContent = camMinRadiusB1.toFixed(2);
+            drawCam();
+        });
+
+        camMinRC1Slider.addEventListener('input', (e) => {
+            camMinRadiusC1 = parseFloat(e.target.value);
+            document.getElementById('camMinRC1Value').textContent = camMinRadiusC1.toFixed(2);
+            drawCam();
+        });
+
+        camMinRB2Slider.addEventListener('input', (e) => {
+            camMinRadiusB2 = parseFloat(e.target.value);
+            document.getElementById('camMinRB2Value').textContent = camMinRadiusB2.toFixed(2);
+            drawCam();
+        });
+
+        camMinRC2Slider.addEventListener('input', (e) => {
+            camMinRadiusC2 = parseFloat(e.target.value);
+            document.getElementById('camMinRC2Value').textContent = camMinRadiusC2.toFixed(2);
+            drawCam();
+        });
+
+        const rollerRadiusSlider = document.getElementById('rollerRadiusSlider');
+        const showGroovesCheckbox = document.getElementById('showGroovesCheckbox');
+
+        rollerRadiusSlider.addEventListener('input', (e) => {
+            rollerRadius = parseFloat(e.target.value);
+            document.getElementById('rollerRadiusValue').textContent = rollerRadius.toFixed(2);
+            drawCam();
+        });
+
+        showGroovesCheckbox.addEventListener('change', (e) => {
+            showGrooves = e.target.checked;
+            drawCam();
+        });
+
+        // Disc configuration controls
+        const twoDiscBtn = document.getElementById('twoDiscBtn');
+        const twoSplitBtn = document.getElementById('twoSplitBtn');
+        const oneDiscBtn = document.getElementById('oneDiscBtn');
+        const twoDiscControls = document.getElementById('twoDiscControls');
+        const oneDiscControls = document.getElementById('oneDiscControls');
+        const oneDiscMinRSlider = document.getElementById('oneDiscMinRSlider');
+        const profileGapSlider = document.getElementById('profileGapSlider');
+
+        function updateDiscConfigButtons() {
+            // Reset all buttons to inactive
+            [twoDiscBtn, twoSplitBtn, oneDiscBtn].forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-300', 'text-gray-700');
+            });
+            // Hide all control panels
+            [twoDiscControls, oneDiscControls].forEach(ctrl => {
+                ctrl.classList.remove('flex');
+                ctrl.classList.add('hidden');
+            });
+
+            // Activate the selected config
+            if (discConfig === 'two') {
+                twoDiscBtn.classList.remove('bg-gray-300', 'text-gray-700');
+                twoDiscBtn.classList.add('bg-blue-500', 'text-white');
+                twoDiscControls.classList.remove('hidden');
+                twoDiscControls.classList.add('flex');
+            } else if (discConfig === 'twoSplit') {
+                // 1 Disc (L/R) uses same controls as 1 Disc
+                twoSplitBtn.classList.remove('bg-gray-300', 'text-gray-700');
+                twoSplitBtn.classList.add('bg-blue-500', 'text-white');
+                oneDiscControls.classList.remove('hidden');
+                oneDiscControls.classList.add('flex');
+            } else {
+                oneDiscBtn.classList.remove('bg-gray-300', 'text-gray-700');
+                oneDiscBtn.classList.add('bg-blue-500', 'text-white');
+                oneDiscControls.classList.remove('hidden');
+                oneDiscControls.classList.add('flex');
+            }
+        }
+
+        twoDiscBtn.addEventListener('click', () => {
+            discConfig = 'two';
+            updateDiscConfigButtons();
+            drawCam();
+        });
+
+        twoSplitBtn.addEventListener('click', () => {
+            discConfig = 'twoSplit';
+            updateDiscConfigButtons();
+            drawCam();
+        });
+
+        oneDiscBtn.addEventListener('click', () => {
+            discConfig = 'one';
+            updateDiscConfigButtons();
+            drawCam();
+        });
+
+        oneDiscMinRSlider.addEventListener('input', (e) => {
+            oneDiscMinR = parseFloat(e.target.value);
+            document.getElementById('oneDiscMinRValue').textContent = oneDiscMinR.toFixed(2);
+            drawCam();
+        });
+
+        profileGapSlider.addEventListener('input', (e) => {
+            profileGap = parseFloat(e.target.value);
+            document.getElementById('profileGapValue').textContent = profileGap.toFixed(2);
+            drawCam();
+        });
+
+        // SVG Export function
+        function exportCamSvg() {
+            const geo = computeLocusGeometry();
+            const { p } = geo;
+
+            // Cam center is at origin for simplicity (same as drawCam)
+            const camCenterX = 0;
+            const camCenterY = bHeight;
+
+            // Raw position functions (same as drawCam)
+            function getRawC1(t) {
+                const ax = getPosX(t, p, vxAmp, transitionType);
+                return ax + cOffsetX;
+            }
+
+            function getRawB1(t) {
+                const ax = getPosX(t, p, vxAmp, transitionType);
+                const ay = getPosY(t, p, vyAmp);
+                return getBx(ax, ay, false);
+            }
+
+            function getRawC2(t) {
+                let t2 = (t + (phaseOffset - 50) / 100) % 1;
+                if (t2 < 0) t2 += 1;
+                const ax = getPosX(t2, p, vxAmp, transitionType);
+                return ax + (mirrorSet2 ? -cOffsetX : cOffsetX);
+            }
+
+            function getRawB2(t) {
+                let t2 = (t + (phaseOffset - 50) / 100) % 1;
+                if (t2 < 0) t2 += 1;
+                const ax = getPosX(t2, p, vxAmp, transitionType);
+                const ay = getPosY(t2, p, vyAmp);
+                return getBx(ax, ay, mirrorSet2);
+            }
+
+            // Find min/max for each profile to compute individual offsets
+            let b1MaxX = -Infinity, c1MaxX = -Infinity;
+            let b2MinX = Infinity, c2MinX = Infinity;
+            for (let i = 0; i <= 360; i++) {
+                const t = i / 360;
+                c1MaxX = Math.max(c1MaxX, getRawC1(t));
+                b1MaxX = Math.max(b1MaxX, getRawB1(t));
+                c2MinX = Math.min(c2MinX, getRawC2(t));
+                b2MinX = Math.min(b2MinX, getRawB2(t));
+            }
+
+            // Calculate individual offsets to achieve min radius for each profile
+            const offsetB1 = camMinRadiusB1 - (camCenterX - b1MaxX);
+            const offsetC1 = camMinRadiusC1 - (camCenterX - c1MaxX);
+            const offsetB2 = camMinRadiusB2 - (b2MinX - camCenterX);
+            const offsetC2 = camMinRadiusC2 - (c2MinX - camCenterX);
+
+            // Define cam profiles with individual offsets applied
+            const camProfiles = [
+                {
+                    name: 'C2',
+                    color: '#f472b6',
+                    minRadius: camMinRadiusC2,
+                    getRadius: (t) => {
+                        return getRawC2(t) + offsetC2 - camCenterX;
+                    }
+                },
+                {
+                    name: 'C1',
+                    color: '#8b5cf6',
+                    minRadius: camMinRadiusC1,
+                    getRadius: (t) => {
+                        return camCenterX - (getRawC1(t) - offsetC1);
+                    }
+                },
+                {
+                    name: 'B2',
+                    color: '#fb923c',
+                    minRadius: camMinRadiusB2,
+                    getRadius: (t) => {
+                        return getRawB2(t) + offsetB2 - camCenterX;
+                    }
+                },
+                {
+                    name: 'B1',
+                    color: '#06b6d4',
+                    minRadius: camMinRadiusB1,
+                    getRadius: (t) => {
+                        return camCenterX - (getRawB1(t) - offsetB1);
+                    }
+                }
+            ];
+
+            // Calculate bounds
+            let maxR = 0;
+            for (const profile of camProfiles) {
+                for (let i = 0; i <= 360; i++) {
+                    const t = i / 360;
+                    maxR = Math.max(maxR, Math.abs(profile.getRadius(t)));
+                }
+            }
+
+            const svgSize = 500;
+            const margin = 20;
+            const scale = (svgSize - 2 * margin) / (2 * maxR);
+            const cx = svgSize / 2;
+            const cy = svgSize / 2;
+
+            let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}">
+  <title>Mechanism 60 Cam Profiles</title>
+  <desc>Generated cam profiles for B1, C1, B2, C2 followers</desc>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="white"/>
+
+  <!-- Center crosshairs -->
+  <line x1="${margin}" y1="${cy}" x2="${svgSize-margin}" y2="${cy}" stroke="#ddd" stroke-width="0.5"/>
+  <line x1="${cx}" y1="${margin}" x2="${cx}" y2="${svgSize-margin}" stroke="#ddd" stroke-width="0.5"/>
+
+  <!-- Center point -->
+  <circle cx="${cx}" cy="${cy}" r="3" fill="#333"/>
+
+  <!-- Min radius circles (dashed) -->
+  <circle cx="${cx}" cy="${cy}" r="${(camMinRadiusB1 * scale).toFixed(2)}" fill="none" stroke="#06b6d4" stroke-width="0.5" stroke-dasharray="3,3" id="minRB1"/>
+  <circle cx="${cx}" cy="${cy}" r="${(camMinRadiusC1 * scale).toFixed(2)}" fill="none" stroke="#8b5cf6" stroke-width="0.5" stroke-dasharray="3,3" id="minRC1"/>
+  <circle cx="${cx}" cy="${cy}" r="${(camMinRadiusB2 * scale).toFixed(2)}" fill="none" stroke="#fb923c" stroke-width="0.5" stroke-dasharray="3,3" id="minRB2"/>
+  <circle cx="${cx}" cy="${cy}" r="${(camMinRadiusC2 * scale).toFixed(2)}" fill="none" stroke="#f472b6" stroke-width="0.5" stroke-dasharray="3,3" id="minRC2"/>
+
+`;
+
+            // Generate path for each profile
+            for (const profile of camProfiles) {
+                let pathData = '';
+                for (let deg = 0; deg <= 360; deg += 2) {
+                    const t = ((deg + 180) % 360) / 360;
+                    const r = profile.getRadius(t);
+                    const angle = deg * Math.PI / 180;
+                    const x = cx + r * scale * Math.cos(angle);
+                    const y = cy - r * scale * Math.sin(angle);  // SVG Y is inverted
+
+                    if (deg === 0) {
+                        pathData += `M ${x.toFixed(2)} ${y.toFixed(2)}`;
+                    } else {
+                        pathData += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+                    }
+                }
+                pathData += ' Z';
+
+                svg += `  <!-- ${profile.name} profile -->
+  <path d="${pathData}" fill="none" stroke="${profile.color}" stroke-width="1.5" id="${profile.name}"/>
+
+`;
+            }
+
+            // Add legend
+            svg += `  <!-- Legend -->
+  <text x="${margin}" y="${svgSize - 50}" font-size="12" fill="#333">Cam Profiles:</text>
+`;
+            let legendX = margin;
+            for (const profile of camProfiles) {
+                svg += `  <circle cx="${legendX + 10}" cy="${svgSize - 30}" r="5" fill="${profile.color}"/>
+  <text x="${legendX + 20}" y="${svgSize - 26}" font-size="10" fill="#333">${profile.name}</text>
+`;
+                legendX += 60;
+            }
+
+            svg += `
+  <!-- Min radius info -->
+  <text x="${margin}" y="${svgSize - 10}" font-size="7" fill="#06b6d4">B1:${camMinRadiusB1.toFixed(2)}</text>
+  <text x="${margin + 50}" y="${svgSize - 10}" font-size="7" fill="#8b5cf6">C1:${camMinRadiusC1.toFixed(2)}</text>
+  <text x="${margin + 100}" y="${svgSize - 10}" font-size="7" fill="#fb923c">B2:${camMinRadiusB2.toFixed(2)}</text>
+  <text x="${margin + 150}" y="${svgSize - 10}" font-size="7" fill="#f472b6">C2:${camMinRadiusC2.toFixed(2)}</text>
+
+  <!-- Scale info -->
+  <text x="${svgSize - margin}" y="${svgSize - 10}" font-size="8" fill="#999" text-anchor="end">Scale: 1 unit = ${(1/scale).toFixed(4)} SVG units</text>
+</svg>`;
+
+            // Download
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mechanism60_cam_profiles.svg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        exportSvgBtn.addEventListener('click', exportCamSvg);
+
+        camAngleSlider.addEventListener('input', (e) => {
+            camAngle = parseFloat(e.target.value);
+            document.getElementById('camAngleValue').textContent = Math.round(camAngle) + '°';
+            drawCam();
+        });
+
+        camSpeedSlider.addEventListener('input', (e) => {
+            camSpeed = parseFloat(e.target.value);
+            document.getElementById('camSpeedValue').textContent = camSpeed.toFixed(1);
+        });
+
+        camPlayBtn.addEventListener('click', () => {
+            camPlaying = !camPlaying;
+            camPlayBtn.innerHTML = camPlaying ? '&#x23F8;' : '&#x25B6;';
+            camPlayBtn.title = camPlaying ? 'Pause' : 'Play';
+            camPlayBtn.classList.toggle('bg-green-500', !camPlaying);
+            camPlayBtn.classList.toggle('bg-red-500', camPlaying);
+            if (camPlaying) animateCam();
+        });
+
+        function animateCam() {
+            if (!camPlaying) return;
+
+            camAngle = (camAngle + camSpeed) % 360;
+            camAngleSlider.value = camAngle;
+            document.getElementById('camAngleValue').textContent = Math.round(camAngle) + '°';
+            drawCam();
+            camAnimationId = requestAnimationFrame(animateCam);
+        }
+
+        function drawCam() {
+            const canvas = document.getElementById('camCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.fillStyle = '#f9fafb';
+            ctx.fillRect(0, 0, w, h);
+
+            // Get shared geometry
+            const geo = computeLocusGeometry();
+            const { p } = geo;
+
+            // Cam center is at origin for simplicity
+            const camCenterX = 0;
+            const camCenterY = bHeight;
+
+            // First, calculate the raw (unshifted) follower positions for each profile
+            // Then we'll compute the offset needed to achieve the desired min radius
+
+            // Raw position functions (relative to an arbitrary reference)
+            function getRawC1(t) {
+                const ax = getPosX(t, p, vxAmp, transitionType);
+                return ax + cOffsetX;  // C1 x position
+            }
+
+            function getRawB1(t) {
+                const ax = getPosX(t, p, vxAmp, transitionType);
+                const ay = getPosY(t, p, vyAmp);
+                return getBx(ax, ay, false);  // B1 x position
+            }
+
+            function getRawC2(t) {
+                let t2 = (t + (phaseOffset - 50) / 100) % 1;
+                if (t2 < 0) t2 += 1;
+                const ax = getPosX(t2, p, vxAmp, transitionType);
+                return ax + (mirrorSet2 ? -cOffsetX : cOffsetX);  // C2 x position (without set offset)
+            }
+
+            function getRawB2(t) {
+                let t2 = (t + (phaseOffset - 50) / 100) % 1;
+                if (t2 < 0) t2 += 1;
+                const ax = getPosX(t2, p, vxAmp, transitionType);
+                const ay = getPosY(t2, p, vyAmp);
+                return getBx(ax, ay, mirrorSet2);  // B2 x position (without set offset)
+            }
+
+            // Find min/max positions for each profile to compute individual offsets
+            let b1MinX = Infinity, b1MaxX = -Infinity;
+            let c1MinX = Infinity, c1MaxX = -Infinity;
+            let b2MinX = Infinity, b2MaxX = -Infinity;
+            let c2MinX = Infinity, c2MaxX = -Infinity;
+            for (let i = 0; i <= 360; i++) {
+                const t = i / 360;
+                const b1 = getRawB1(t);
+                const c1 = getRawC1(t);
+                const b2 = getRawB2(t);
+                const c2 = getRawC2(t);
+                b1MinX = Math.min(b1MinX, b1); b1MaxX = Math.max(b1MaxX, b1);
+                c1MinX = Math.min(c1MinX, c1); c1MaxX = Math.max(c1MaxX, c1);
+                b2MinX = Math.min(b2MinX, b2); b2MaxX = Math.max(b2MaxX, b2);
+                c2MinX = Math.min(c2MinX, c2); c2MaxX = Math.max(c2MaxX, c2);
+            }
+
+            // Calculate profile ranges (max - min for each)
+            const b1Range = b1MaxX - b1MinX;
+            const c1Range = c1MaxX - c1MinX;
+            const b2Range = b2MaxX - b2MinX;
+            const c2Range = c2MaxX - c2MinX;
+
+            let camProfiles;
+            let effectiveMinB1, effectiveMinC1, effectiveMinB2, effectiveMinC2;
+
+            if (discConfig === 'two') {
+                // Two-disc mode: independent min radii for each profile
+                effectiveMinB1 = camMinRadiusB1;
+                effectiveMinC1 = camMinRadiusC1;
+                effectiveMinB2 = camMinRadiusB2;
+                effectiveMinC2 = camMinRadiusC2;
+
+                // Calculate individual offsets
+                // Set 1 (B1, C1) is on the LEFT of cam - followers at x < camCenter
+                const offsetB1 = effectiveMinB1 - (camCenterX - b1MaxX);
+                const offsetC1 = effectiveMinC1 - (camCenterX - c1MaxX);
+
+                // Set 2 (B2, C2) is on the RIGHT of cam - followers at x > camCenter
+                const offsetB2 = effectiveMinB2 - (b2MinX - camCenterX);
+                const offsetC2 = effectiveMinC2 - (c2MinX - camCenterX);
+
+                camProfiles = [
+                    {
+                        name: 'C2',
+                        color: '#f472b6',
+                        fillColor: '#fce7f3',
+                        set: 2,
+                        side: 'right',
+                        minRadius: effectiveMinC2,
+                        followerY: bHeight + cOffsetY,
+                        getRadius: (t) => {
+                            return getRawC2(t) + offsetC2 - camCenterX;
+                        }
+                    },
+                    {
+                        name: 'C1',
+                        color: '#8b5cf6',
+                        fillColor: '#ede9fe',
+                        set: 1,
+                        side: 'left',
+                        minRadius: effectiveMinC1,
+                        followerY: bHeight + cOffsetY,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawC1(t) - offsetC1);
+                        }
+                    },
+                    {
+                        name: 'B2',
+                        color: '#fb923c',
+                        fillColor: '#ffedd5',
+                        set: 2,
+                        side: 'right',
+                        minRadius: effectiveMinB2,
+                        followerY: bHeight,
+                        getRadius: (t) => {
+                            return getRawB2(t) + offsetB2 - camCenterX;
+                        }
+                    },
+                    {
+                        name: 'B1',
+                        color: '#06b6d4',
+                        fillColor: '#cffafe',
+                        set: 1,
+                        side: 'left',
+                        minRadius: effectiveMinB1,
+                        followerY: bHeight,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawB1(t) - offsetB1);
+                        }
+                    }
+                ];
+            } else if (discConfig === 'twoSplit') {
+                // One-disc L/R mode: Same radii stacking as 1 Disc (B1 → C1 → B2 → C2)
+                // But Set 1 (B1, C1) followers on left, Set 2 (B2, C2) followers on right
+                // Gap between groove walls = profileGap, so gap between pitch curves = profileGap + 2*rollerRadius
+                const pitchGap = profileGap + 2 * rollerRadius;
+
+                effectiveMinB1 = oneDiscMinR;
+                const maxB1 = effectiveMinB1 + b1Range;
+                effectiveMinC1 = maxB1 + pitchGap;
+
+                // For C1 on left side, find actual max radius
+                const offsetC1 = effectiveMinC1 - (camCenterX - c1MaxX);
+                let actualMaxC1 = effectiveMinC1;
+                for (let i = 0; i <= 360; i++) {
+                    const t = i / 360;
+                    const r = camCenterX - (getRawC1(t) - offsetC1);
+                    actualMaxC1 = Math.max(actualMaxC1, r);
+                }
+
+                effectiveMinB2 = actualMaxC1 + pitchGap;
+
+                // For B2 on right side, find actual max radius
+                const offsetB2 = effectiveMinB2 - (b2MinX - camCenterX);
+                let actualMaxB2 = effectiveMinB2;
+                for (let i = 0; i <= 360; i++) {
+                    const t = i / 360;
+                    const r = getRawB2(t) + offsetB2 - camCenterX;
+                    actualMaxB2 = Math.max(actualMaxB2, r);
+                }
+
+                effectiveMinC2 = actualMaxB2 + pitchGap;
+
+                // Set 1 (left side): offset based on max X mapping to min radius
+                const offsetB1 = effectiveMinB1 - (camCenterX - b1MaxX);
+
+                // Set 2 (right side): offset based on min X mapping to min radius
+                const offsetC2 = effectiveMinC2 - (c2MinX - camCenterX);
+
+                camProfiles = [
+                    {
+                        name: 'C2',
+                        color: '#f472b6',
+                        fillColor: '#fce7f3',
+                        set: 2,
+                        side: 'right',
+                        minRadius: effectiveMinC2,
+                        followerY: bHeight + cOffsetY,
+                        getRadius: (t) => {
+                            return getRawC2(t) + offsetC2 - camCenterX;
+                        }
+                    },
+                    {
+                        name: 'B2',
+                        color: '#fb923c',
+                        fillColor: '#ffedd5',
+                        set: 2,
+                        side: 'right',
+                        minRadius: effectiveMinB2,
+                        followerY: bHeight,
+                        getRadius: (t) => {
+                            return getRawB2(t) + offsetB2 - camCenterX;
+                        }
+                    },
+                    {
+                        name: 'C1',
+                        color: '#8b5cf6',
+                        fillColor: '#ede9fe',
+                        set: 1,
+                        side: 'left',
+                        minRadius: effectiveMinC1,
+                        followerY: bHeight + cOffsetY,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawC1(t) - offsetC1);
+                        }
+                    },
+                    {
+                        name: 'B1',
+                        color: '#06b6d4',
+                        fillColor: '#cffafe',
+                        set: 1,
+                        side: 'left',
+                        minRadius: effectiveMinB1,
+                        followerY: bHeight,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawB1(t) - offsetB1);
+                        }
+                    }
+                ];
+            } else {
+                // One-disc mode: stacked profiles B1 → C1 → B2 → C2
+                // All profiles on the same side, all positive radii
+                // Gap between groove walls = profileGap, so gap between pitch curves = profileGap + 2*rollerRadius
+                const pitchGap = profileGap + 2 * rollerRadius;
+
+                effectiveMinB1 = oneDiscMinR;
+                const maxB1 = effectiveMinB1 + b1Range;
+                effectiveMinC1 = maxB1 + pitchGap;
+                const maxC1 = effectiveMinC1 + c1Range;
+                effectiveMinB2 = maxC1 + pitchGap;
+                const maxB2 = effectiveMinB2 + b2Range;
+                effectiveMinC2 = maxB2 + pitchGap;
+
+                // For one-disc, all profiles use the same side (positive radii)
+                // We offset each raw position to achieve the stacked layout
+                const offsetB1 = effectiveMinB1 - (camCenterX - b1MaxX);
+                const offsetC1 = effectiveMinC1 - (camCenterX - c1MaxX);
+                const offsetB2 = effectiveMinB2 - (camCenterX - b2MaxX);
+                const offsetC2 = effectiveMinC2 - (camCenterX - c2MaxX);
+
+                camProfiles = [
+                    {
+                        name: 'C2',
+                        color: '#f472b6',
+                        fillColor: '#fce7f3',
+                        set: 2,
+                        side: 'left',
+                        minRadius: effectiveMinC2,
+                        followerY: bHeight + cOffsetY,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawC2(t) - offsetC2);
+                        }
+                    },
+                    {
+                        name: 'B2',
+                        color: '#fb923c',
+                        fillColor: '#ffedd5',
+                        set: 2,
+                        side: 'left',
+                        minRadius: effectiveMinB2,
+                        followerY: bHeight,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawB2(t) - offsetB2);
+                        }
+                    },
+                    {
+                        name: 'C1',
+                        color: '#8b5cf6',
+                        fillColor: '#ede9fe',
+                        set: 1,
+                        side: 'left',
+                        minRadius: effectiveMinC1,
+                        followerY: bHeight + cOffsetY,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawC1(t) - offsetC1);
+                        }
+                    },
+                    {
+                        name: 'B1',
+                        color: '#06b6d4',
+                        fillColor: '#cffafe',
+                        set: 1,
+                        side: 'left',
+                        minRadius: effectiveMinB1,
+                        followerY: bHeight,
+                        getRadius: (t) => {
+                            return camCenterX - (getRawB1(t) - offsetB1);
+                        }
+                    }
+                ];
+            }
+
+            // Calculate max radius for scaling
+            let maxRadius = Math.max(effectiveMinB1, effectiveMinC1, effectiveMinB2, effectiveMinC2);
+            for (let i = 0; i <= 100; i++) {
+                const t = i / 100;
+                for (const profile of camProfiles) {
+                    maxRadius = Math.max(maxRadius, profile.getRadius(t));
+                }
+            }
+
+            // Screen transformation
+            const margin = 50;
+            const plotW = w - 2 * margin;
+            const plotH = h - 2 * margin;
+            const viewRange = maxRadius * 3;
+            const scale = Math.min(plotW, plotH) / viewRange;
+            const screenCenterX = w / 2;
+            const screenCenterY = h / 2;
+
+            function toScreen(x, y) {
+                return {
+                    sx: screenCenterX + x * scale,
+                    sy: screenCenterY - y * scale
+                };
+            }
+
+            // Draw axes
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(margin, screenCenterY);
+            ctx.lineTo(w - margin, screenCenterY);
+            ctx.moveTo(screenCenterX, margin);
+            ctx.lineTo(screenCenterX, h - margin);
+            ctx.stroke();
+
+            const camCenter = toScreen(camCenterX, camCenterY);
+
+            // Draw min radius circles (dashed) for each profile
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1;
+
+            // Draw min radius circle for each profile using its effective min radius
+            for (const profile of camProfiles) {
+                ctx.strokeStyle = profile.color;
+                ctx.beginPath();
+                ctx.arc(camCenter.sx, camCenter.sy, profile.minRadius * scale, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+
+            ctx.setLineDash([]);
+
+            // Draw each cam profile
+            for (const profile of camProfiles) {
+                if (showGrooves) {
+                    // Calculate groove walls by offsetting along the normal
+                    // For a polar curve r(θ), the normal direction at each point needs
+                    // to be computed from the curve tangent
+
+                    const pitchPoints = [];
+                    const step = 1; // degree step for smoother curves
+
+                    // First pass: collect pitch curve points
+                    for (let deg = 0; deg <= 360; deg += step) {
+                        const t = ((deg + 180) % 360) / 360;
+                        const r = profile.getRadius(t);
+                        const angle = (deg - camAngle) * Math.PI / 180;
+                        const x = camCenterX + r * Math.cos(angle);
+                        const y = camCenterY + r * Math.sin(angle);
+                        pitchPoints.push({ x, y, r, angle, deg });
+                    }
+
+                    // Second pass: calculate normals and offset points
+                    const innerPoints = [];
+                    const outerPoints = [];
+
+                    for (let i = 0; i < pitchPoints.length; i++) {
+                        const curr = pitchPoints[i];
+                        const prev = pitchPoints[(i - 1 + pitchPoints.length) % pitchPoints.length];
+                        const next = pitchPoints[(i + 1) % pitchPoints.length];
+
+                        // Tangent vector (central difference)
+                        const tx = next.x - prev.x;
+                        const ty = next.y - prev.y;
+                        const tLen = Math.sqrt(tx * tx + ty * ty);
+
+                        // Normal vector (perpendicular to tangent, pointing outward from cam center)
+                        // For a curve going counterclockwise, rotate tangent 90° clockwise for outward normal
+                        let nx = ty / tLen;
+                        let ny = -tx / tLen;
+
+                        // Make sure normal points outward (away from cam center)
+                        const toCenterX = camCenterX - curr.x;
+                        const toCenterY = camCenterY - curr.y;
+                        if (nx * toCenterX + ny * toCenterY > 0) {
+                            nx = -nx;
+                            ny = -ny;
+                        }
+
+                        // Inner wall (toward cam center) and outer wall (away from cam center)
+                        innerPoints.push({
+                            x: curr.x - nx * rollerRadius,
+                            y: curr.y - ny * rollerRadius
+                        });
+                        outerPoints.push({
+                            x: curr.x + nx * rollerRadius,
+                            y: curr.y + ny * rollerRadius
+                        });
+                    }
+
+                    // Draw outer wall (solid)
+                    ctx.beginPath();
+                    for (let i = 0; i < outerPoints.length; i++) {
+                        const s = toScreen(outerPoints[i].x, outerPoints[i].y);
+                        if (i === 0) ctx.moveTo(s.sx, s.sy);
+                        else ctx.lineTo(s.sx, s.sy);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = profile.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Draw inner wall (solid)
+                    ctx.beginPath();
+                    for (let i = 0; i < innerPoints.length; i++) {
+                        const s = toScreen(innerPoints[i].x, innerPoints[i].y);
+                        if (i === 0) ctx.moveTo(s.sx, s.sy);
+                        else ctx.lineTo(s.sx, s.sy);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = profile.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Fill between walls (groove area)
+                    ctx.beginPath();
+                    for (let i = 0; i < outerPoints.length; i++) {
+                        const s = toScreen(outerPoints[i].x, outerPoints[i].y);
+                        if (i === 0) ctx.moveTo(s.sx, s.sy);
+                        else ctx.lineTo(s.sx, s.sy);
+                    }
+                    for (let i = innerPoints.length - 1; i >= 0; i--) {
+                        const s = toScreen(innerPoints[i].x, innerPoints[i].y);
+                        ctx.lineTo(s.sx, s.sy);
+                    }
+                    ctx.closePath();
+                    ctx.globalAlpha = 0.1;
+                    ctx.fillStyle = profile.color;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+
+                    // Draw pitch curve (dashed, for reference)
+                    ctx.beginPath();
+                    ctx.setLineDash([3, 3]);
+                    for (let i = 0; i < pitchPoints.length; i++) {
+                        const s = toScreen(pitchPoints[i].x, pitchPoints[i].y);
+                        if (i === 0) ctx.moveTo(s.sx, s.sy);
+                        else ctx.lineTo(s.sx, s.sy);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = profile.color;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                } else {
+                    // Original pitch curve only
+                    ctx.beginPath();
+                    for (let deg = 0; deg <= 360; deg += 2) {
+                        const t = ((deg + 180) % 360) / 360;
+                        const r = profile.getRadius(t);
+                        const angle = (deg - camAngle) * Math.PI / 180;
+                        const x = camCenterX + r * Math.cos(angle);
+                        const y = camCenterY + r * Math.sin(angle);
+                        const s = toScreen(x, y);
+
+                        if (deg === 0) ctx.moveTo(s.sx, s.sy);
+                        else ctx.lineTo(s.sx, s.sy);
+                    }
+                    ctx.closePath();
+                    ctx.globalAlpha = 0.15;
+                    ctx.fillStyle = profile.color;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                    ctx.strokeStyle = profile.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            // Draw cam center
+            ctx.fillStyle = '#1f2937';
+            ctx.beginPath();
+            ctx.arc(camCenter.sx, camCenter.sy, 8, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Draw current angle indicator (pointing to where t=0 is on the rotating cam)
+            const indicatorAngle = camAngle * Math.PI / 180;
+            const indicatorR = Math.min(effectiveMinB1, effectiveMinC1, effectiveMinB2, effectiveMinC2) * scale * 0.8;
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(camCenter.sx, camCenter.sy);
+            ctx.lineTo(
+                camCenter.sx + indicatorR * Math.cos(indicatorAngle),
+                camCenter.sy + indicatorR * Math.sin(indicatorAngle)
+            );
+            ctx.stroke();
+
+            // Calculate follower positions
+            // Profile is drawn with t = (deg + 180) / 360, so t=0 is at deg=180 (left contact)
+            // When camAngle=0: left contact at screen 180° → deg=180 → t=0
+            // When camAngle=0: right contact at screen 0° → deg=0 → t=0.5
+            // As cam rotates by camAngle, the deg at screen 180° becomes 180+camAngle
+            // So t at left contact = ((180 + camAngle + 180) % 360) / 360 = camAngle / 360
+            const tContactLeft = (camAngle / 360) % 1;
+            const tContactRight = ((camAngle / 360) + 0.5) % 1;
+
+            // Draw followers - one for each cam profile
+            const followers = [];
+            for (const profile of camProfiles) {
+                // Use the side property if available, otherwise determine from name
+                const isRightSide = profile.side === 'right' ||
+                    (profile.side === undefined && profile.name.endsWith('2') && discConfig === 'two');
+                const tContact = isRightSide ? tContactRight : tContactLeft;
+                const radius = profile.getRadius(tContact);
+                const x = isRightSide ? camCenterX + radius : camCenterX - radius;
+                followers.push({ name: profile.name, x: x, y: profile.followerY, color: profile.color });
+            }
+
+            for (const f of followers) {
+                const fs = toScreen(f.x, f.y);
+
+                // Draw follower arm (horizontal line from follower to cam contact)
+                ctx.strokeStyle = '#9ca3af';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(fs.sx, fs.sy);
+                ctx.lineTo(camCenter.sx, fs.sy);
+                ctx.stroke();
+
+                if (showGrooves) {
+                    // Draw roller follower (actual size circle)
+                    const rollerScreenRadius = rollerRadius * scale;
+                    ctx.fillStyle = f.color;
+                    ctx.globalAlpha = 0.3;
+                    ctx.beginPath();
+                    ctx.arc(fs.sx, fs.sy, rollerScreenRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                    ctx.strokeStyle = f.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Draw center point
+                    ctx.fillStyle = f.color;
+                    ctx.beginPath();
+                    ctx.arc(fs.sx, fs.sy, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else {
+                    // Draw follower as labeled circle (original)
+                    ctx.fillStyle = f.color;
+                    ctx.beginPath();
+                    ctx.arc(fs.sx, fs.sy, 12, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(f.name, fs.sx, fs.sy);
+                }
+            }
+
+            // Legend
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'left';
+            let legendX = margin;
+            const legendY = h - 20;
+            for (const f of followers) {
+                ctx.fillStyle = f.color;
+                ctx.beginPath();
+                ctx.arc(legendX + 6, legendY - 3, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#333';
+                ctx.fillText(f.name + ' follower', legendX + 15, legendY + 2);
+                legendX += 100;
+            }
+
+            // Calculate cam profile statistics (pressure angle, min/max radius)
+            const camStats = [];
+            for (const profile of camProfiles) {
+                let minR = Infinity, maxR = -Infinity;
+                let maxPressureAngle = 0;
+                const dt = 1 / 360;
+
+                for (let i = 0; i <= 360; i++) {
+                    const t = i / 360;
+                    const r = profile.getRadius(t);
+                    minR = Math.min(minR, r);
+                    maxR = Math.max(maxR, r);
+
+                    // Calculate pressure angle: tan(alpha) = (dR/dTheta) / R
+                    // dR/dTheta ≈ (R(t+dt) - R(t-dt)) / (2*dt) * (1/2π) since theta = 2π*t
+                    if (i > 0 && i < 360) {
+                        const rPlus = profile.getRadius((t + dt) % 1);
+                        const rMinus = profile.getRadius((t - dt + 1) % 1);
+                        const dRdTheta = (rPlus - rMinus) / (2 * dt * 2 * Math.PI);
+                        const pressureAngle = Math.abs(Math.atan2(dRdTheta, r)) * 180 / Math.PI;
+                        maxPressureAngle = Math.max(maxPressureAngle, pressureAngle);
+                    }
+                }
+
+                camStats.push({
+                    name: profile.name,
+                    color: profile.color,
+                    minR: minR,
+                    maxR: maxR,
+                    ratio: maxR / minR,
+                    maxPressureAngle: maxPressureAngle
+                });
+            }
+
+            // Update stats panel
+            const statsDiv = document.getElementById('camStats');
+            if (statsDiv) {
+                let html = '';
+                for (const stat of camStats) {
+                    const paWarning = stat.maxPressureAngle > 30 ? 'text-red-600 font-bold' : 'text-green-600';
+                    const ratioWarning = stat.ratio > 3 ? 'text-orange-600' : 'text-gray-700';
+                    html += `
+                        <div class="border-b pb-2">
+                            <div class="flex items-center gap-1 mb-1">
+                                <span class="w-3 h-3 rounded-full" style="background:${stat.color}"></span>
+                                <span class="font-semibold">${stat.name}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-2 text-gray-600">
+                                <span>Min R:</span><span class="text-right">${stat.minR.toFixed(3)}</span>
+                                <span>Max R:</span><span class="text-right">${stat.maxR.toFixed(3)}</span>
+                                <span>Ratio:</span><span class="text-right ${ratioWarning}">${stat.ratio.toFixed(2)}</span>
+                                <span>Max PA:</span><span class="text-right ${paWarning}">${stat.maxPressureAngle.toFixed(1)}°</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += `
+                    <div class="mt-2 text-gray-500 text-xs">
+                        <p>PA = Pressure Angle</p>
+                        <p class="text-green-600">PA &lt; 30° = Good</p>
+                        <p class="text-red-600">PA &gt; 30° = High load</p>
+                    </div>
+                `;
+                statsDiv.innerHTML = html;
+            }
+
+            // Info text on canvas
+            ctx.fillStyle = '#666';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(`Cam angle: ${Math.round(camAngle)}°`, w - margin, margin + 15);
+
+            // Watermark
+            ctx.save();
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(-30 * Math.PI / 180);
+            ctx.font = '40px sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.globalAlpha = 0.15;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BrianMechanisms', 0, 0);
+            ctx.restore();
+        }
+
+        // =============================================
+        // OPENSCAD MODULE INITIALIZATION
+        // =============================================
+        // Initialize the SCAD module with callbacks to access app state
+        initScadModule({
+            getAppState: () => ({
+                vxAmp, vyAmp, transitionType, cOffsetX, phaseOffset, mirrorSet2,
+                discConfig, camMinRadiusB1, camMinRadiusC1, camMinRadiusB2, camMinRadiusC2,
+                oneDiscMinR, profileGap, rollerRadius, bHeight, linkLength
+            }),
+            getComputeLocusGeometry: () => computeLocusGeometry,
+            getMotionFunctions: () => ({ getPosX, getPosY }),
+            getGeometryFunctions: () => ({ getBx })
+        });
+
+        // Setup SCAD event listeners
+        setupScadEventListeners();
+
+        // Initialize the 3D Mechanism module with callbacks to access app state
+        initMechanismModule({
+            getAppState: () => ({
+                vxAmp, vyAmp, transitionType, cOffsetX, cOffsetY, phaseOffset, mirrorSet2,
+                discConfig, camMinRadiusB1, camMinRadiusC1, camMinRadiusB2, camMinRadiusC2,
+                oneDiscMinR, profileGap, rollerRadius, bHeight, linkLength
+            }),
+            getComputeLocusGeometry: () => computeLocusGeometry,
+            getMotionFunctions: () => ({ getPosX, getPosY }),
+            getGeometryFunctions: () => ({ getBx })
+        });
+
+        // Setup 3D Mechanism event listeners
+        setupMechanismEventListeners();
+
+        // =============================================
+        // INIT
+        // =============================================
+        updateParams();
+        updatePhaseDisplay();
+        updateDirectionButtons();
+        updateModeButtons();
+        updateSetButtons();
+
+        // Load tab from URL hash or default to locus
+        const initialTab = getTabFromHash();
+        switchTab(initialTab);
+    </script>
+</body>
+</html>
