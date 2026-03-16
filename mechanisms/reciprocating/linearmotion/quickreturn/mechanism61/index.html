@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanism 61 - Compound Epicyclic Quick Return</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-2 text-gray-800">Mechanism 61 - Compound Epicyclic Quick Return</h1>
+        <p class="text-gray-600 mb-4">Compound epicyclic gear train with dual semicircular rack transitions for quick-return linear motion</p>
+
+        <div class="grid grid-cols-3 gap-4">
+            <!-- Left: Parameters -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h2 class="text-lg font-semibold mb-3">Parameters</h2>
+
+                <h3 class="font-medium text-gray-700 mb-2">Compound Gear</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>r<sub>1</sub> (outer radius)</span>
+                            <span class="text-blue-600 font-bold" id="r1Value">50</span>
+                        </label>
+                        <input type="range" id="r1Slider" min="30" max="80" value="50" step="1" class="w-full">
+                    </div>
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>Gear Ratio k = r<sub>1</sub>/r<sub>2</sub></span>
+                            <span class="text-green-600 font-bold" id="ratioValue">2.0</span>
+                        </label>
+                        <input type="range" id="ratioSlider" min="1.2" max="4.0" value="2.0" step="0.1" class="w-full">
+                    </div>
+                </div>
+
+                <h3 class="font-medium text-gray-700 mt-4 mb-2">Driven Gears</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>r<sub>3</sub> (outer driven)</span>
+                            <span class="text-purple-600 font-bold" id="r3Value">30</span>
+                        </label>
+                        <input type="range" id="r3Slider" min="10" max="50" value="30" step="1" class="w-full">
+                    </div>
+                </div>
+
+                <h3 class="font-medium text-gray-700 mt-4 mb-2">Track</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>Rack Length L</span>
+                            <span class="text-gray-700 font-bold" id="lValue">300</span>
+                        </label>
+                        <input type="range" id="lSlider" min="100" max="500" value="300" step="10" class="w-full">
+                    </div>
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>Offset Angle &delta;</span>
+                            <span class="text-orange-600 font-bold" id="deltaValue">45</span>&deg;
+                        </label>
+                        <input type="range" id="deltaSlider" min="0" max="90" value="45" step="1" class="w-full">
+                    </div>
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>Q Offset &phi;</span>
+                            <span class="text-cyan-600 font-bold" id="phiValue">45</span>&deg;
+                        </label>
+                        <input type="range" id="phiSlider" min="0" max="90" value="45" step="1" class="w-full">
+                        <p class="text-xs text-gray-500">Angle Q stays at R<sub>2</sub> into the turn</p>
+                    </div>
+                </div>
+
+                <h3 class="font-medium text-gray-700 mt-4 mb-2">Visualization</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox" id="gripperCheck" class="w-4 h-4 accent-emerald-500">
+                        <span>Show Gripper</span>
+                    </label>
+                    <div>
+                        <label class="flex justify-between text-sm mb-1">
+                            <span>Rail offset</span>
+                            <span class="text-emerald-600 font-bold" id="railOffsetValue">25</span>
+                        </label>
+                        <input type="range" id="railOffsetSlider" min="10" max="80" value="25" step="1" class="w-full">
+                    </div>
+                </div>
+
+                <!-- Derived Values -->
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-2 text-sm">Derived Values</h3>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between">
+                            <span>r<sub>2</sub> (inner compound):</span>
+                            <span class="font-mono font-bold text-amber-600" id="r2Display">25.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>r<sub>4</sub> (inner driven):</span>
+                            <span class="font-mono font-bold text-amber-600" id="r4Display">15.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>R<sub>1</sub> (outer rack radius):</span>
+                            <span class="font-mono font-bold" id="R1Display">110.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>R<sub>2</sub> (inner rack radius):</span>
+                            <span class="font-mono font-bold" id="R2Display">55.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Speed ratio k:</span>
+                            <span class="font-mono font-bold text-green-600" id="kDisplay">2.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>r<sub>1</sub>&middot;r<sub>4</sub> = r<sub>2</sub>&middot;r<sub>3</sub>:</span>
+                            <span class="font-mono font-bold text-green-600" id="constraintDisplay">&#x2713;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current State -->
+                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-2 text-sm">Current State</h3>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between">
+                            <span>Section:</span>
+                            <span class="font-mono font-bold" id="sectionDisplay">Bottom (slow)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>v<sub>Px</sub>:</span>
+                            <span class="font-mono font-bold text-red-600" id="vPxDisplay">0.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>v<sub>Qx</sub>:</span>
+                            <span class="font-mono font-bold text-cyan-500" id="vQxDisplay">0.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Compound &theta;:</span>
+                            <span class="font-mono font-bold" id="thetaDisplay">0.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-2 text-sm">Legend</h3>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-blue-400"></span>
+                            <span>Compound Gear (C)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-purple-500"></span>
+                            <span>Gear B (outer driven) &mdash; top rack</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-amber-500"></span>
+                            <span>Gear D (inner driven) &mdash; bottom rack</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                            <span>Point P (smooth transition)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-cyan-400"></span>
+                            <span>Point Q (delayed by &delta;)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Canvas area -->
+            <div class="col-span-2 space-y-4">
+                <!-- Mechanism Canvas -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Racetrack Mechanism</h2>
+                    <canvas id="mechCanvas" width="800" height="450" class="border border-gray-300 bg-gray-900 mx-auto block rounded"></canvas>
+
+                    <!-- Animation Controls -->
+                    <div class="mt-4 border-t pt-4">
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <!-- Play/Pause -->
+                            <button id="playBtn" class="px-3 py-2 bg-green-500 text-white text-lg rounded hover:bg-green-600" title="Play">
+                                &#x25B6;
+                            </button>
+
+                            <!-- Direction Controls -->
+                            <div class="flex gap-1">
+                                <button id="dirForward" class="px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600" title="Forward">
+                                    &#x25B6;
+                                </button>
+                                <button id="dirBackward" class="px-2 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400" title="Backward">
+                                    &#x25C0;
+                                </button>
+                                <button id="dirPingPong" class="px-2 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400" title="Ping Pong">
+                                    &#x21C4;
+                                </button>
+                            </div>
+
+                            <!-- Progress slider -->
+                            <div class="flex items-center gap-2 flex-1">
+                                <label class="text-sm font-medium text-gray-700">Progress:</label>
+                                <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5"
+                                       class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="progressValue" class="text-sm text-gray-600 font-bold w-12 text-right">0%</span>
+                            </div>
+
+                            <!-- Speed Control -->
+                            <div class="flex items-center gap-1">
+                                <label class="text-xs text-gray-600">Speed:</label>
+                                <input type="range" id="speedSlider" min="0.1" max="2" value="0.5" step="0.1"
+                                       class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <span id="speedValue" class="text-xs text-gray-800 font-bold w-6">0.5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note about P -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                    <strong>Point P:</strong> During stance P is at radius R<sub>2</sub> from compound center, during swing at R<sub>1</sub>.
+                    During the turns, P's radius transitions smoothly between R<sub>2</sub> and R<sub>1</sub>,
+                    ensuring a continuous velocity profile with no discontinuities.
+                </div>
+
+                <!-- Velocity Profile -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Velocity &mdash; <span class="text-red-600">P</span> &amp; <span class="text-cyan-500">Q</span></h2>
+                    <canvas id="velCanvas" width="800" height="180" class="border border-gray-200 bg-white mx-auto block rounded"></canvas>
+                </div>
+
+                <!-- Acceleration Profile -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Acceleration &mdash; <span class="text-red-600">P</span> &amp; <span class="text-cyan-500">Q</span></h2>
+                    <canvas id="accCanvas" width="800" height="180" class="border border-gray-200 bg-white mx-auto block rounded"></canvas>
+                </div>
+
+                <!-- Jerk Profile -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h2 class="text-lg font-semibold mb-3">Jerk &mdash; <span class="text-red-600">P</span> &amp; <span class="text-cyan-500">Q</span></h2>
+                    <canvas id="jerkCanvas" width="800" height="180" class="border border-gray-200 bg-white mx-auto block rounded"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ============================================================
+// Canvas setup
+// ============================================================
+const mechCanvas = document.getElementById('mechCanvas');
+const mechCtx = mechCanvas.getContext('2d');
+const velCanvas = document.getElementById('velCanvas');
+const velCtx = velCanvas.getContext('2d');
+const accCanvas = document.getElementById('accCanvas');
+const accCtx = accCanvas.getContext('2d');
+const jerkCanvas = document.getElementById('jerkCanvas');
+const jerkCtx = jerkCanvas.getContext('2d');
+
+// ============================================================
+// Slider references
+// ============================================================
+const progressSlider = document.getElementById('progressSlider');
+const ratioSlider = document.getElementById('ratioSlider');
+const deltaSlider = document.getElementById('deltaSlider');
+const r1Slider = document.getElementById('r1Slider');
+const r3Slider = document.getElementById('r3Slider');
+const lSlider = document.getElementById('lSlider');
+const phiSlider = document.getElementById('phiSlider');
+const speedSlider = document.getElementById('speedSlider');
+const playBtn = document.getElementById('playBtn');
+const dirForward = document.getElementById('dirForward');
+const dirBackward = document.getElementById('dirBackward');
+const dirPingPong = document.getElementById('dirPingPong');
+const gripperCheck = document.getElementById('gripperCheck');
+const railOffsetSlider = document.getElementById('railOffsetSlider');
+
+// ============================================================
+// Animation state
+// ============================================================
+let playing = false;
+let animationSpeed = 0.5;
+let animationDirection = 1;
+let animationMode = 'forward';
+let progress = 0;
+let animationId = null;
+
+// ============================================================
+// Parameter computation
+// ============================================================
+function getP() {
+    const r1 = parseFloat(r1Slider.value);
+    const k = parseFloat(ratioSlider.value);
+    const r3 = parseFloat(r3Slider.value);
+    const L = parseFloat(lSlider.value);
+    const delta = parseFloat(deltaSlider.value) * Math.PI / 180;
+    const phi = parseFloat(phiSlider.value) * Math.PI / 180;
+
+    const r2 = r1 / k;
+    const r4 = r2 * r3 / r1;
+    const R1 = r1 + 2 * r3;
+    const R2 = r2 + 2 * r4;
+    const orbitB = r1 + r3;
+    const orbitD = r2 + r4;
+
+    // Update displays
+    document.getElementById('ratioValue').textContent = k.toFixed(1);
+    document.getElementById('deltaValue').textContent = deltaSlider.value;
+    document.getElementById('phiValue').textContent = phiSlider.value;
+    document.getElementById('r1Value').textContent = r1;
+    document.getElementById('r3Value').textContent = r3;
+    document.getElementById('lValue').textContent = L;
+    document.getElementById('r2Display').textContent = r2.toFixed(1);
+    document.getElementById('r4Display').textContent = r4.toFixed(1);
+    document.getElementById('R1Display').textContent = R1.toFixed(1);
+    document.getElementById('R2Display').textContent = R2.toFixed(1);
+    document.getElementById('kDisplay').textContent = k.toFixed(1);
+    const check = Math.abs(r1 * r4 - r2 * r3) < 0.01;
+    document.getElementById('constraintDisplay').textContent = check ? '\u2713' : '\u2717';
+    document.getElementById('constraintDisplay').className = 'font-mono font-bold ' + (check ? 'text-green-600' : 'text-red-600');
+
+    return { r1, r2, r3, r4, R1, R2, orbitB, orbitD, k, L, delta, phi };
+}
+
+// ============================================================
+// Time durations for each section (at omega = 1)
+// ============================================================
+function getTimes(p) {
+    const tBot = p.L / p.r2;
+    const tRight = Math.PI * p.R1 / p.r1;
+    const tTop = p.L / p.r1;
+    const tLeft = Math.PI * p.R1 / p.r1;
+    const tTotal = tBot + tRight + tTop + tLeft;
+    return { tBot, tRight, tTop, tLeft, tTotal };
+}
+
+// ============================================================
+// Q distance helpers (shared by getPosX and getStateFromTime)
+// ============================================================
+// Q maintains constant vx = r2 during hold zones.
+// Full velocity with varying d: vx = omegaC * [d*sin(ang) - d'*cos(ang)]
+// Hold zone ODE: d*sin - d'*cos = R2 → d(ang) = R2*(pi/2 - ang)/cos(ang)
+// Transition zone: cubic Hermite matching value + derivative at hold boundary
+function qDistRight(ang, phi, R1, R2) {
+    if (phi < 1e-10) {
+        // phi=0: Q = P, use P's sinusoidal interpolation
+        return (R1 + R2) / 2 - (R1 - R2) / 2 * Math.sin(ang);
+    }
+    if (ang >= Math.PI / 2 - phi) {
+        // Hold zone: d(ang) = R2*(pi/2 - ang) / cos(ang)
+        const num = Math.PI / 2 - ang;
+        const den = Math.cos(ang);
+        if (Math.abs(den) < 1e-10) return R2;
+        return R2 * num / den;
+    }
+    // Transition zone: cubic Hermite from holdEndR to R1
+    const sinPhi = Math.sin(phi);
+    const cosPhi = Math.cos(phi);
+    const holdEndR = R2 * phi / sinPhi;
+    const span = Math.PI - phi;  // angular span of transition zone
+    // Required dd/dang at start for velocity continuity
+    const reqDprime = R2 * (phi * cosPhi - sinPhi) / (sinPhi * sinPhi);
+    // Convert to dd/ds where s = (a0 - ang) / span, ds/dang = -1/span
+    const slope0 = -reqDprime * span;
+    const slope1 = 0;  // smooth arrival at R1
+    // Cubic Hermite coefficients
+    const A = holdEndR;
+    const B = slope0;
+    const C = 3 * (R1 - holdEndR) - 2 * slope0 - slope1;
+    const D = 2 * (holdEndR - R1) + slope0 + slope1;
+    const s = (Math.PI / 2 - phi - ang) / span;
+    return A + B * s + C * s * s + D * s * s * s;
+}
+function qDistLeft(ang, phi, R1, R2) {
+    if (phi < 1e-10) {
+        return (R1 + R2) / 2 - (R1 - R2) / 2 * Math.sin(ang);
+    }
+    if (ang <= -3 * Math.PI / 2 + phi) {
+        // Hold zone: d(ang) = -R2*(ang + 3pi/2) / cos(ang)
+        const num = ang + 3 * Math.PI / 2;
+        const den = Math.cos(ang);
+        if (Math.abs(den) < 1e-10) return R2;
+        return -R2 * num / den;
+    }
+    // Transition zone: cubic Hermite from R1 to holdStartR
+    const sinPhi = Math.sin(phi);
+    const cosPhi = Math.cos(phi);
+    const holdStartR = R2 * phi / sinPhi;
+    const span = Math.PI - phi;
+    // Required dd/dang at end (ang = -3pi/2+phi) for velocity continuity
+    // By mirror symmetry with right turn, same derivative magnitude
+    const reqDprime = R2 * (phi * cosPhi - sinPhi) / (sinPhi * sinPhi);
+    // s = (ang - a1) / (a0 - a1) where a0 = -pi/2, a1 = -3pi/2+phi
+    // s=0 at a1 (holdStartR end), s=1 at a0 (R1 end)
+    const a0 = -Math.PI / 2;
+    const a1 = -3 * Math.PI / 2 + phi;
+    const s = (ang - a1) / (a0 - a1);  // 0 at hold boundary, 1 at R1
+    // At s=0: d = holdStartR, dd/ds must match reqDprime
+    // ds/dang = 1/span, so dd/ds = dd/dang * span
+    // But we need dd/dang at a1 for the left hold zone:
+    // d(ang) = -R2*(ang+3pi/2)/cos(ang)
+    // d'(ang) = -R2*[cos(ang) + (ang+3pi/2)*sin(ang)] / cos^2(ang)
+    // At ang = a1 = -3pi/2+phi: ang+3pi/2 = phi, cos(a1) = -sin(phi), sin(a1) = cos(phi)
+    // d'(a1) = -R2*[-sinPhi + phi*cosPhi] / sin^2(phi)
+    //        = R2*(sinPhi - phi*cosPhi) / sin^2(phi)
+    //        = -reqDprime  (negated from right turn!)
+    const leftReqDprime = -reqDprime;
+    const slope0 = leftReqDprime * span;  // dd/ds at s=0
+    const slope1 = 0;  // smooth arrival at R1
+    const A = holdStartR;
+    const B = slope0;
+    const C = 3 * (R1 - holdStartR) - 2 * slope0 - slope1;
+    const D = 2 * (holdStartR - R1) + slope0 + slope1;
+    return A + B * s + C * s * s + D * s * s * s;
+}
+
+// ============================================================
+// Lightweight x-position helper (no velocity, no recursion)
+// ============================================================
+function getPosX(tFrac, p, which) {
+    const t = getTimes(p);
+    const tAbs = tFrac * t.tTotal;
+    let compX, radX, radY, dist;
+
+    if (tAbs < t.tBot) {
+        const frac = tAbs / t.tBot;
+        compX = -p.L / 2 + frac * p.L;
+        radX = 0;
+        dist = p.R2;
+    } else if (tAbs < t.tBot + t.tRight) {
+        const turnFrac = (tAbs - t.tBot) / t.tRight;
+        const ang = Math.PI / 2 - turnFrac * Math.PI;
+        compX = p.L / 2;
+        radX = Math.cos(ang);
+        if (which === 'q') dist = qDistRight(ang, p.phi, p.R1, p.R2);
+        else dist = (p.R1 + p.R2) / 2 - (p.R1 - p.R2) / 2 * Math.sin(ang);
+    } else if (tAbs < t.tBot + t.tRight + t.tTop) {
+        const frac = (tAbs - t.tBot - t.tRight) / t.tTop;
+        compX = p.L / 2 - frac * p.L;
+        radX = 0;
+        dist = p.R1;
+    } else {
+        const turnFrac = (tAbs - t.tBot - t.tRight - t.tTop) / t.tLeft;
+        const ang = -Math.PI / 2 - turnFrac * Math.PI;
+        compX = -p.L / 2;
+        radX = Math.cos(ang);
+        if (which === 'q') dist = qDistLeft(ang, p.phi, p.R1, p.R2);
+        else dist = (p.R1 + p.R2) / 2 - (p.R1 - p.R2) / 2 * Math.sin(ang);
+    }
+    return compX + radX * dist;
+}
+
+// ============================================================
+// State from fractional time (0-1)
+// ============================================================
+function getStateFromTime(tFrac, p) {
+    const t = getTimes(p);
+    const tAbs = tFrac * t.tTotal;
+    let compX, compY, radX, radY, compTheta, section, vPx, vQx, pDist, qDist;
+
+    if (tAbs < t.tBot) {
+        section = 'Stance';
+        const frac = tAbs / t.tBot;
+        compX = -p.L / 2 + frac * p.L;
+        compY = 0;
+        radX = 0; radY = 1;
+        compTheta = tAbs;
+        pDist = p.R2;
+        qDist = p.R2;
+    } else if (tAbs < t.tBot + t.tRight) {
+        section = 'Lift';
+        const tInTurn = tAbs - t.tBot;
+        const turnFrac = tInTurn / t.tRight;
+        const ang = Math.PI / 2 - turnFrac * Math.PI;
+        compX = p.L / 2; compY = 0;
+        radX = Math.cos(ang); radY = Math.sin(ang);
+        compTheta = tAbs;
+        pDist = (p.R1 + p.R2) / 2 - (p.R1 - p.R2) / 2 * Math.sin(ang);
+        qDist = qDistRight(ang, p.phi, p.R1, p.R2);
+    } else if (tAbs < t.tBot + t.tRight + t.tTop) {
+        section = 'Swing';
+        const tInTop = tAbs - t.tBot - t.tRight;
+        const frac = tInTop / t.tTop;
+        compX = p.L / 2 - frac * p.L;
+        compY = 0;
+        radX = 0; radY = -1;
+        compTheta = tAbs;
+        pDist = p.R1;
+        qDist = p.R1;
+    } else {
+        section = 'Drop';
+        const tInTurn = tAbs - t.tBot - t.tRight - t.tTop;
+        const turnFrac = tInTurn / t.tLeft;
+        const ang = -Math.PI / 2 - turnFrac * Math.PI;
+        compX = -p.L / 2; compY = 0;
+        radX = Math.cos(ang); radY = Math.sin(ang);
+        compTheta = tAbs;
+        pDist = (p.R1 + p.R2) / 2 - (p.R1 - p.R2) / 2 * Math.sin(ang);
+        qDist = qDistLeft(ang, p.phi, p.R1, p.R2);
+    }
+
+    // Compute velocities numerically using getPosX helper
+    const dt = 1e-6;
+    const f0 = Math.max(tFrac - dt, 0), f1 = Math.min(tFrac + dt, 1);
+    const scale = (f1 - f0) * t.tTotal;
+    vPx = (getPosX(f1, p, 'p') - getPosX(f0, p, 'p')) / scale;
+    vQx = (getPosX(f1, p, 'q') - getPosX(f0, p, 'q')) / scale;
+
+    return { compX, compY, radX, radY, compTheta, section, vPx, vQx, pDist, qDist };
+}
+
+// ============================================================
+// Drawing helpers
+// ============================================================
+function drawGear(ctx, x, y, radius, nTeeth, rotation, color, lineWidth) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    const toothHeight = Math.max(2, radius * 0.18);
+    const innerR = radius - toothHeight / 2;
+    const outerR = radius + toothHeight / 2;
+
+    ctx.beginPath();
+    for (let i = 0; i < nTeeth; i++) {
+        const base = (i / nTeeth) * 2 * Math.PI;
+        const a1 = base + (0.1 / nTeeth) * 2 * Math.PI;
+        const a2 = base + (0.25 / nTeeth) * 2 * Math.PI;
+        const a4 = base + (0.5 / nTeeth) * 2 * Math.PI;
+        const a5 = base + (0.6 / nTeeth) * 2 * Math.PI;
+        if (i === 0) ctx.moveTo(Math.cos(base) * innerR, Math.sin(base) * innerR);
+        ctx.lineTo(Math.cos(a1) * innerR, Math.sin(a1) * innerR);
+        ctx.lineTo(Math.cos(a2) * outerR, Math.sin(a2) * outerR);
+        ctx.lineTo(Math.cos(a4) * outerR, Math.sin(a4) * outerR);
+        ctx.lineTo(Math.cos(a5) * innerR, Math.sin(a5) * innerR);
+        const next = ((i + 1) / nTeeth) * 2 * Math.PI;
+        ctx.lineTo(Math.cos(next) * innerR, Math.sin(next) * innerR);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
+function straightRack(ctx, x1, x2, y, color) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2, y);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    const nTicks = Math.round(Math.abs(x2 - x1) / 8);
+    const th = 4;
+    for (let i = 0; i <= nTicks; i++) {
+        const x = x1 + (i / nTicks) * (x2 - x1);
+        ctx.beginPath();
+        ctx.moveTo(x, y - th);
+        ctx.lineTo(x, y + th);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+    }
+}
+
+function arcRack(ctx, cx, cy, radius, startAngle, endAngle, color) {
+    const ccw = endAngle < startAngle;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startAngle, endAngle, ccw);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    const nTicks = 30;
+    const th = 4;
+    const span = endAngle - startAngle;
+    for (let i = 0; i <= nTicks; i++) {
+        const angle = startAngle + (i / nTicks) * span;
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(cx + cos * (radius - th), cy + sin * (radius - th));
+        ctx.lineTo(cx + cos * (radius + th), cy + sin * (radius + th));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+    }
+}
+
+// ============================================================
+// Main draw
+// ============================================================
+function draw() {
+    const p = getP();
+    const tFrac = progress / 100;
+    const state = getStateFromTime(tFrac, p);
+
+    document.getElementById('sectionDisplay').textContent = state.section;
+    document.getElementById('vPxDisplay').textContent = state.vPx.toFixed(1);
+    document.getElementById('vQxDisplay').textContent = state.vQx.toFixed(1);
+    document.getElementById('thetaDisplay').textContent = state.compTheta.toFixed(2);
+    document.getElementById('progressValue').textContent = Math.round(progress) + '%';
+
+    // --- Mechanism canvas ---
+    const W = mechCanvas.width, H = mechCanvas.height;
+    mechCtx.clearRect(0, 0, W, H);
+    mechCtx.fillStyle = '#111827';
+    mechCtx.fillRect(0, 0, W, H);
+
+    mechCtx.save();
+    const totalW = p.L + 2 * p.R1;
+    const showGripper = gripperCheck.checked;
+    const railGapVal = parseFloat(railOffsetSlider.value);
+    // Q' mirror extends below rail by the same distance Q is above it
+    // Max Q above rail: railY - (-R1) = R2 + railGap + R1
+    // So Q' max below rail: railY + (R2 + railGap + R1) = 2*(R2+railGap) + R1
+    const railY0 = showGripper ? p.R2 + railGapVal : 0;
+    const bottomExtent = showGripper ? railY0 + (railY0 + p.R1) + 15 : p.R1;
+    const totalH = p.R1 + bottomExtent;
+    const scale = Math.min((W - 40) / totalW, (H - 40) / totalH);
+    const cx = W / 2;
+    const vertCenter = (-p.R1 + bottomExtent) / 2;
+    const cy = H / 2 - vertCenter * scale;
+    mechCtx.translate(cx, cy);
+    mechCtx.scale(scale, scale);
+
+    const outerColor = '#a855f7';
+    const innerColor = '#f59e0b';
+    const compColor = '#60a5fa';
+
+    // Watermark (diagonal, big, background)
+    mechCtx.save();
+    mechCtx.rotate(-Math.PI / 6);
+    mechCtx.fillStyle = 'rgba(255,255,255,0.04)';
+    mechCtx.font = 'bold 70px sans-serif';
+    mechCtx.textAlign = 'center';
+    mechCtx.textBaseline = 'middle';
+    mechCtx.fillText('BrianMechanisms', 0, 0);
+    mechCtx.restore();
+
+    // Locus of P (dotted, faint)
+    mechCtx.beginPath();
+    const locusN = 200;
+    for (let i = 0; i <= locusN; i++) {
+        const f = i / locusN;
+        const st = getStateFromTime(f, p);
+        const lx = st.compX + st.radX * st.pDist;
+        const ly = st.compY + st.radY * st.pDist;
+        if (i === 0) mechCtx.moveTo(lx, ly);
+        else mechCtx.lineTo(lx, ly);
+    }
+    mechCtx.closePath();
+    mechCtx.strokeStyle = 'rgba(239,68,68,0.25)';
+    mechCtx.lineWidth = 1;
+    mechCtx.setLineDash([4, 4]);
+    mechCtx.stroke();
+    mechCtx.setLineDash([]);
+
+    // Locus of Q (dotted, faint, cyan)
+    mechCtx.beginPath();
+    for (let i = 0; i <= locusN; i++) {
+        const f = i / locusN;
+        const st = getStateFromTime(f, p);
+        const lx = st.compX + st.radX * st.qDist;
+        const ly = st.compY + st.radY * st.qDist;
+        if (i === 0) mechCtx.moveTo(lx, ly);
+        else mechCtx.lineTo(lx, ly);
+    }
+    mechCtx.closePath();
+    mechCtx.strokeStyle = 'rgba(34,211,238,0.3)';
+    mechCtx.lineWidth = 1;
+    mechCtx.setLineDash([4, 4]);
+    mechCtx.stroke();
+    mechCtx.setLineDash([]);
+
+    // Racks
+    straightRack(mechCtx, -p.L / 2, p.L / 2, p.R2, innerColor);
+    straightRack(mechCtx, -p.L / 2, p.L / 2, -p.R1, outerColor);
+    const rCx = p.L / 2;
+    arcRack(mechCtx, rCx, 0, p.R1, -Math.PI / 2, Math.PI / 2 - p.delta, outerColor);
+    arcRack(mechCtx, rCx, 0, p.R2, -Math.PI / 2 + p.delta, Math.PI / 2, innerColor);
+    const lCx = -p.L / 2;
+    arcRack(mechCtx, lCx, 0, p.R1, Math.PI / 2 + p.delta, 3 * Math.PI / 2, outerColor);
+    arcRack(mechCtx, lCx, 0, p.R2, Math.PI / 2, 3 * Math.PI / 2 - p.delta, innerColor);
+
+    // Center line
+    mechCtx.beginPath();
+    mechCtx.moveTo(-p.L / 2 - p.R1 - 10, 0);
+    mechCtx.lineTo(p.L / 2 + p.R1 + 10, 0);
+    mechCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+    mechCtx.lineWidth = 1;
+    mechCtx.stroke();
+
+    // Gears
+    const { compX, compY, radX, radY, compTheta } = state;
+    const dx = compX + radX * p.orbitD;
+    const dy = compY + radY * p.orbitD;
+    const bx = compX + radX * p.orbitB;
+    const by = compY + radY * p.orbitB;
+
+    const nTO = Math.max(12, Math.round(p.r1 / 3));
+    const nTI = Math.max(8, Math.round(p.r2 / 3));
+    drawGear(mechCtx, compX, compY, p.r1, nTO, -compTheta, compColor, 1.5);
+    drawGear(mechCtx, compX, compY, p.r2, nTI, -compTheta, compColor, 1.5);
+    drawGear(mechCtx, bx, by, p.r3, Math.max(8, Math.round(p.r3 / 3)), compTheta * (p.r1 / p.r3), outerColor, 1.5);
+    drawGear(mechCtx, dx, dy, p.r4, Math.max(6, Math.round(p.r4 / 3)), compTheta * (p.r2 / p.r4), innerColor, 1.5);
+
+    // Radial line
+    const pX = compX + radX * state.pDist;
+    const pY = compY + radY * state.pDist;
+    mechCtx.beginPath();
+    mechCtx.moveTo(compX, compY);
+    mechCtx.lineTo(pX, pY);
+    mechCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+    mechCtx.lineWidth = 0.5;
+    mechCtx.setLineDash([3, 3]);
+    mechCtx.stroke();
+    mechCtx.setLineDash([]);
+
+    // Point P
+    mechCtx.beginPath();
+    mechCtx.arc(pX, pY, 4, 0, Math.PI * 2);
+    mechCtx.fillStyle = '#ef4444';
+    mechCtx.fill();
+    mechCtx.strokeStyle = '#fff';
+    mechCtx.lineWidth = 1;
+    mechCtx.stroke();
+    mechCtx.fillStyle = '#ef4444';
+    mechCtx.font = 'bold 11px sans-serif';
+    mechCtx.fillText('P', pX + 6, pY - 6);
+
+    // Point Q
+    const qX = compX + radX * state.qDist;
+    const qY = compY + radY * state.qDist;
+    mechCtx.beginPath();
+    mechCtx.arc(qX, qY, 4, 0, Math.PI * 2);
+    mechCtx.fillStyle = '#22d3ee';
+    mechCtx.fill();
+    mechCtx.strokeStyle = '#fff';
+    mechCtx.lineWidth = 1;
+    mechCtx.stroke();
+    mechCtx.fillStyle = '#22d3ee';
+    mechCtx.font = 'bold 11px sans-serif';
+    mechCtx.fillText('Q', qX + 6, qY - 6);
+
+    // Gripper visualization (rigid links from slider on rail to Q and Q')
+    if (gripperCheck.checked) {
+        const gripColor = '#10b981';
+        const gripColor2 = '#f59e0b';
+        const railGap = parseFloat(railOffsetSlider.value);
+        const railY = p.R2 + railGap;
+
+        // Rigid link length: max vertical distance / cos(15°) so max angle ≈ 75°
+        const maxDy = railY + p.R1;  // railY - (-R1)
+        const armLen = maxDy / Math.cos(15 * Math.PI / 180);
+
+        // Slider x from rigid link constraint: slider always left of Q
+        const dyQ = railY - qY;
+        const dxSq = armLen * armLen - dyQ * dyQ;
+        const dxVal = dxSq > 0 ? Math.sqrt(dxSq) : 0;
+        const sliderX = qX - dxVal;
+
+        // Q' is mirror of Q about the rail (horizontal axis at railY)
+        const qPrimeX = qX;
+        const qPrimeY = 2 * railY - qY;  // mirror about railY
+
+        // Q' arm: same slider, rigid link to Q'
+        const dyQp = railY - qPrimeY;  // = -(railY - qY) = -dyQ
+        const dxSqP = armLen * armLen - dyQp * dyQp;
+        const dxValP = dxSqP > 0 ? Math.sqrt(dxSqP) : 0;
+        const sliderXp = qPrimeX - dxValP;
+        // Both links share the same slider, so sliderX should be the same
+        // (Q' is mirror so dyQp = -dyQ, |dyQp| = |dyQ|, dxValP = dxVal, same sliderX)
+
+        // Horizontal rail
+        const railLeft = -p.L / 2 - p.R1 - 30;
+        const railRight = p.L / 2 + p.R1 + 30;
+        mechCtx.beginPath();
+        mechCtx.moveTo(railLeft, railY);
+        mechCtx.lineTo(railRight, railY);
+        mechCtx.strokeStyle = '#6b7280';
+        mechCtx.lineWidth = 3;
+        mechCtx.stroke();
+        // Rail ticks
+        mechCtx.lineWidth = 0.5;
+        mechCtx.strokeStyle = '#9ca3af';
+        const railSpan = railRight - railLeft;
+        const nRailTicks = Math.round(railSpan / 10);
+        for (let i = 0; i <= nRailTicks; i++) {
+            const rx = railLeft + (i / nRailTicks) * railSpan;
+            mechCtx.beginPath();
+            mechCtx.moveTo(rx, railY - 3);
+            mechCtx.lineTo(rx, railY + 3);
+            mechCtx.stroke();
+        }
+
+        // Slider block on rail
+        const sliderW = 14, sliderH = 10;
+        mechCtx.fillStyle = gripColor;
+        mechCtx.fillRect(sliderX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+        mechCtx.strokeStyle = '#059669';
+        mechCtx.lineWidth = 1;
+        mechCtx.strokeRect(sliderX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+
+        // --- Upper arm: slider to Q ---
+        mechCtx.beginPath();
+        mechCtx.moveTo(sliderX, railY);
+        mechCtx.lineTo(qX, qY);
+        mechCtx.strokeStyle = gripColor;
+        mechCtx.lineWidth = 2.5;
+        mechCtx.stroke();
+
+        // --- Lower arm: slider to Q' ---
+        mechCtx.beginPath();
+        mechCtx.moveTo(sliderX, railY);
+        mechCtx.lineTo(qPrimeX, qPrimeY);
+        mechCtx.strokeStyle = gripColor2;
+        mechCtx.lineWidth = 2.5;
+        mechCtx.stroke();
+
+        // Equalizing linkage (rhombus at pivot enforcing mirror symmetry)
+        // The rhombus has 4 equal-length short links forming a diamond.
+        // Top vertex on upper arm, bottom on lower arm, left/right on slider.
+        const eqSize = 30;  // half-diagonal of rhombus
+        // Upper arm direction from slider
+        const armDxU = qX - sliderX, armDyU = qY - railY;
+        const armLenActual = Math.sqrt(armDxU * armDxU + armDyU * armDyU);
+        const uxN = armDxU / (armLenActual || 1), uyN = armDyU / (armLenActual || 1);
+        // Lower arm direction from slider
+        const armDxL = qPrimeX - sliderX, armDyL = qPrimeY - railY;
+        const armLenL = Math.sqrt(armDxL * armDxL + armDyL * armDyL);
+        const lxN = armDxL / (armLenL || 1), lyN = armDyL / (armLenL || 1);
+        // Rhombus vertices: top on upper arm, bottom on lower arm
+        const eqTop = { x: sliderX + uxN * eqSize, y: railY + uyN * eqSize };
+        const eqBot = { x: sliderX + lxN * eqSize, y: railY + lyN * eqSize };
+        // Left and right: perpendicular to the bisector of the two arms
+        const bisX = (uxN + lxN) / 2, bisY = (uyN + lyN) / 2;
+        const bisLen = Math.sqrt(bisX * bisX + bisY * bisY) || 1;
+        const perpX = -bisY / bisLen, perpY = bisX / bisLen;
+        const eqLeft = { x: sliderX + perpX * eqSize * 0.5, y: railY + perpY * eqSize * 0.5 };
+        const eqRight = { x: sliderX - perpX * eqSize * 0.5, y: railY - perpY * eqSize * 0.5 };
+        // Draw rhombus
+        mechCtx.beginPath();
+        mechCtx.moveTo(eqTop.x, eqTop.y);
+        mechCtx.lineTo(eqRight.x, eqRight.y);
+        mechCtx.lineTo(eqBot.x, eqBot.y);
+        mechCtx.lineTo(eqLeft.x, eqLeft.y);
+        mechCtx.closePath();
+        mechCtx.strokeStyle = '#d1d5db';
+        mechCtx.lineWidth = 2;
+        mechCtx.stroke();
+        // Rhombus vertex dots
+        [eqTop, eqBot, eqLeft, eqRight].forEach(pt => {
+            mechCtx.beginPath();
+            mechCtx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+            mechCtx.fillStyle = '#9ca3af';
+            mechCtx.fill();
+        });
+
+        // Pivot dot at slider center
+        mechCtx.beginPath();
+        mechCtx.arc(sliderX, railY, 3, 0, Math.PI * 2);
+        mechCtx.fillStyle = '#059669';
+        mechCtx.fill();
+
+        // Claw at Q (fixed orientation - horizontal rectangle with jaws pointing up)
+        const cw = 14, ch = 6;
+        mechCtx.fillStyle = gripColor;
+        mechCtx.fillRect(qX - cw / 2, qY - ch / 2, cw, ch);
+        mechCtx.strokeStyle = '#059669';
+        mechCtx.lineWidth = 1;
+        mechCtx.strokeRect(qX - cw / 2, qY - ch / 2, cw, ch);
+        // Jaws pointing up (away from rail)
+        mechCtx.beginPath();
+        mechCtx.moveTo(qX - cw / 2, qY - ch / 2);
+        mechCtx.lineTo(qX - cw / 2 - 3, qY - ch / 2 - 8);
+        mechCtx.moveTo(qX + cw / 2, qY - ch / 2);
+        mechCtx.lineTo(qX + cw / 2 + 3, qY - ch / 2 - 8);
+        mechCtx.strokeStyle = gripColor;
+        mechCtx.lineWidth = 2;
+        mechCtx.stroke();
+        // Pivot dot at Q
+        mechCtx.beginPath();
+        mechCtx.arc(qX, qY, 3, 0, Math.PI * 2);
+        mechCtx.fillStyle = '#059669';
+        mechCtx.fill();
+
+        // Claw at Q' (fixed orientation - horizontal rectangle with jaws pointing down)
+        mechCtx.fillStyle = gripColor2;
+        mechCtx.fillRect(qPrimeX - cw / 2, qPrimeY - ch / 2, cw, ch);
+        mechCtx.strokeStyle = '#b45309';
+        mechCtx.lineWidth = 1;
+        mechCtx.strokeRect(qPrimeX - cw / 2, qPrimeY - ch / 2, cw, ch);
+        // Jaws pointing down (away from rail)
+        mechCtx.beginPath();
+        mechCtx.moveTo(qPrimeX - cw / 2, qPrimeY + ch / 2);
+        mechCtx.lineTo(qPrimeX - cw / 2 - 3, qPrimeY + ch / 2 + 8);
+        mechCtx.moveTo(qPrimeX + cw / 2, qPrimeY + ch / 2);
+        mechCtx.lineTo(qPrimeX + cw / 2 + 3, qPrimeY + ch / 2 + 8);
+        mechCtx.strokeStyle = gripColor2;
+        mechCtx.lineWidth = 2;
+        mechCtx.stroke();
+        // Pivot dot at Q'
+        mechCtx.beginPath();
+        mechCtx.arc(qPrimeX, qPrimeY, 3, 0, Math.PI * 2);
+        mechCtx.fillStyle = '#b45309';
+        mechCtx.fill();
+    }
+
+    // Gear labels
+    mechCtx.font = '10px sans-serif';
+    mechCtx.fillStyle = compColor;
+    mechCtx.fillText('C', compX + 4, compY - p.r1 - 6);
+    mechCtx.fillStyle = outerColor;
+    mechCtx.fillText('B', bx + 4, by - p.r3 - 5);
+    mechCtx.fillStyle = innerColor;
+    mechCtx.fillText('D', dx + 4, dy - p.r4 - 5);
+
+    mechCtx.restore();
+
+    // --- Profile charts ---
+    drawAllProfiles(p, tFrac);
+}
+
+// ============================================================
+// Generic profile chart drawing
+// ============================================================
+function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, currentP, currentQ, yAxisLabel) {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, '#fafafa');
+    bgGrad.addColorStop(1, '#f3f4f6');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    const pad = { left: 55, right: 15, top: 15, bottom: 30 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+    const N = samplesP.length - 1;
+
+    let vMax = 0;
+    for (let i = 0; i <= N; i++) {
+        vMax = Math.max(vMax, Math.abs(samplesP[i]), Math.abs(samplesQ[i]));
+    }
+    if (vMax === 0) vMax = 1;
+
+    const zeroY = pad.top + plotH / 2;
+
+    // Section backgrounds
+    const sectionFills = [
+        'rgba(245,158,11,0.07)', 'rgba(34,197,94,0.07)',
+        'rgba(168,85,247,0.07)', 'rgba(239,68,68,0.07)',
+    ];
+    for (let i = 0; i < 4; i++) {
+        const x0 = pad.left + boundaries[i] * plotW;
+        const x1 = pad.left + boundaries[i + 1] * plotW;
+        ctx.fillStyle = sectionFills[i];
+        ctx.fillRect(x0, pad.top, x1 - x0, plotH);
+    }
+
+    // Grid lines
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 0.5;
+    for (let i = 1; i <= 3; i++) {
+        const y = pad.top + (i / 4) * plotH;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + plotW, y); ctx.stroke();
+    }
+
+    // Section dividers
+    ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    for (let i = 1; i < 4; i++) {
+        const x = pad.left + boundaries[i] * plotW;
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + plotH); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // Zero line + Y axis
+    ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(pad.left + plotW, zeroY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + plotH); ctx.stroke();
+
+    // Y labels
+    ctx.fillStyle = '#6b7280'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    const topVal = vMax.toFixed(0);
+    ctx.fillText('+' + topVal, pad.left - 5, pad.top + 12);
+    ctx.fillText('-' + topVal, pad.left - 5, pad.top + plotH - 4);
+    ctx.fillText('0', pad.left - 5, zeroY + 4);
+
+    // P curve (red)
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+        const x = pad.left + (i / N) * plotW;
+        const y = zeroY - (samplesP[i] / vMax) * (plotH / 2 - 5);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2; ctx.stroke();
+
+    // Q curve (cyan)
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+        const x = pad.left + (i / N) * plotW;
+        const y = zeroY - (samplesQ[i] / vMax) * (plotH / 2 - 5);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 2; ctx.stroke();
+
+    // Current position marker
+    const markerX = pad.left + currentFrac * plotW;
+    ctx.beginPath(); ctx.moveTo(markerX, pad.top); ctx.lineTo(markerX, pad.top + plotH);
+    ctx.strokeStyle = 'rgba(59,130,246,0.6)'; ctx.lineWidth = 2; ctx.stroke();
+
+    // Dots
+    const dotYP = zeroY - (currentP / vMax) * (plotH / 2 - 5);
+    ctx.beginPath(); ctx.arc(markerX, dotYP, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#dc2626'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    const dotYQ = zeroY - (currentQ / vMax) * (plotH / 2 - 5);
+    ctx.beginPath(); ctx.arc(markerX, dotYQ, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#06b6d4'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // Tooltips
+    ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+    const tx = markerX + 7;
+    const txR = tx > W - 55;
+    ctx.fillStyle = '#dc2626';
+    ctx.fillText('P:' + currentP.toFixed(1), txR ? markerX - 50 : tx, dotYP < zeroY ? dotYP - 6 : dotYP + 12);
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('Q:' + currentQ.toFixed(1), txR ? markerX - 50 : tx, dotYQ < zeroY ? dotYQ - 16 : dotYQ + 22);
+
+    // Y-axis title
+    ctx.save(); ctx.translate(14, pad.top + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#6b7280'; ctx.font = '11px sans-serif';
+    ctx.fillText(yAxisLabel, 0, 0); ctx.restore();
+}
+
+// ============================================================
+// Draw all profile charts (velocity, acceleration, jerk)
+// ============================================================
+function drawAllProfiles(p, currentFrac) {
+    const t = getTimes(p);
+    const boundaries = [0, t.tBot / t.tTotal,
+        (t.tBot + t.tRight) / t.tTotal,
+        (t.tBot + t.tRight + t.tTop) / t.tTotal, 1];
+
+    // Sample velocity
+    const N = 400;
+    const velP = [], velQ = [];
+    for (let i = 0; i <= N; i++) {
+        const st = getStateFromTime(i / N, p);
+        velP.push(st.vPx);
+        velQ.push(st.vQx);
+    }
+
+    // Compute acceleration (numerical derivative of velocity)
+    const accP = [], accQ = [];
+    const dFrac = 1 / N;
+    const dtAbs = dFrac * t.tTotal;
+    for (let i = 0; i <= N; i++) {
+        const i0 = Math.max(i - 1, 0), i1 = Math.min(i + 1, N);
+        const scale = (i1 - i0) * dtAbs;
+        accP.push((velP[i1] - velP[i0]) / scale);
+        accQ.push((velQ[i1] - velQ[i0]) / scale);
+    }
+
+    // Compute jerk (numerical derivative of acceleration)
+    const jerkP = [], jerkQ = [];
+    for (let i = 0; i <= N; i++) {
+        const i0 = Math.max(i - 1, 0), i1 = Math.min(i + 1, N);
+        const scale = (i1 - i0) * dtAbs;
+        jerkP.push((accP[i1] - accP[i0]) / scale);
+        jerkQ.push((accQ[i1] - accQ[i0]) / scale);
+    }
+
+    // Current values
+    const ci = Math.round(currentFrac * N);
+    const curVP = velP[ci], curVQ = velQ[ci];
+    const curAP = accP[ci], curAQ = accQ[ci];
+    const curJP = jerkP[ci], curJQ = jerkQ[ci];
+
+    drawProfile(velCtx, velCanvas, velP, velQ, boundaries, currentFrac, curVP, curVQ, 'v\u2093');
+    drawProfile(accCtx, accCanvas, accP, accQ, boundaries, currentFrac, curAP, curAQ, 'a\u2093');
+    drawProfile(jerkCtx, jerkCanvas, jerkP, jerkQ, boundaries, currentFrac, curJP, curJQ, 'j\u2093');
+}
+
+// ============================================================
+// Direction button UI
+// ============================================================
+function updateDirectionButtons() {
+    dirForward.classList.toggle('bg-blue-500', animationMode === 'forward');
+    dirForward.classList.toggle('text-white', animationMode === 'forward');
+    dirForward.classList.toggle('bg-gray-300', animationMode !== 'forward');
+    dirForward.classList.toggle('text-gray-700', animationMode !== 'forward');
+    dirBackward.classList.toggle('bg-blue-500', animationMode === 'backward');
+    dirBackward.classList.toggle('text-white', animationMode === 'backward');
+    dirBackward.classList.toggle('bg-gray-300', animationMode !== 'backward');
+    dirBackward.classList.toggle('text-gray-700', animationMode !== 'backward');
+    dirPingPong.classList.toggle('bg-blue-500', animationMode === 'pingpong');
+    dirPingPong.classList.toggle('text-white', animationMode === 'pingpong');
+    dirPingPong.classList.toggle('bg-gray-300', animationMode !== 'pingpong');
+    dirPingPong.classList.toggle('text-gray-700', animationMode !== 'pingpong');
+}
+
+// ============================================================
+// Animation
+// ============================================================
+dirForward.addEventListener('click', () => { animationMode = 'forward'; animationDirection = 1; updateDirectionButtons(); });
+dirBackward.addEventListener('click', () => { animationMode = 'backward'; animationDirection = -1; updateDirectionButtons(); });
+dirPingPong.addEventListener('click', () => { animationMode = 'pingpong'; updateDirectionButtons(); });
+
+speedSlider.addEventListener('input', (e) => {
+    animationSpeed = parseFloat(e.target.value);
+    document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
+});
+
+playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.innerHTML = playing ? '&#x23F8;' : '&#x25B6;';
+    playBtn.title = playing ? 'Pause' : 'Play';
+    playBtn.classList.toggle('bg-green-500', !playing);
+    playBtn.classList.toggle('bg-red-500', playing);
+    if (playing) animate();
+});
+
+function animate() {
+    if (!playing) return;
+    let dir = animationDirection;
+    if (animationMode === 'pingpong') {
+        if (progress >= 100) animationDirection = -1;
+        else if (progress <= 0) animationDirection = 1;
+        dir = animationDirection;
+    }
+    progress += dir * animationSpeed * 0.2;
+    if (animationMode === 'forward') { if (progress > 100) progress = 0; }
+    else if (animationMode === 'backward') { if (progress < 0) progress = 100; }
+    else { progress = Math.max(0, Math.min(100, progress)); }
+    progressSlider.value = progress;
+    draw();
+    animationId = requestAnimationFrame(animate);
+}
+
+// ============================================================
+// Event listeners
+// ============================================================
+progressSlider.addEventListener('input', (e) => { progress = parseFloat(e.target.value); draw(); });
+[ratioSlider, deltaSlider, phiSlider, r1Slider, r3Slider, lSlider].forEach(s => { s.addEventListener('input', draw); });
+gripperCheck.addEventListener('change', draw);
+railOffsetSlider.addEventListener('input', () => {
+    document.getElementById('railOffsetValue').textContent = railOffsetSlider.value;
+    draw();
+});
+
+// Initial draw
+draw();
+</script>
+</body>
+</html>
