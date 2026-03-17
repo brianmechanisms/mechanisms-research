@@ -73,10 +73,14 @@
 
                 <h3 class="font-medium text-gray-700 mt-4 mb-2">Visualization</h3>
                 <div class="space-y-2">
-                    <label class="flex items-center gap-2 text-sm cursor-pointer">
-                        <input type="checkbox" id="gripperCheck" class="w-4 h-4 accent-emerald-500">
-                        <span>Show Gripper</span>
-                    </label>
+                    <div>
+                        <label class="text-sm mb-1 block">Gripper Type</label>
+                        <select id="gripperSelect" class="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-white">
+                            <option value="none">None</option>
+                            <option value="crank">Ball Crank</option>
+                            <option value="slot">Slot</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="flex justify-between text-sm mb-1">
                             <span>Rail offset</span>
@@ -271,7 +275,7 @@ const playBtn = document.getElementById('playBtn');
 const dirForward = document.getElementById('dirForward');
 const dirBackward = document.getElementById('dirBackward');
 const dirPingPong = document.getElementById('dirPingPong');
-const gripperCheck = document.getElementById('gripperCheck');
+const gripperSelect = document.getElementById('gripperSelect');
 const railOffsetSlider = document.getElementById('railOffsetSlider');
 
 // ============================================================
@@ -610,13 +614,17 @@ function draw() {
 
     mechCtx.save();
     const totalW = p.L + 2 * p.R1;
-    const showGripper = gripperCheck.checked;
+    const gripperMode = gripperSelect.value;  // 'none', 'crank', 'slot'
+    const showGripper = gripperMode !== 'none';
     const railGapVal = parseFloat(railOffsetSlider.value);
     // Q' mirror extends below rail by the same distance Q is above it
     // Max Q above rail: railY - (-R1) = R2 + railGap + R1
     // So Q' max below rail: railY + (R2 + railGap + R1) = 2*(R2+railGap) + R1
     const railY0 = showGripper ? p.R2 + railGapVal : 0;
-    const bottomExtent = showGripper ? railY0 + (railY0 + p.R1) + 15 : p.R1;
+    // Ball crank has Q' mirror below rail; slot mode only has a small claw below
+    const bottomExtent = !showGripper ? p.R1
+        : gripperMode === 'crank' ? railY0 + (railY0 + p.R1) + 15
+        : railY0 + 30;  // slot: rail + small claw below
     const totalH = p.R1 + bottomExtent;
     const scale = Math.min((W - 40) / totalW, (H - 40) / totalH);
     const cx = W / 2;
@@ -744,36 +752,14 @@ function draw() {
     mechCtx.font = 'bold 11px sans-serif';
     mechCtx.fillText('Q', qX + 6, qY - 6);
 
-    // Gripper visualization (rigid links from slider on rail to Q and Q')
-    if (gripperCheck.checked) {
+    // Gripper visualization
+    if (showGripper) {
         const gripColor = '#10b981';
         const gripColor2 = '#f59e0b';
         const railGap = parseFloat(railOffsetSlider.value);
         const railY = p.R2 + railGap;
 
-        // Rigid link length: max vertical distance / cos(15°) so max angle ≈ 75°
-        const maxDy = railY + p.R1;  // railY - (-R1)
-        const armLen = maxDy / Math.cos(15 * Math.PI / 180);
-
-        // Slider x from rigid link constraint: slider always left of Q
-        const dyQ = railY - qY;
-        const dxSq = armLen * armLen - dyQ * dyQ;
-        const dxVal = dxSq > 0 ? Math.sqrt(dxSq) : 0;
-        const sliderX = qX - dxVal;
-
-        // Q' is mirror of Q about the rail (horizontal axis at railY)
-        const qPrimeX = qX;
-        const qPrimeY = 2 * railY - qY;  // mirror about railY
-
-        // Q' arm: same slider, rigid link to Q'
-        const dyQp = railY - qPrimeY;  // = -(railY - qY) = -dyQ
-        const dxSqP = armLen * armLen - dyQp * dyQp;
-        const dxValP = dxSqP > 0 ? Math.sqrt(dxSqP) : 0;
-        const sliderXp = qPrimeX - dxValP;
-        // Both links share the same slider, so sliderX should be the same
-        // (Q' is mirror so dyQp = -dyQ, |dyQp| = |dyQ|, dxValP = dxVal, same sliderX)
-
-        // Horizontal rail
+        // Horizontal rail (shared by both modes)
         const railLeft = -p.L / 2 - p.R1 - 30;
         const railRight = p.L / 2 + p.R1 + 30;
         mechCtx.beginPath();
@@ -795,117 +781,183 @@ function draw() {
             mechCtx.stroke();
         }
 
-        // Slider block on rail
-        const sliderW = 14, sliderH = 10;
-        mechCtx.fillStyle = gripColor;
-        mechCtx.fillRect(sliderX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
-        mechCtx.strokeStyle = '#059669';
-        mechCtx.lineWidth = 1;
-        mechCtx.strokeRect(sliderX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+        if (gripperMode === 'crank') {
+            // --- Ball Crank mode ---
+            // Rigid link length: max vertical distance / cos(15°) so max angle ≈ 75°
+            const maxDy = railY + p.R1;  // railY - (-R1)
+            const armLen = maxDy / Math.cos(15 * Math.PI / 180);
 
-        // --- Upper arm: slider to Q ---
-        mechCtx.beginPath();
-        mechCtx.moveTo(sliderX, railY);
-        mechCtx.lineTo(qX, qY);
-        mechCtx.strokeStyle = gripColor;
-        mechCtx.lineWidth = 2.5;
-        mechCtx.stroke();
+            // Slider x from rigid link constraint: slider always left of Q
+            const dyQ = railY - qY;
+            const dxSq = armLen * armLen - dyQ * dyQ;
+            const dxVal = dxSq > 0 ? Math.sqrt(dxSq) : 0;
+            const sliderX = qX - dxVal;
 
-        // --- Lower arm: slider to Q' ---
-        mechCtx.beginPath();
-        mechCtx.moveTo(sliderX, railY);
-        mechCtx.lineTo(qPrimeX, qPrimeY);
-        mechCtx.strokeStyle = gripColor2;
-        mechCtx.lineWidth = 2.5;
-        mechCtx.stroke();
+            // Q' is mirror of Q about the rail
+            const qPrimeX = qX;
+            const qPrimeY = 2 * railY - qY;
 
-        // Equalizing linkage (rhombus at pivot enforcing mirror symmetry)
-        // The rhombus has 4 equal-length short links forming a diamond.
-        // Top vertex on upper arm, bottom on lower arm, left/right on slider.
-        const eqSize = 30;  // half-diagonal of rhombus
-        // Upper arm direction from slider
-        const armDxU = qX - sliderX, armDyU = qY - railY;
-        const armLenActual = Math.sqrt(armDxU * armDxU + armDyU * armDyU);
-        const uxN = armDxU / (armLenActual || 1), uyN = armDyU / (armLenActual || 1);
-        // Lower arm direction from slider
-        const armDxL = qPrimeX - sliderX, armDyL = qPrimeY - railY;
-        const armLenL = Math.sqrt(armDxL * armDxL + armDyL * armDyL);
-        const lxN = armDxL / (armLenL || 1), lyN = armDyL / (armLenL || 1);
-        // Rhombus vertices: top on upper arm, bottom on lower arm
-        const eqTop = { x: sliderX + uxN * eqSize, y: railY + uyN * eqSize };
-        const eqBot = { x: sliderX + lxN * eqSize, y: railY + lyN * eqSize };
-        // Left and right: perpendicular to the bisector of the two arms
-        const bisX = (uxN + lxN) / 2, bisY = (uyN + lyN) / 2;
-        const bisLen = Math.sqrt(bisX * bisX + bisY * bisY) || 1;
-        const perpX = -bisY / bisLen, perpY = bisX / bisLen;
-        const eqLeft = { x: sliderX + perpX * eqSize * 0.5, y: railY + perpY * eqSize * 0.5 };
-        const eqRight = { x: sliderX - perpX * eqSize * 0.5, y: railY - perpY * eqSize * 0.5 };
-        // Draw rhombus
-        mechCtx.beginPath();
-        mechCtx.moveTo(eqTop.x, eqTop.y);
-        mechCtx.lineTo(eqRight.x, eqRight.y);
-        mechCtx.lineTo(eqBot.x, eqBot.y);
-        mechCtx.lineTo(eqLeft.x, eqLeft.y);
-        mechCtx.closePath();
-        mechCtx.strokeStyle = '#d1d5db';
-        mechCtx.lineWidth = 2;
-        mechCtx.stroke();
-        // Rhombus vertex dots
-        [eqTop, eqBot, eqLeft, eqRight].forEach(pt => {
+            // Slider block on rail
+            const sliderW = 14, sliderH = 10;
+            mechCtx.fillStyle = gripColor;
+            mechCtx.fillRect(sliderX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+            mechCtx.strokeStyle = '#059669';
+            mechCtx.lineWidth = 1;
+            mechCtx.strokeRect(sliderX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+
+            // Upper arm: slider to Q
             mechCtx.beginPath();
-            mechCtx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
-            mechCtx.fillStyle = '#9ca3af';
+            mechCtx.moveTo(sliderX, railY);
+            mechCtx.lineTo(qX, qY);
+            mechCtx.strokeStyle = gripColor;
+            mechCtx.lineWidth = 2.5;
+            mechCtx.stroke();
+
+            // Lower arm: slider to Q'
+            mechCtx.beginPath();
+            mechCtx.moveTo(sliderX, railY);
+            mechCtx.lineTo(qPrimeX, qPrimeY);
+            mechCtx.strokeStyle = gripColor2;
+            mechCtx.lineWidth = 2.5;
+            mechCtx.stroke();
+
+            // Equalizing linkage (rhombus)
+            const eqSize = 30;
+            const armDxU = qX - sliderX, armDyU = qY - railY;
+            const armLenActual = Math.sqrt(armDxU * armDxU + armDyU * armDyU);
+            const uxN = armDxU / (armLenActual || 1), uyN = armDyU / (armLenActual || 1);
+            const armDxL = qPrimeX - sliderX, armDyL = qPrimeY - railY;
+            const armLenL = Math.sqrt(armDxL * armDxL + armDyL * armDyL);
+            const lxN = armDxL / (armLenL || 1), lyN = armDyL / (armLenL || 1);
+            const eqTop = { x: sliderX + uxN * eqSize, y: railY + uyN * eqSize };
+            const eqBot = { x: sliderX + lxN * eqSize, y: railY + lyN * eqSize };
+            const bisX = (uxN + lxN) / 2, bisY = (uyN + lyN) / 2;
+            const bisLen = Math.sqrt(bisX * bisX + bisY * bisY) || 1;
+            const perpX = -bisY / bisLen, perpY = bisX / bisLen;
+            const eqLeft = { x: sliderX + perpX * eqSize * 0.5, y: railY + perpY * eqSize * 0.5 };
+            const eqRight = { x: sliderX - perpX * eqSize * 0.5, y: railY - perpY * eqSize * 0.5 };
+            mechCtx.beginPath();
+            mechCtx.moveTo(eqTop.x, eqTop.y);
+            mechCtx.lineTo(eqRight.x, eqRight.y);
+            mechCtx.lineTo(eqBot.x, eqBot.y);
+            mechCtx.lineTo(eqLeft.x, eqLeft.y);
+            mechCtx.closePath();
+            mechCtx.strokeStyle = '#d1d5db';
+            mechCtx.lineWidth = 2;
+            mechCtx.stroke();
+            [eqTop, eqBot, eqLeft, eqRight].forEach(pt => {
+                mechCtx.beginPath();
+                mechCtx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+                mechCtx.fillStyle = '#9ca3af';
+                mechCtx.fill();
+            });
+
+            // Pivot dot at slider center
+            mechCtx.beginPath();
+            mechCtx.arc(sliderX, railY, 3, 0, Math.PI * 2);
+            mechCtx.fillStyle = '#059669';
             mechCtx.fill();
-        });
 
-        // Pivot dot at slider center
-        mechCtx.beginPath();
-        mechCtx.arc(sliderX, railY, 3, 0, Math.PI * 2);
-        mechCtx.fillStyle = '#059669';
-        mechCtx.fill();
+            // Claw at Q (jaws up)
+            const cw = 14, ch = 6;
+            mechCtx.fillStyle = gripColor;
+            mechCtx.fillRect(qX - cw / 2, qY - ch / 2, cw, ch);
+            mechCtx.strokeStyle = '#059669';
+            mechCtx.lineWidth = 1;
+            mechCtx.strokeRect(qX - cw / 2, qY - ch / 2, cw, ch);
+            mechCtx.beginPath();
+            mechCtx.moveTo(qX - cw / 2, qY - ch / 2);
+            mechCtx.lineTo(qX - cw / 2 - 3, qY - ch / 2 - 8);
+            mechCtx.moveTo(qX + cw / 2, qY - ch / 2);
+            mechCtx.lineTo(qX + cw / 2 + 3, qY - ch / 2 - 8);
+            mechCtx.strokeStyle = gripColor;
+            mechCtx.lineWidth = 2;
+            mechCtx.stroke();
+            mechCtx.beginPath();
+            mechCtx.arc(qX, qY, 3, 0, Math.PI * 2);
+            mechCtx.fillStyle = '#059669';
+            mechCtx.fill();
 
-        // Claw at Q (fixed orientation - horizontal rectangle with jaws pointing up)
-        const cw = 14, ch = 6;
-        mechCtx.fillStyle = gripColor;
-        mechCtx.fillRect(qX - cw / 2, qY - ch / 2, cw, ch);
-        mechCtx.strokeStyle = '#059669';
-        mechCtx.lineWidth = 1;
-        mechCtx.strokeRect(qX - cw / 2, qY - ch / 2, cw, ch);
-        // Jaws pointing up (away from rail)
-        mechCtx.beginPath();
-        mechCtx.moveTo(qX - cw / 2, qY - ch / 2);
-        mechCtx.lineTo(qX - cw / 2 - 3, qY - ch / 2 - 8);
-        mechCtx.moveTo(qX + cw / 2, qY - ch / 2);
-        mechCtx.lineTo(qX + cw / 2 + 3, qY - ch / 2 - 8);
-        mechCtx.strokeStyle = gripColor;
-        mechCtx.lineWidth = 2;
-        mechCtx.stroke();
-        // Pivot dot at Q
-        mechCtx.beginPath();
-        mechCtx.arc(qX, qY, 3, 0, Math.PI * 2);
-        mechCtx.fillStyle = '#059669';
-        mechCtx.fill();
+            // Claw at Q' (jaws down)
+            mechCtx.fillStyle = gripColor2;
+            mechCtx.fillRect(qPrimeX - cw / 2, qPrimeY - ch / 2, cw, ch);
+            mechCtx.strokeStyle = '#b45309';
+            mechCtx.lineWidth = 1;
+            mechCtx.strokeRect(qPrimeX - cw / 2, qPrimeY - ch / 2, cw, ch);
+            mechCtx.beginPath();
+            mechCtx.moveTo(qPrimeX - cw / 2, qPrimeY + ch / 2);
+            mechCtx.lineTo(qPrimeX - cw / 2 - 3, qPrimeY + ch / 2 + 8);
+            mechCtx.moveTo(qPrimeX + cw / 2, qPrimeY + ch / 2);
+            mechCtx.lineTo(qPrimeX + cw / 2 + 3, qPrimeY + ch / 2 + 8);
+            mechCtx.strokeStyle = gripColor2;
+            mechCtx.lineWidth = 2;
+            mechCtx.stroke();
+            mechCtx.beginPath();
+            mechCtx.arc(qPrimeX, qPrimeY, 3, 0, Math.PI * 2);
+            mechCtx.fillStyle = '#b45309';
+            mechCtx.fill();
 
-        // Claw at Q' (fixed orientation - horizontal rectangle with jaws pointing down)
-        mechCtx.fillStyle = gripColor2;
-        mechCtx.fillRect(qPrimeX - cw / 2, qPrimeY - ch / 2, cw, ch);
-        mechCtx.strokeStyle = '#b45309';
-        mechCtx.lineWidth = 1;
-        mechCtx.strokeRect(qPrimeX - cw / 2, qPrimeY - ch / 2, cw, ch);
-        // Jaws pointing down (away from rail)
-        mechCtx.beginPath();
-        mechCtx.moveTo(qPrimeX - cw / 2, qPrimeY + ch / 2);
-        mechCtx.lineTo(qPrimeX - cw / 2 - 3, qPrimeY + ch / 2 + 8);
-        mechCtx.moveTo(qPrimeX + cw / 2, qPrimeY + ch / 2);
-        mechCtx.lineTo(qPrimeX + cw / 2 + 3, qPrimeY + ch / 2 + 8);
-        mechCtx.strokeStyle = gripColor2;
-        mechCtx.lineWidth = 2;
-        mechCtx.stroke();
-        // Pivot dot at Q'
-        mechCtx.beginPath();
-        mechCtx.arc(qPrimeX, qPrimeY, 3, 0, Math.PI * 2);
-        mechCtx.fillStyle = '#b45309';
-        mechCtx.fill();
+        } else if (gripperMode === 'slot') {
+            // --- Slot mode ---
+            // Q slides in a vertical slot; the slot block sits on the rail at Q's x-position
+            const slotW = 8;
+            const slotX = qX;
+            // Slot must reach from railY up to Q's highest point (-R1) plus margin
+            const slotTop = -p.R1 - 5;  // Q's highest y is -R1 (top rack)
+            const slotBot = railY + 5;   // small extension below rail
+            const slotFullH = slotBot - slotTop;
+
+            // Vertical slot (tall narrow rectangle)
+            mechCtx.fillStyle = 'rgba(16,185,129,0.15)';
+            mechCtx.fillRect(slotX - slotW / 2, slotTop, slotW, slotFullH);
+            mechCtx.strokeStyle = gripColor;
+            mechCtx.lineWidth = 1.5;
+            mechCtx.strokeRect(slotX - slotW / 2, slotTop, slotW, slotFullH);
+
+            // Slider block on rail (the slot carrier)
+            const sliderW = 20, sliderH = 10;
+            mechCtx.fillStyle = gripColor;
+            mechCtx.fillRect(slotX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+            mechCtx.strokeStyle = '#059669';
+            mechCtx.lineWidth = 1;
+            mechCtx.strokeRect(slotX - sliderW / 2, railY - sliderH / 2, sliderW, sliderH);
+
+            // Vertical line from Q to rail (Q slides in the slot)
+            mechCtx.beginPath();
+            mechCtx.moveTo(qX, qY);
+            mechCtx.lineTo(slotX, railY);
+            mechCtx.strokeStyle = gripColor;
+            mechCtx.lineWidth = 2;
+            mechCtx.setLineDash([4, 3]);
+            mechCtx.stroke();
+            mechCtx.setLineDash([]);
+
+            // Q pin in the slot
+            mechCtx.beginPath();
+            mechCtx.arc(qX, qY, 4, 0, Math.PI * 2);
+            mechCtx.fillStyle = gripColor;
+            mechCtx.fill();
+            mechCtx.strokeStyle = '#059669';
+            mechCtx.lineWidth = 1.5;
+            mechCtx.stroke();
+
+            // Claw at slot block (jaws pointing down, gripping below rail)
+            const cw = 14, ch = 6;
+            const clawY = railY + sliderH / 2;
+            mechCtx.fillStyle = gripColor;
+            mechCtx.fillRect(slotX - cw / 2, clawY, cw, ch);
+            mechCtx.strokeStyle = '#059669';
+            mechCtx.lineWidth = 1;
+            mechCtx.strokeRect(slotX - cw / 2, clawY, cw, ch);
+            mechCtx.beginPath();
+            mechCtx.moveTo(slotX - cw / 2, clawY + ch);
+            mechCtx.lineTo(slotX - cw / 2 - 3, clawY + ch + 8);
+            mechCtx.moveTo(slotX + cw / 2, clawY + ch);
+            mechCtx.lineTo(slotX + cw / 2 + 3, clawY + ch + 8);
+            mechCtx.strokeStyle = gripColor;
+            mechCtx.lineWidth = 2;
+            mechCtx.stroke();
+        }
     }
 
     // Gear labels
@@ -1146,7 +1198,7 @@ function animate() {
 // ============================================================
 progressSlider.addEventListener('input', (e) => { progress = parseFloat(e.target.value); draw(); });
 [ratioSlider, deltaSlider, phiSlider, r1Slider, r3Slider, lSlider].forEach(s => { s.addEventListener('input', draw); });
-gripperCheck.addEventListener('change', draw);
+gripperSelect.addEventListener('change', draw);
 railOffsetSlider.addEventListener('input', () => {
     document.getElementById('railOffsetValue').textContent = railOffsetSlider.value;
     draw();
