@@ -752,54 +752,64 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Compound Gear assembly -->
+                                <!-- Gear Assembly -->
                                 <div class="tree-node">
                                     <div class="tree-row" onclick="toggleTreeNode(this)">
-                                        <span class="tree-arrow">▸</span>
-                                        <input type="checkbox" disabled onclick="event.stopPropagation()">
-                                        <span class="tree-label assembly disabled">Compound Gear</span>
+                                        <span class="tree-arrow">▾</span>
+                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_assy')" onclick="event.stopPropagation()">
+                                        <span class="tree-label assembly">Gear Assembly</span>
                                     </div>
-                                    <div class="tree-children collapsed">
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" disabled>
-                                                <span class="dot" style="background:#60a5fa; opacity:0.3"></span>
-                                                <span class="tree-label disabled">r₁ Gear</span>
+                                    <div class="tree-children">
+                                        <!-- Compound Gear assembly -->
+                                        <div class="tree-node">
+                                            <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                <span class="tree-arrow">▾</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'compound_gear')" onclick="event.stopPropagation()">
+                                                <span class="tree-label assembly">Compound Gear</span>
+                                            </div>
+                                            <div class="tree-children">
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="gear_r1" onclick="selectScadPart(this, 'gear_r1')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r1')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#60a5fa"></span>
+                                                        <span class="tree-label">r₁ Gear</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="gear_r2" onclick="selectScadPart(this, 'gear_r2')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r2')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#38bdf8"></span>
+                                                        <span class="tree-label">r₂ Gear</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" disabled>
-                                                <span class="dot" style="background:#60a5fa; opacity:0.3"></span>
-                                                <span class="tree-label disabled">r₂ Gear</span>
+                                        <!-- Driven Gears assembly -->
+                                        <div class="tree-node">
+                                            <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                <span class="tree-arrow">▾</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'driven_gears')" onclick="event.stopPropagation()">
+                                                <span class="tree-label assembly">Driven Gears</span>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Driven Gears assembly -->
-                                <div class="tree-node">
-                                    <div class="tree-row" onclick="toggleTreeNode(this)">
-                                        <span class="tree-arrow">▸</span>
-                                        <input type="checkbox" disabled onclick="event.stopPropagation()">
-                                        <span class="tree-label assembly disabled">Driven Gears</span>
-                                    </div>
-                                    <div class="tree-children collapsed">
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" disabled>
-                                                <span class="dot" style="background:#a855f7; opacity:0.3"></span>
-                                                <span class="tree-label disabled">r₃ Gear</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" disabled>
-                                                <span class="dot" style="background:#f59e0b; opacity:0.3"></span>
-                                                <span class="tree-label disabled">r₄ Gear</span>
+                                            <div class="tree-children">
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="gear_r3" onclick="selectScadPart(this, 'gear_r3')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r3')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#a855f7"></span>
+                                                        <span class="tree-label">r₃ Gear</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="gear_r4" onclick="selectScadPart(this, 'gear_r4')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r4')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f59e0b"></span>
+                                                        <span class="tree-label">r₄ Gear</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1873,7 +1883,7 @@ let threeInitialized = false;
 let threeMeshGroup;
 
 // Part visibility state
-const scadVisible = { outer_rack: true, inner_rack: true };
+const scadVisible = { outer_rack: true, inner_rack: true, gear_r1: true, gear_r2: true, gear_r3: true, gear_r4: true };
 
 function selectScadPart(el, part) {
     document.querySelectorAll('.part-row').forEach(e => e.classList.remove('selected'));
@@ -1892,7 +1902,8 @@ function toggleTreeNode(rowEl) {
 }
 
 function toggleTreeVis(checkbox, key) {
-    if (key === 'root' || key === 'racetrack') {
+    const assemblyKeys = ['root', 'racetrack', 'gear_assy', 'compound_gear', 'driven_gears'];
+    if (assemblyKeys.includes(key)) {
         // Assembly toggle: propagate to children
         const node = checkbox.closest('.tree-node');
         const childBoxes = node.querySelectorAll('.tree-children input[type=checkbox]:not([disabled])');
@@ -1914,6 +1925,10 @@ function rebuild3D() {
     const p = getP();
     if (scadVisible.outer_rack) buildOuterRack3D(p, false);
     if (scadVisible.inner_rack) buildInnerRack3D(p, false);
+    if (scadVisible.gear_r1) buildGearR1_3D(p);
+    if (scadVisible.gear_r2) buildGearR2_3D(p);
+    if (scadVisible.gear_r3) buildGearR3_3D(p);
+    if (scadVisible.gear_r4) buildGearR4_3D(p);
 }
 
 function setScadView(mode) {
@@ -2232,6 +2247,77 @@ function buildInnerRack3D(p, clear = true) {
     }
 }
 
+// Helper: build a spur gear 3D mesh (tooth profile matching drawGear)
+function buildGear3D(radius, nTeeth, depth, color, cx, cy) {
+    const toothHeight = Math.max(2, radius * 0.18);
+    const innerR = radius - toothHeight / 2;
+    const outerR = radius + toothHeight / 2;
+    const shape = new THREE.Shape();
+
+    for (let i = 0; i < nTeeth; i++) {
+        const base = (i / nTeeth) * 2 * Math.PI;
+        const a1 = base + (0.1 / nTeeth) * 2 * Math.PI;
+        const a2 = base + (0.25 / nTeeth) * 2 * Math.PI;
+        const a4 = base + (0.5 / nTeeth) * 2 * Math.PI;
+        const a5 = base + (0.6 / nTeeth) * 2 * Math.PI;
+        if (i === 0) shape.moveTo(Math.cos(base) * innerR, Math.sin(base) * innerR);
+        shape.lineTo(Math.cos(a1) * innerR, Math.sin(a1) * innerR);
+        shape.lineTo(Math.cos(a2) * outerR, Math.sin(a2) * outerR);
+        shape.lineTo(Math.cos(a4) * outerR, Math.sin(a4) * outerR);
+        shape.lineTo(Math.cos(a5) * innerR, Math.sin(a5) * innerR);
+        const next = ((i + 1) / nTeeth) * 2 * Math.PI;
+        shape.lineTo(Math.cos(next) * innerR, Math.sin(next) * innerR);
+    }
+    shape.closePath();
+
+    // Add center hole (20% of radius)
+    const holeR = radius * 0.2;
+    const hole = new THREE.Path();
+    for (let i = 0; i <= 32; i++) {
+        const a = (i / 32) * 2 * Math.PI;
+        if (i === 0) hole.moveTo(Math.cos(a) * holeR, Math.sin(a) * holeR);
+        else hole.lineTo(Math.cos(a) * holeR, Math.sin(a) * holeR);
+    }
+    shape.holes.push(hole);
+
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: depth, bevelEnabled: false });
+    const mat = new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.85 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(cx, cy, 0);
+    threeMeshGroup.add(mesh);
+}
+
+// r1 gear (compound, outer) - centered at origin
+function buildGearR1_3D(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(12, Math.round(p.r1 / 3));
+    buildGear3D(p.r1, nTeeth, depth, 0x60a5fa, 0, 0);
+}
+
+// r2 gear (compound, inner) - centered at origin, offset in z
+function buildGearR2_3D(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(8, Math.round(p.r2 / 3));
+    buildGear3D(p.r2, nTeeth, depth, 0x38bdf8, 0, 0);
+}
+
+// r3 gear (driven, outer) - orbits at distance r1+r3 from center
+function buildGearR3_3D(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(8, Math.round(p.r3 / 3));
+    // Position at right side (theta=0 default position)
+    const orbitR = p.r1 + p.r3;
+    buildGear3D(p.r3, nTeeth, depth, 0xa855f7, orbitR, 0);
+}
+
+// r4 gear (driven, inner) - orbits at distance r2+r4 from center
+function buildGearR4_3D(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(6, Math.round(p.r4 / 3));
+    const orbitR = p.r2 + p.r4;
+    buildGear3D(p.r4, nTeeth, depth, 0xf59e0b, orbitR, 0);
+}
+
 function generateInnerRack(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const toothH = parseFloat(toothHeightSlider.value);
@@ -2357,6 +2443,90 @@ arc_rack(-L/2, 90, 270 - delta);
 `;
 }
 
+function generateSpurGear(label, radius, nTeeth, depth, holeR) {
+    const mod = (2 * radius) / nTeeth;
+    const toothH = Math.max(2, radius * 0.18);
+    return `// Mechanism 61 - ${label}
+// Generated from mechanism parameters
+
+// --- Parameters ---
+radius = ${radius.toFixed(2)};
+n_teeth = ${nTeeth};
+mod = ${mod.toFixed(3)};
+depth = ${depth};
+hole_r = ${holeR.toFixed(2)};
+tooth_h = ${toothH.toFixed(2)};
+
+// Derived
+pitch_r = radius;
+outer_r = radius + tooth_h / 2;
+inner_r = radius - tooth_h / 2;
+
+$fn = 120;
+
+// --- Modules ---
+
+module gear_tooth_2d(n, inner, outer) {
+    a_step = 360 / n;
+    a1 = a_step * 0.1;
+    a2 = a_step * 0.25;
+    a4 = a_step * 0.5;
+    a5 = a_step * 0.6;
+    polygon([
+        [inner * cos(0),    inner * sin(0)],
+        [inner * cos(a1),   inner * sin(a1)],
+        [outer * cos(a2),   outer * sin(a2)],
+        [outer * cos(a4),   outer * sin(a4)],
+        [inner * cos(a5),   inner * sin(a5)],
+        [inner * cos(a_step), inner * sin(a_step)]
+    ]);
+}
+
+module spur_gear() {
+    difference() {
+        linear_extrude(depth)
+            union() {
+                for (i = [0 : n_teeth - 1]) {
+                    rotate([0, 0, i * 360 / n_teeth])
+                        gear_tooth_2d(n_teeth, inner_r, outer_r);
+                }
+            }
+        // Center hole
+        translate([0, 0, -1])
+            linear_extrude(depth + 2)
+                circle(r = hole_r);
+    }
+}
+
+// --- Assembly ---
+spur_gear();
+`;
+}
+
+function generateGearR1(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(12, Math.round(p.r1 / 3));
+    return generateSpurGear(`r₁ Gear (Compound, Outer) — r₁=${p.r1.toFixed(1)}`, p.r1, nTeeth, depth, p.r1 * 0.2);
+}
+
+function generateGearR2(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(8, Math.round(p.r2 / 3));
+    return generateSpurGear(`r₂ Gear (Compound, Inner) — r₂=${p.r2.toFixed(1)}`, p.r2, nTeeth, depth, p.r2 * 0.2);
+}
+
+function generateGearR3(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(8, Math.round(p.r3 / 3));
+    return generateSpurGear(`r₃ Gear (Driven, Outer) — r₃=${p.r3.toFixed(1)}`, p.r3, nTeeth, depth, p.r3 * 0.2);
+}
+
+function generateGearR4(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const nTeeth = Math.max(6, Math.round(p.r4 / 3));
+    return generateSpurGear(`r₄ Gear (Driven, Inner) — r₄=${p.r4.toFixed(1)}`, p.r4, nTeeth, depth, p.r4 * 0.2);
+}
+
 function updateScadCode() {
     if (!scadCodeArea) return;
     const p = getP();
@@ -2365,11 +2535,12 @@ function updateScadCode() {
     document.getElementById('baseThickValue').textContent = baseThickSlider.value;
 
     let code = '';
-    if (scadCurrentPart === 'outer_rack') {
-        code = generateOuterRack(p);
-    } else if (scadCurrentPart === 'inner_rack') {
-        code = generateInnerRack(p);
-    }
+    if (scadCurrentPart === 'outer_rack') code = generateOuterRack(p);
+    else if (scadCurrentPart === 'inner_rack') code = generateInnerRack(p);
+    else if (scadCurrentPart === 'gear_r1') code = generateGearR1(p);
+    else if (scadCurrentPart === 'gear_r2') code = generateGearR2(p);
+    else if (scadCurrentPart === 'gear_r3') code = generateGearR3(p);
+    else if (scadCurrentPart === 'gear_r4') code = generateGearR4(p);
     scadCodeArea.value = code;
     rebuild3D();
 }
