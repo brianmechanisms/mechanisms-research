@@ -2248,7 +2248,7 @@ function buildInnerRack3D(p, clear = true) {
 }
 
 // Helper: build a spur gear 3D mesh (tooth profile matching drawGear)
-function buildGear3D(radius, nTeeth, depth, color, cx, cy) {
+function buildGear3D(radius, nTeeth, depth, color, cx, cy, cz = 0) {
     const toothHeight = Math.max(2, radius * 0.18);
     const innerR = radius - toothHeight / 2;
     const outerR = radius + toothHeight / 2;
@@ -2283,22 +2283,22 @@ function buildGear3D(radius, nTeeth, depth, color, cx, cy) {
     const geo = new THREE.ExtrudeGeometry(shape, { depth: depth, bevelEnabled: false });
     const mat = new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.85 });
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(cx, cy, 0);
+    mesh.position.set(cx, cy, cz);
     threeMeshGroup.add(mesh);
 }
 
-// r1 gear (compound, outer) - centered at origin
+// r1 gear (compound, outer) - centered at origin, bottom layer
 function buildGearR1_3D(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const nTeeth = Math.max(12, Math.round(p.r1 / 3));
-    buildGear3D(p.r1, nTeeth, depth, 0x60a5fa, 0, 0);
+    buildGear3D(p.r1, nTeeth, depth, 0x60a5fa, 0, 0, 0);
 }
 
-// r2 gear (compound, inner) - centered at origin, offset in z
+// r2 gear (compound, inner) - centered at origin, stacked on top of r1
 function buildGearR2_3D(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const nTeeth = Math.max(8, Math.round(p.r2 / 3));
-    buildGear3D(p.r2, nTeeth, depth, 0x38bdf8, 0, 0);
+    buildGear3D(p.r2, nTeeth, depth, 0x38bdf8, 0, 0, depth);
 }
 
 // r3 gear (driven, outer) - orbits at distance r1+r3 from center
@@ -2307,15 +2307,15 @@ function buildGearR3_3D(p) {
     const nTeeth = Math.max(8, Math.round(p.r3 / 3));
     // Position at right side (theta=0 default position)
     const orbitR = p.r1 + p.r3;
-    buildGear3D(p.r3, nTeeth, depth, 0xa855f7, orbitR, 0);
+    buildGear3D(p.r3, nTeeth, depth, 0xa855f7, orbitR, 0, 0);
 }
 
-// r4 gear (driven, inner) - orbits at distance r2+r4 from center
+// r4 gear (driven, inner) - orbits at distance r2+r4, same Z plane as r2
 function buildGearR4_3D(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const nTeeth = Math.max(6, Math.round(p.r4 / 3));
     const orbitR = p.r2 + p.r4;
-    buildGear3D(p.r4, nTeeth, depth, 0xf59e0b, orbitR, 0);
+    buildGear3D(p.r4, nTeeth, depth, 0xf59e0b, orbitR, 0, depth);
 }
 
 function generateInnerRack(p) {
