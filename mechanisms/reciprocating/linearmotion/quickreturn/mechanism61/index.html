@@ -4,10 +4,256 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mechanism 61 - Compound Epicyclic Quick Return</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
+        :root {
+            --bg-deep: #0a0e13;
+            --bg-primary: #0f1419;
+            --bg-raised: #151c24;
+            --bg-surface: #1a222c;
+            --bg-hover: #1f2937;
+            --border-subtle: #1e2a36;
+            --border-medium: #2a3646;
+            --border-accent: #3d4f63;
+            --text-primary: #e2e8f0;
+            --text-secondary: #8b9db5;
+            --text-muted: #5a6d82;
+            --accent-copper: #d4845a;
+            --accent-copper-dim: #a36842;
+            --accent-copper-glow: rgba(212, 132, 90, 0.15);
+            --accent-amber: #e6a856;
+            --accent-teal: #4db8a4;
+            --font-mono: 'DM Mono', 'JetBrains Mono', monospace;
+            --font-serif: 'Instrument Serif', 'Georgia', serif;
+            --font-sans: 'IBM Plex Sans', sans-serif;
+        }
+        body {
+            background: var(--bg-deep) !important;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ─── Header ─── */
+        .page-header {
+            background: linear-gradient(180deg, var(--bg-raised) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 20px 32px 0;
+        }
+        .header-number {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent-copper);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .header-title {
+            font-family: var(--font-serif);
+            font-size: 28px;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-top: 2px;
+        }
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        /* ─── Tab Bar ─── */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin-top: 20px;
+            position: relative;
+        }
+        .tab-bar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border-subtle);
+        }
+        .m61-tab {
+            position: relative;
+            padding: 10px 24px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            z-index: 1;
+        }
+        .m61-tab:hover { color: var(--text-secondary); }
+        .m61-tab.active { color: var(--accent-copper); }
+        .m61-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 8px;
+            right: 8px;
+            height: 2px;
+            background: var(--accent-copper);
+            border-radius: 2px 2px 0 0;
+        }
+        .m61-tab .tab-icon {
+            display: inline-block;
+            margin-right: 6px;
+            opacity: 0.6;
+        }
+        .m61-tab.active .tab-icon { opacity: 1; }
+
+        /* ─── Panel animation ─── */
+        .tab-panel { display: none !important; }
+        .tab-panel.active { display: block !important; animation: panelFade 0.3s ease; }
+        #panelMechanism.tab-panel.active { display: grid !important; }
+        @keyframes panelFade {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── Mechanism panel: dark cards ─── */
+        .mech-card {
+            background: var(--bg-raised);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+        }
+        .mech-card h2, .mech-card h3 {
+            color: var(--text-primary);
+        }
+        .mech-card label, .mech-card span {
+            color: var(--text-secondary);
+        }
+        .mech-card .text-blue-600, .mech-card .text-green-600,
+        .mech-card .text-purple-600, .mech-card .text-amber-600,
+        .mech-card .text-orange-600 {
+            filter: brightness(1.3);
+        }
+        .mech-section-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        /* ─── Custom range sliders ─── */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--border-medium);
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-copper);
+            border: 2px solid var(--bg-deep);
+            box-shadow: 0 0 6px rgba(212, 132, 90, 0.3);
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-copper);
+            border: 2px solid var(--bg-deep);
+            box-shadow: 0 0 6px rgba(212, 132, 90, 0.3);
+            cursor: pointer;
+        }
+
+        /* ─── Notes panel (academic paper) ─── */
+        .notes-panel {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 40px 32px 80px;
+        }
+        .notes-panel h2 {
+            font-family: var(--font-serif) !important;
+            font-size: 22px !important;
+            color: var(--text-primary) !important;
+            margin-top: 36px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .notes-panel h3 {
+            font-family: var(--font-serif) !important;
+            font-size: 17px !important;
+            font-style: italic;
+            color: var(--text-primary) !important;
+            margin-top: 28px;
+            margin-bottom: 12px;
+        }
+        .notes-panel h4 {
+            font-family: var(--font-serif) !important;
+            font-size: 15px !important;
+            color: var(--text-primary) !important;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .notes-panel p {
+            font-size: 14px;
+            line-height: 1.75;
+            color: var(--text-secondary);
+        }
+        .notes-panel strong { color: var(--text-primary); }
+        .notes-panel .bg-gray-50 {
+            background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-raised) 100%) !important;
+            border: 1px solid var(--border-medium) !important;
+            border-left: 3px solid var(--border-accent) !important;
+            border-radius: 0 6px 6px 0 !important;
+            color: var(--text-primary);
+        }
+        .notes-panel .bg-gray-50 span[style*="color:#888"] {
+            color: var(--text-muted) !important;
+        }
+        .notes-panel .bg-yellow-50 {
+            background: linear-gradient(135deg, var(--accent-copper-glow) 0%, var(--bg-raised) 100%) !important;
+            border: 2px solid var(--accent-copper-dim) !important;
+            border-left: 3px solid var(--accent-copper) !important;
+            border-radius: 0 6px 6px 0 !important;
+            color: var(--text-primary);
+        }
+        .notes-panel .bg-blue-50 {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-medium) !important;
+            color: var(--text-secondary) !important;
+        }
+        .notes-panel table { border-color: var(--border-subtle); }
+        .notes-panel th { color: var(--text-primary); border-color: var(--border-subtle) !important; }
+        .notes-panel td { border-color: var(--border-subtle) !important; }
+
         /* OpenSCAD tab styles */
         .scad-fullpage {
             position: fixed !important;
@@ -278,25 +524,46 @@
         .scad-toggle-sidebar:hover { background: #30363d; color: #c9d1d9; }
     </style>
 </head>
-<body class="bg-gray-100 p-4">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-2xl font-bold mb-2 text-gray-800">Mechanism 61 - Compound Epicyclic Quick Return</h1>
-        <p class="text-gray-600 mb-4">Compound epicyclic gear train with dual semicircular rack transitions for quick-return linear motion</p>
+<body class="p-0">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="max-w-6xl mx-auto">
+            <span class="header-number">Mechanism 61</span>
+            <h1 class="header-title">Compound Epicyclic Quick Return</h1>
+            <p class="header-subtitle">Compound epicyclic gear train with dual semicircular rack transitions for quick-return linear motion</p>
 
-        <!-- Tabs -->
-        <div class="flex gap-1 mb-4 border-b border-gray-300">
-            <button id="tabMechanism" class="px-4 py-2 text-sm font-medium rounded-t bg-white border border-b-white border-gray-300 -mb-px text-gray-800" onclick="switchTab('mechanism')">Mechanism</button>
-            <button id="tabNotes" class="px-4 py-2 text-sm font-medium rounded-t bg-gray-200 border border-transparent text-gray-500 hover:text-gray-700" onclick="switchTab('notes')">Design Notes</button>
-            <button id="tabDesign3d" class="px-4 py-2 text-sm font-medium rounded-t bg-gray-200 border border-transparent text-gray-500 hover:text-gray-700" onclick="switchTab('design3d')">3D Design</button>
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button id="tabMechanism" class="m61-tab active" onclick="switchTab('mechanism')">
+                    <span class="tab-icon">&#x2699;</span>Mechanism
+                </button>
+                <button id="tabNotes" class="m61-tab" onclick="switchTab('notes')">
+                    <span class="tab-icon">&#x1D53D;</span>Design Notes
+                </button>
+                <button id="tabDesign3d" class="m61-tab" onclick="switchTab('design3d')">
+                    <span class="tab-icon">&#x25A6;</span>3D Design
+                </button>
+            </div>
         </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto" style="padding: 16px;">
 
         <!-- Tab: Mechanism -->
-        <div id="panelMechanism" class="grid grid-cols-3 gap-4">
+        <div id="panelMechanism" class="tab-panel active" style="grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
             <!-- Left: Parameters -->
-            <div class="bg-white rounded-lg shadow p-4">
+            <div class="mech-card">
                 <h2 class="text-lg font-semibold mb-3">Parameters</h2>
 
-                <h3 class="font-medium text-gray-700 mb-2">Compound Gear</h3>
+                <h3 class="font-medium mb-2">Configuration</h3>
+                <div class="mb-3">
+                    <select id="configSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
+                        <option value="track-fixed">Racetrack Fixed</option>
+                        <option value="compound-fixed">Compound Fixed</option>
+                    </select>
+                </div>
+
+                <h3 class="font-medium mb-2">Compound Gear</h3>
                 <div class="space-y-3">
                     <div>
                         <label class="flex justify-between text-sm mb-1">
@@ -314,7 +581,7 @@
                     </div>
                 </div>
 
-                <h3 class="font-medium text-gray-700 mt-4 mb-2">Driven Gears</h3>
+                <h3 class="font-medium mt-4 mb-2">Driven Gears</h3>
                 <div class="space-y-3">
                     <div>
                         <label class="flex justify-between text-sm mb-1">
@@ -325,14 +592,18 @@
                     </div>
                 </div>
 
-                <h3 class="font-medium text-gray-700 mt-4 mb-2">Track</h3>
+                <h3 class="font-medium mt-4 mb-2">Track</h3>
                 <div class="space-y-3">
                     <div>
                         <label class="flex justify-between text-sm mb-1">
-                            <span>Rack Length L</span>
-                            <span class="text-gray-700 font-bold" id="lValue">300</span>
+                            <span>Stance fraction f</span>
+                            <span class="font-bold" id="fValue" style="color: var(--accent-copper);">0.60</span>
                         </label>
-                        <input type="range" id="lSlider" min="100" max="500" value="300" step="10" class="w-full">
+                        <input type="range" id="fSlider" min="0.30" max="0.95" value="0.60" step="0.01" class="w-full">
+                        <div class="flex justify-between text-xs mt-1" style="color: var(--text-muted);">
+                            <span>f<sub>max</sub> = <span id="fMaxDisplay">0.67</span></span>
+                            <span>L = <span id="lValue">300</span></span>
+                        </div>
                     </div>
                     <div>
                         <label class="flex justify-between text-sm mb-1">
@@ -347,15 +618,15 @@
                             <span class="text-cyan-600 font-bold" id="phiValue">45</span>&deg;
                         </label>
                         <input type="range" id="phiSlider" min="0" max="90" value="45" step="1" class="w-full">
-                        <p class="text-xs text-gray-500">Angle Q stays at R<sub>2</sub> into the turn</p>
+                        <p class="text-xs" style="color: var(--text-muted)">Angle Q stays at R<sub>2</sub> into the turn</p>
                     </div>
                 </div>
 
-                <h3 class="font-medium text-gray-700 mt-4 mb-2">Visualization</h3>
+                <h3 class="font-medium mt-4 mb-2">Visualization</h3>
                 <div class="space-y-2">
                     <div>
                         <label class="text-sm mb-1 block">Gripper Type</label>
-                        <select id="gripperSelect" class="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-white">
+                        <select id="gripperSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
                             <option value="none">None</option>
                             <option value="crank">Bell Crank</option>
                             <option value="slot">Slot</option>
@@ -371,8 +642,8 @@
                 </div>
 
                 <!-- Derived Values -->
-                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <h3 class="font-medium text-gray-700 mb-2 text-sm">Derived Values</h3>
+                <div class="mt-4 p-3 rounded-lg" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                    <h3 class="font-medium mb-2 text-sm">Derived Values</h3>
                     <div class="space-y-1 text-xs">
                         <div class="flex justify-between">
                             <span>r<sub>2</sub> (inner compound):</span>
@@ -402,8 +673,8 @@
                 </div>
 
                 <!-- Current State -->
-                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <h3 class="font-medium text-gray-700 mb-2 text-sm">Current State</h3>
+                <div class="mt-3 p-3 rounded-lg" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                    <h3 class="font-medium mb-2 text-sm">Current State</h3>
                     <div class="space-y-1 text-xs">
                         <div class="flex justify-between">
                             <span>Section:</span>
@@ -425,8 +696,8 @@
                 </div>
 
                 <!-- Legend -->
-                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <h3 class="font-medium text-gray-700 mb-2 text-sm">Legend</h3>
+                <div class="mt-3 p-3 rounded-lg" style="background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+                    <h3 class="font-medium mb-2 text-sm">Legend</h3>
                     <div class="space-y-1 text-xs">
                         <div class="flex items-center gap-2">
                             <span class="inline-block w-3 h-3 rounded-full bg-blue-400"></span>
@@ -455,134 +726,421 @@
             <!-- Right: Canvas area -->
             <div class="col-span-2 space-y-4">
                 <!-- Mechanism Canvas -->
-                <div class="bg-white rounded-lg shadow p-4">
+                <div class="mech-card">
                     <h2 class="text-lg font-semibold mb-3">Racetrack Mechanism</h2>
-                    <canvas id="mechCanvas" width="800" height="450" class="border border-gray-300 bg-gray-900 mx-auto block rounded"></canvas>
+                    <canvas id="mechCanvas" width="800" height="450" class="mx-auto block rounded" style="border: 1px solid var(--border-subtle); background: #0d1117;"></canvas>
 
                     <!-- Animation Controls -->
-                    <div class="mt-4 border-t pt-4">
+                    <div class="mt-4 pt-4" style="border-top: 1px solid var(--border-subtle);">
                         <div class="flex items-center gap-4 flex-wrap">
                             <!-- Play/Pause -->
-                            <button id="playBtn" class="px-3 py-2 bg-green-500 text-white text-lg rounded hover:bg-green-600" title="Play">
+                            <button id="playBtn" class="px-3 py-2 text-white text-lg rounded" style="background: #22c55e;" title="Play">
                                 &#x25B6;
                             </button>
 
                             <!-- Direction Controls -->
                             <div class="flex gap-1">
-                                <button id="dirForward" class="px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600" title="Forward">
+                                <button id="dirForward" class="px-2 py-1 text-white text-sm rounded" style="background: #3b82f6;" title="Forward">
                                     &#x25B6;
                                 </button>
-                                <button id="dirBackward" class="px-2 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400" title="Backward">
+                                <button id="dirBackward" class="px-2 py-1 text-sm rounded" style="background: var(--bg-surface); color: var(--text-secondary);" title="Backward">
                                     &#x25C0;
                                 </button>
-                                <button id="dirPingPong" class="px-2 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400" title="Ping Pong">
+                                <button id="dirPingPong" class="px-2 py-1 text-sm rounded" style="background: var(--bg-surface); color: var(--text-secondary);" title="Ping Pong">
                                     &#x21C4;
                                 </button>
                             </div>
 
                             <!-- Progress slider -->
                             <div class="flex items-center gap-2 flex-1">
-                                <label class="text-sm font-medium text-gray-700">Progress:</label>
+                                <label class="text-sm font-medium" style="color: var(--text-secondary);">Progress:</label>
                                 <input type="range" id="progressSlider" min="0" max="100" value="0" step="0.5"
-                                       class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                                <span id="progressValue" class="text-sm text-gray-600 font-bold w-12 text-right">0%</span>
+                                       class="flex-1">
+                                <span id="progressValue" class="text-sm font-bold w-12 text-right" style="color: var(--text-secondary);">0%</span>
                             </div>
 
                             <!-- Speed Control -->
                             <div class="flex items-center gap-1">
-                                <label class="text-xs text-gray-600">Speed:</label>
+                                <label class="text-xs" style="color: var(--text-muted);">Speed:</label>
                                 <input type="range" id="speedSlider" min="0.1" max="2" value="0.5" step="0.1"
-                                       class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                                <span id="speedValue" class="text-xs text-gray-800 font-bold w-6">0.5</span>
+                                       class="w-20">
+                                <span id="speedValue" class="text-xs font-bold w-6" style="color: var(--text-secondary);">0.5</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Note about P -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-                    <strong>Point P:</strong> During stance P is at radius R<sub>2</sub> from compound center, during swing at R<sub>1</sub>.
+                <div class="rounded-lg p-3 text-sm" style="background: var(--bg-surface); border: 1px solid var(--border-medium); color: var(--text-secondary);">
+                    <strong style="color: var(--text-primary);">Point P:</strong> During stance P is at radius R<sub>2</sub> from compound center, during swing at R<sub>1</sub>.
                     During the turns, P's radius transitions smoothly between R<sub>2</sub> and R<sub>1</sub>,
                     ensuring a continuous velocity profile with no discontinuities.
                 </div>
 
                 <!-- Velocity Profile -->
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-3">Velocity &mdash; <span class="text-red-600">P</span> &amp; <span class="text-cyan-500">Q</span></h2>
-                    <canvas id="velCanvas" width="800" height="180" class="border border-gray-200 bg-white mx-auto block rounded"></canvas>
+                <div class="mech-card">
+                    <h2 class="text-lg font-semibold mb-3">Velocity &mdash; <span class="text-red-500">P</span> &amp; <span class="text-cyan-400">Q</span></h2>
+                    <canvas id="velCanvas" width="800" height="180" class="mx-auto block rounded" style="border: 1px solid var(--border-subtle); background: #0d1117;"></canvas>
                 </div>
 
                 <!-- Acceleration Profile -->
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-3">Acceleration &mdash; <span class="text-red-600">P</span> &amp; <span class="text-cyan-500">Q</span></h2>
-                    <canvas id="accCanvas" width="800" height="180" class="border border-gray-200 bg-white mx-auto block rounded"></canvas>
+                <div class="mech-card">
+                    <h2 class="text-lg font-semibold mb-3">Acceleration &mdash; <span class="text-red-500">P</span> &amp; <span class="text-cyan-400">Q</span></h2>
+                    <canvas id="accCanvas" width="800" height="180" class="mx-auto block rounded" style="border: 1px solid var(--border-subtle); background: #0d1117;"></canvas>
                 </div>
 
                 <!-- Jerk Profile -->
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h2 class="text-lg font-semibold mb-3">Jerk &mdash; <span class="text-red-600">P</span> &amp; <span class="text-cyan-500">Q</span></h2>
-                    <canvas id="jerkCanvas" width="800" height="180" class="border border-gray-200 bg-white mx-auto block rounded"></canvas>
+                <div class="mech-card">
+                    <h2 class="text-lg font-semibold mb-3">Jerk &mdash; <span class="text-red-500">P</span> &amp; <span class="text-cyan-400">Q</span></h2>
+                    <canvas id="jerkCanvas" width="800" height="180" class="mx-auto block rounded" style="border: 1px solid var(--border-subtle); background: #0d1117;"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- Tab: Design Notes -->
-        <div id="panelNotes" class="hidden">
-            <div class="bg-white rounded-lg shadow p-6 max-w-none text-gray-800 leading-relaxed">
+        <div id="panelNotes" class="tab-panel">
+            <div class="notes-panel leading-relaxed">
 
-                <h2 class="text-xl font-semibold mb-4">Design Notes</h2>
+                <h2 class="text-xl font-semibold mb-4">Long-Range Linear Motion Mechanism Using a Pair of Out-of-Phase Compound Epicyclic Gear Trains with Linear-Transition Racetrack Paths</h2>
 
-                <!-- 1. Overview -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">1. Overview</h3>
+                <!-- Introduction -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">Introduction</h3>
                 <p class="mb-3">
-                    This mechanism uses a compound epicyclic gear train rolling around a racetrack-shaped closed track
-                    to produce quick-return linear motion. The goal is a 1-DOF mechanism where a gripper moves at
-                    constant horizontal velocity during the working stroke (stance) and returns quickly during the
-                    return stroke (swing), suitable for continuous pick-and-place or linear actuation.
+                    This paper presents a mechanism for producing long-range linear motion
+                    using compound epicyclic gear trains that travel around racetrack-shaped closed tracks.
+                    Unlike conventional epicyclic systems which produce purely rotary output, the racetrack
+                    track geometry introduces straight sections where the gear train translates linearly,
+                    enabling direct linear actuation. Two such gear trains, operating 180&deg; out of phase
+                    on the same track, provide continuous gripping &mdash; at any instant at least one
+                    gear train is in its working stroke.
                 </p>
 
-                <!-- 2. Gear Train -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">2. Gear Train &amp; Constraints</h3>
-                <p class="mb-2">
-                    A compound gear with coaxial pair (r<sub>1</sub>, r<sub>2</sub>) meshes with driven gears
-                    (r<sub>3</sub>, r<sub>4</sub>) on the outer and inner racks respectively. The speed ratio
-                    <em>k</em> = r<sub>1</sub>/r<sub>2</sub> determines the quick-return ratio.
-                </p>
-                <p class="mb-2"><strong>Simultaneity constraint:</strong></p>
-                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
-                    <math display="block"><mrow><msub><mi>r</mi><mn>1</mn></msub><mo>&middot;</mo><msub><mi>r</mi><mn>4</mn></msub><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub><mo>&middot;</mo><msub><mi>r</mi><mn>3</mn></msub></mrow></math>
-                </div>
-                <p class="mb-2">
-                    This ensures both gear pairs complete their semicircular turns together.
-                    The track radii are:
-                </p>
-                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
-                    <math display="block"><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>=</mo><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><mn>2</mn><msub><mi>r</mi><mn>3</mn></msub></mrow></math>
-                    <math display="block" style="margin-top:0.5em"><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>=</mo><msub><mi>r</mi><mn>2</mn></msub><mo>+</mo><mn>2</mn><msub><mi>r</mi><mn>4</mn></msub></mrow></math>
-                </div>
-
-                <!-- 3. 4-Phase Cycle -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">3. Four-Phase Cycle</h3>
-                <table class="w-full text-sm border-collapse mb-3">
-                    <thead><tr class="bg-gray-100">
-                        <th class="border px-3 py-1 text-left">Phase</th>
-                        <th class="border px-3 py-1 text-left">Path</th>
-                        <th class="border px-3 py-1 text-left">v<sub>x</sub></th>
-                        <th class="border px-3 py-1 text-left">Duration</th>
+                <!-- Design Aims -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">Design Aims</h3>
+                <table class="w-full text-sm border-collapse mb-3" style="color: var(--text-secondary);">
+                    <thead><tr style="background: var(--bg-surface);">
+                        <th class="border px-3 py-1 text-left" style="width:2em;">#</th>
+                        <th class="border px-3 py-1 text-left">Aim</th>
+                        <th class="border px-3 py-1 text-left">Purpose</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td class="border px-3 py-1">Stance</td><td class="border px-3 py-1">Bottom rack &rarr;</td><td class="border px-3 py-1">+<math><msub><mi>r</mi><mn>2</mn></msub></math></td><td class="border px-3 py-1"><math><mfrac><mi>L</mi><msub><mi>r</mi><mn>2</mn></msub></mfrac></math></td></tr>
-                        <tr><td class="border px-3 py-1">Lift</td><td class="border px-3 py-1">Right semicircle</td><td class="border px-3 py-1">transition</td><td class="border px-3 py-1"><math><mfrac><mrow><mi>&pi;</mi><msub><mi>R</mi><mn>1</mn></msub></mrow><msub><mi>r</mi><mn>1</mn></msub></mfrac></math></td></tr>
-                        <tr><td class="border px-3 py-1">Swing</td><td class="border px-3 py-1">Top rack &larr;</td><td class="border px-3 py-1">&minus;<math><msub><mi>r</mi><mn>1</mn></msub></math></td><td class="border px-3 py-1"><math><mfrac><mi>L</mi><msub><mi>r</mi><mn>1</mn></msub></mfrac></math></td></tr>
-                        <tr><td class="border px-3 py-1">Drop</td><td class="border px-3 py-1">Left semicircle</td><td class="border px-3 py-1">transition</td><td class="border px-3 py-1"><math><mfrac><mrow><mi>&pi;</mi><msub><mi>R</mi><mn>1</mn></msub></mrow><msub><mi>r</mi><mn>1</mn></msub></mfrac></math></td></tr>
+                        <tr><td class="border px-3 py-1">1</td><td class="border px-3 py-1">Constant velocity during working stroke</td><td class="border px-3 py-1">Uniform feed rate for pick-and-place or linear actuation</td></tr>
+                        <tr><td class="border px-3 py-1">2</td><td class="border px-3 py-1">Quick return (stance fraction &gt; 50%)</td><td class="border px-3 py-1">Two mechanism sets suffice for continuous coverage</td></tr>
+                        <tr><td class="border px-3 py-1">3</td><td class="border px-3 py-1">Single degree of freedom</td><td class="border px-3 py-1">One actuator drives the entire mechanism</td></tr>
+                        <tr><td class="border px-3 py-1">4</td><td class="border px-3 py-1">Continuous velocity profile (C<sup>1</sup>)</td><td class="border px-3 py-1">No discontinuities in velocity at phase transitions</td></tr>
+                        <tr><td class="border px-3 py-1">5</td><td class="border px-3 py-1">Long stroke length relative to mechanism size</td><td class="border px-3 py-1">Compact design with large working range</td></tr>
                     </tbody>
                 </table>
 
-                <!-- 4. Point P -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">4. Point P &mdash; Velocity-Continuous Transition</h3>
+                <!-- The Compound Epicyclic Gear Train -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">The Compound Epicyclic Gear Train</h3>
                 <p class="mb-2">
-                    Point P sits on the compound gear's radial arm. During stance it is at radius R<sub>2</sub>,
-                    during swing at R<sub>1</sub>. During turns, P's radius transitions via sinusoidal interpolation:
+                    The gear train consists of four gears arranged in two meshing pairs.
+                    A compound gear with two coaxial faces of radii r<sub>1</sub> (outer, larger) and
+                    r<sub>2</sub> (inner, smaller), rigidly connected on a common shaft, forms the
+                    central element. The gear ratio k = r<sub>1</sub>/r<sub>2</sub> &gt; 1 determines
+                    the quick-return speed ratio. Two driven gears complete the train:
+                    r<sub>3</sub> meshes with the compound&rsquo;s outer face r<sub>1</sub> and rolls on the
+                    outer track, while r<sub>4</sub> meshes with the inner face r<sub>2</sub> and rolls on
+                    the inner track.
+                </p>
+                <p class="mb-2">
+                    The track is a racetrack shape: two parallel straight racks of length L connected at each
+                    end by semicircular arcs. The outer semicircular radius is
+                    R<sub>1</sub> = r<sub>1</sub> + 2r<sub>3</sub> and the inner semicircular radius is
+                    R<sub>2</sub> = r<sub>2</sub> + 2r<sub>4</sub>. The two tracks are concentric at the
+                    semicircular ends and parallel on the straight sections.
+                </p>
+                <p class="mb-2">
+                    Only one driven gear engages its rack during each straight section, while both driven
+                    gears engage their respective semicircular rings simultaneously at the turns. The
+                    mechanism completes a four-phase cycle per revolution of the track:
+                </p>
+                <table class="w-full text-sm border-collapse mb-3" style="color: var(--text-secondary);">
+                    <thead><tr style="background: var(--bg-surface);">
+                        <th class="border px-3 py-1 text-left">Phase</th>
+                        <th class="border px-3 py-1 text-left">Path</th>
+                        <th class="border px-3 py-1 text-left">Active gear</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr><td class="border px-3 py-1">Stance</td><td class="border px-3 py-1">Bottom rack &rarr;</td><td class="border px-3 py-1">r<sub>4</sub> on inner rack</td></tr>
+                        <tr><td class="border px-3 py-1">Lift</td><td class="border px-3 py-1">Right semicircle</td><td class="border px-3 py-1">r<sub>3</sub> and r<sub>4</sub> both</td></tr>
+                        <tr><td class="border px-3 py-1">Swing</td><td class="border px-3 py-1">Top rack &larr;</td><td class="border px-3 py-1">r<sub>3</sub> on outer rack</td></tr>
+                        <tr><td class="border px-3 py-1">Drop</td><td class="border px-3 py-1">Left semicircle</td><td class="border px-3 py-1">r<sub>3</sub> and r<sub>4</sub> both</td></tr>
+                    </tbody>
+                </table>
+
+                <p class="mb-2">
+                    The compound gear rotates at angular velocity &omega;<sub>c</sub>. From the gear ratio
+                    at each mesh, the driven gear angular velocities are
+                    &omega;<sub>3</sub> = &omega;<sub>c</sub>&middot;r<sub>1</sub>/r<sub>3</sub> and
+                    &omega;<sub>4</sub> = &omega;<sub>c</sub>&middot;r<sub>2</sub>/r<sub>4</sub>.
+                </p>
+                <p class="mb-2">
+                    During stance, driven gear r<sub>4</sub> rolls without slip on the inner rack.
+                    Since r<sub>4</sub> rotates at &omega;<sub>4</sub> = &omega;<sub>c</sub>&middot;r<sub>2</sub>/r<sub>4</sub>,
+                    the driven gear centre translates at
+                    v = &omega;<sub>4</sub>&middot;r<sub>4</sub> = &omega;<sub>c</sub>&middot;r<sub>2</sub>.
+                    The compound centre, at fixed spacing from the driven gear, translates at the same
+                    velocity. By identical reasoning, during swing the compound centre translates at
+                    v = &omega;<sub>c</sub>&middot;r<sub>1</sub>. The stance and swing durations for a rack
+                    of length L are therefore:
+                </p>
+                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
+                    <math display="block"><mrow>
+                        <msub><mi>t</mi><mi>stance</mi></msub>
+                        <mo>=</mo>
+                        <mfrac><mi>L</mi><mrow><msub><mi>&omega;</mi><mi>c</mi></msub><mo>&middot;</mo><msub><mi>r</mi><mn>2</mn></msub></mrow></mfrac>
+                        <mo>,</mo>
+                        <mspace width="2em"/>
+                        <msub><mi>t</mi><mi>swing</mi></msub>
+                        <mo>=</mo>
+                        <mfrac><mi>L</mi><mrow><msub><mi>&omega;</mi><mi>c</mi></msub><mo>&middot;</mo><msub><mi>r</mi><mn>1</mn></msub></mrow></mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(1)</span>
+                </div>
+                <p class="mb-2">
+                    Since r<sub>1</sub> &gt; r<sub>2</sub>, the swing is faster than the stance &mdash;
+                    producing the quick-return effect.
+                </p>
+
+                <p class="mb-2">
+                    At the semicircular turns, the driven gears orbit around fixed semicircular rings,
+                    forming a planetary gear train. The compound gear centre acts as the carrier (arm).
+                    The Willis equation, the fundamental equation of planetary gear trains, relates sun,
+                    ring, and arm angular velocities for any simple epicyclic stage:
+                </p>
+                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
+                    <math display="block"><mrow>
+                        <mfrac>
+                            <mrow><msub><mi>&omega;</mi><mi>sun</mi></msub><mo>&minus;</mo><msub><mi>&omega;</mi><mi>arm</mi></msub></mrow>
+                            <mrow><msub><mi>&omega;</mi><mi>ring</mi></msub><mo>&minus;</mo><msub><mi>&omega;</mi><mi>arm</mi></msub></mrow>
+                        </mfrac>
+                        <mo>=</mo>
+                        <mo>&minus;</mo>
+                        <mfrac>
+                            <msub><mi>r</mi><mi>ring</mi></msub>
+                            <msub><mi>r</mi><mi>sun</mi></msub>
+                        </mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(2)</span>
+                </div>
+                <p class="mb-2">
+                    For the outer gear pair (sun = r<sub>1</sub>, planet = r<sub>3</sub>,
+                    ring = R<sub>1</sub> fixed), setting &omega;<sub>ring</sub> = 0 and solving for the arm
+                    angular velocity gives
+                    &omega;<sub>a</sub> = &omega;<sub>c</sub>&middot;r<sub>1</sub>/(r<sub>1</sub> + R<sub>1</sub>).
+                    Since R<sub>1</sub> = r<sub>1</sub> + 2r<sub>3</sub>, it follows that:
+                </p>
+                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
+                    <math display="block"><mrow>
+                        <msub><mi>&omega;</mi><mrow><mi>a</mi><mo>,</mo><mi>outer</mi></mrow></msub>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mrow><msub><mi>&omega;</mi><mi>c</mi></msub><mo>&middot;</mo><msub><mi>r</mi><mn>1</mn></msub></mrow>
+                            <mrow><mn>2</mn><mo>(</mo><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><msub><mi>r</mi><mn>3</mn></msub><mo>)</mo></mrow>
+                        </mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(3)</span>
+                </div>
+                <p class="mb-2">
+                    By identical reasoning for the inner gear pair (sun = r<sub>2</sub>,
+                    planet = r<sub>4</sub>, ring = R<sub>2</sub> fixed):
+                </p>
+                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
+                    <math display="block"><mrow>
+                        <msub><mi>&omega;</mi><mrow><mi>a</mi><mo>,</mo><mi>inner</mi></mrow></msub>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mrow><msub><mi>&omega;</mi><mi>c</mi></msub><mo>&middot;</mo><msub><mi>r</mi><mn>2</mn></msub></mrow>
+                            <mrow><mn>2</mn><mo>(</mo><msub><mi>r</mi><mn>2</mn></msub><mo>+</mo><msub><mi>r</mi><mn>4</mn></msub><mo>)</mo></mrow>
+                        </mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(4)</span>
+                </div>
+                <p class="mb-2">
+                    Since both driven gears share the same arm (the compound gear centre), the arm
+                    angular velocity must be identical for both gear&ndash;ring pairs at the turns.
+                    Setting &omega;<sub>a,outer</sub> = &omega;<sub>a,inner</sub> and cross-multiplying
+                    yields the simultaneity constraint:
+                </p>
+                <div class="bg-yellow-50 border rounded p-3 my-3 text-center font-bold">
+                    <math display="block"><mrow>
+                        <msub><mi>r</mi><mn>1</mn></msub>
+                        <mo>&middot;</mo>
+                        <msub><mi>r</mi><mn>4</mn></msub>
+                        <mo>=</mo>
+                        <msub><mi>r</mi><mn>2</mn></msub>
+                        <mo>&middot;</mo>
+                        <msub><mi>r</mi><mn>3</mn></msub>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(5)</span>
+                </div>
+                <p class="mb-2">
+                    The two semicircular turns are geometrically identical &mdash; both have the same ring
+                    radii R<sub>1</sub> and R<sub>2</sub> with the same gear pairs engaged. The lift
+                    and drop durations are therefore equal. Each turn sweeps &pi; radians at angular
+                    velocity &omega;<sub>a</sub>, giving:
+                </p>
+                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
+                    <math display="block"><mrow>
+                        <msub><mi>t</mi><mi>lift</mi></msub>
+                        <mo>=</mo>
+                        <msub><mi>t</mi><mi>drop</mi></msub>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mi>&pi;</mi>
+                            <msub><mi>&omega;</mi><mi>a</mi></msub>
+                        </mfrac>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mrow><mn>2</mn><mi>&pi;</mi><mo>(</mo><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><msub><mi>r</mi><mn>3</mn></msub><mo>)</mo></mrow>
+                            <mrow><msub><mi>&omega;</mi><mi>c</mi></msub><mo>&middot;</mo><msub><mi>r</mi><mn>1</mn></msub></mrow>
+                        </mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(6)</span>
+                </div>
+                <p class="mb-2">
+                    The total cycle time
+                    t<sub>total</sub> = t<sub>stance</sub> + t<sub>lift</sub> + t<sub>swing</sub> + t<sub>drop</sub>,
+                    and &omega;<sub>c</sub> cancels throughout. The stance fraction is:
+                </p>
+                <div class="bg-yellow-50 border rounded p-3 my-3 text-center font-bold">
+                    <math display="block"><mrow>
+                        <mi>f</mi>
+                        <mo>=</mo>
+                        <mfrac>
+                            <msub><mi>t</mi><mi>stance</mi></msub>
+                            <msub><mi>t</mi><mi>total</mi></msub>
+                        </mfrac>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mfrac><mi>L</mi><msub><mi>r</mi><mn>2</mn></msub></mfrac>
+                            <mrow>
+                                <mfrac><mi>L</mi><msub><mi>r</mi><mn>2</mn></msub></mfrac>
+                                <mo>+</mo>
+                                <mfrac>
+                                    <mrow><mn>4</mn><mi>&pi;</mi><mo>(</mo><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><msub><mi>r</mi><mn>3</mn></msub><mo>)</mo></mrow>
+                                    <msub><mi>r</mi><mn>1</mn></msub>
+                                </mfrac>
+                                <mo>+</mo>
+                                <mfrac><mi>L</mi><msub><mi>r</mi><mn>1</mn></msub></mfrac>
+                            </mrow>
+                        </mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(7)</span>
+                </div>
+                <p class="mb-2">
+                    The stance fraction depends only on the gear radii and rack length. Solving (7)
+                    for L in terms of a desired stance fraction f yields the minimum rack length:
+                </p>
+                <div class="bg-yellow-50 border rounded p-3 my-3 text-center font-bold">
+                    <math display="block"><mrow>
+                        <msub><mi>L</mi><mi>min</mi></msub>
+                        <mo>=</mo>
+                        <mfrac>
+                            <mrow><mn>4</mn><mi>&pi;</mi><mi>f</mi><mo>(</mo><msub><mi>r</mi><mn>1</mn></msub><mo>+</mo><msub><mi>r</mi><mn>3</mn></msub><mo>)</mo></mrow>
+                            <mrow><mi>k</mi><mo>(</mo><mn>1</mn><mo>&minus;</mo><mi>f</mi><mo>)</mo><mo>&minus;</mo><mi>f</mi></mrow>
+                        </mfrac>
+                    </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(8)</span>
+                </div>
+                <p class="mb-2">
+                    where k = r<sub>1</sub>/r<sub>2</sub>. The denominator vanishes when
+                    f = k/(k+1), which represents the maximum achievable stance fraction &mdash; the
+                    limit as L &rarr; &infin;, where the turns become negligible relative to the straights.
+                    For any finite mechanism, f must be strictly less than k/(k+1).
+                </p>
+
+                <!-- Kinematic Inversions -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">Kinematic Inversions</h3>
+                <p class="mb-2">
+                    The gear train and racetrack track form a single kinematic chain with one degree of
+                    freedom. Two useful mechanisms arise by choosing which body to fix (ground):
+                </p>
+                <table class="w-full text-sm border-collapse mb-3" style="color: var(--text-secondary);">
+                    <thead><tr style="background: var(--bg-surface);">
+                        <th class="border px-3 py-1 text-left">Configuration</th>
+                        <th class="border px-3 py-1 text-left">Grounded body</th>
+                        <th class="border px-3 py-1 text-left">Moving body</th>
+                        <th class="border px-3 py-1 text-left">Output</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                            <td class="border px-3 py-1">Racetrack Fixed</td>
+                            <td class="border px-3 py-1">Racetrack frame</td>
+                            <td class="border px-3 py-1">Compound gear translates around track</td>
+                            <td class="border px-3 py-1">Point on compound gear (Q)</td>
+                        </tr>
+                        <tr>
+                            <td class="border px-3 py-1">Compound Fixed</td>
+                            <td class="border px-3 py-1">Compound gear shaft</td>
+                            <td class="border px-3 py-1">Racetrack translates past compound</td>
+                            <td class="border px-3 py-1">Racetrack linear displacement</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="mb-2">
+                    Both configurations produce the same relative motion between compound gear and
+                    track &mdash; they are kinematic inversions of each other. The velocities,
+                    phase durations, and gear-tooth forces are identical; only the observer&rsquo;s
+                    frame of reference changes. The choice between them depends on the application:
+                    racetrack-fixed suits cases where the output must be taken from a moving point
+                    (e.g. a pick-and-place arm), while compound-fixed suits cases where the output
+                    is the linear displacement of the track itself (e.g. a bed or carriage).
+                </p>
+
+                <!-- The Bell Crank Configuration (Racetrack Fixed) -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">The Bell Crank Configuration</h3>
+                <p class="mb-2">
+                    In the racetrack-fixed inversion, a point Q on the compound gear&rsquo;s radial arm
+                    serves as the output. A rigid bell-crank arm connects Q through a slider on a
+                    horizontal rail to a gripper. The slider&rsquo;s horizontal position tracks Q&rsquo;s
+                    x-coordinate.
+                </p>
+                <p class="mb-2">
+                    For continuous motion, two gear trains operate 180&deg; out of phase on the same track,
+                    so that at least one is always in its stance phase.
+                </p>
+
+                <!-- The Slotted Slider Configuration (Racetrack Fixed) -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">The Slotted Slider Configuration</h3>
+                <p class="mb-2">
+                    In this configuration the slider is the body (ground) and the gripper is mounted on the
+                    racetrack rack section, which now moves relative to the slider body. The output point Q
+                    drives the slider through a vertical slot, translating Q&rsquo;s horizontal motion
+                    directly to the body.
+                </p>
+                <p class="mb-2">
+                    Since the body (slider) is common to both gear trains, each compound gear sees the same
+                    relative motion with respect to the body regardless of phase. The two compound gears can
+                    therefore be connected by rigid links and driven by a single actuator &mdash; they maintain
+                    fixed relative positions because their motion relative to the moving body is identical.
+                    This makes the slotted slider the preferred configuration for continuous-motion applications.
+                </p>
+
+                <!-- The Compound-Fixed Configuration -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">The Compound-Fixed Configuration</h3>
+                <p class="mb-2">
+                    In the compound-fixed inversion, the compound gear shaft is grounded &mdash; it rotates
+                    in place but does not translate. The racetrack track slides past the compound gear,
+                    producing direct linear output from the track&rsquo;s translation. During stance the track
+                    translates at v = &omega;<sub>c</sub>&middot;r<sub>2</sub>; during swing it returns at
+                    v = &omega;<sub>c</sub>&middot;r<sub>1</sub>.
+                </p>
+                <p class="mb-2">
+                    This configuration is mechanically simpler: the output is the track&rsquo;s own
+                    displacement, requiring no intermediate linkage. The compound gear sits on a fixed bearing,
+                    eliminating the need for a carrier or slider mechanism.
+                </p>
+
+                <!-- Velocity-Continuous Output -->
+                <h3 class="text-lg font-semibold mt-6 mb-2">Velocity-Continuous Output</h3>
+                <p class="mb-2">
+                    Point P sits on the compound gear&rsquo;s radial arm at a variable radius d<sub>P</sub>.
+                    During stance, d<sub>P</sub> = R<sub>2</sub>; during swing, d<sub>P</sub> = R<sub>1</sub>.
+                    During each turn, P&rsquo;s radius transitions via sinusoidal interpolation where &theta;
+                    sweeps from &pi;/2 to &minus;&pi;/2:
                 </p>
                 <div class="bg-gray-50 border rounded p-3 my-3 text-center">
                     <math display="block"><mrow>
@@ -593,129 +1151,49 @@
                         <mfrac><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>&minus;</mo><msub><mi>R</mi><mn>2</mn></msub></mrow><mn>2</mn></mfrac>
                         <mo>&middot;</mo><mi>sin</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo>
                     </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(9)</span>
                 </div>
-                <p class="mb-3">where &theta; sweeps from &pi;/2 to &minus;&pi;/2 during each turn.</p>
-
-                <!-- 5. Point Q -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">5. Point Q &mdash; Constant v<sub>x</sub> Hold Zone</h3>
                 <p class="mb-2">
                     Point Q extends the constant-velocity region into the turns by an angle &phi;.
-                    During the hold zone, Q must maintain v<sub>x</sub> = r<sub>2</sub> while
-                    the compound gear rotates around the semicircular arc.
+                    Within this hold zone, Q maintains v<sub>x</sub> = &omega;<sub>c</sub>&middot;r<sub>2</sub>
+                    while the compound gear rotates around the semicircular arc. With the radial arm at
+                    angle &theta;, the horizontal velocity of a point at varying radius d is
+                    v<sub>x</sub> = &omega;<sub>c</sub>[d&middot;sin(&theta;) &minus; d&prime;&middot;cos(&theta;)].
+                    Setting v<sub>x</sub> = &omega;<sub>c</sub>&middot;R<sub>2</sub> and integrating with the
+                    boundary condition d(&pi;/2) = R<sub>2</sub> gives:
                 </p>
-                <p class="mb-2">
-                    With the compound center at the turn center and the radial arm at angle &theta;,
-                    the full horizontal velocity of a point at varying radius <em>d</em> is:
-                </p>
-                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
-                    <math display="block"><mrow>
-                        <msub><mi>v</mi><mi>x</mi></msub><mo>=</mo>
-                        <msub><mi>&omega;</mi><mi>C</mi></msub><mo>&middot;</mo>
-                        <mo>[</mo><mi>d</mi><mo>&middot;</mo><mi>sin</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo>
-                        <mo>&minus;</mo>
-                        <msup><mi>d</mi><mo>&prime;</mo></msup><mo>&middot;</mo><mi>cos</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo><mo>]</mo>
-                    </mrow></math>
-                </div>
-                <p class="mb-2">
-                    Setting v<sub>x</sub> = R<sub>2</sub> (since &omega;<sub>C</sub> = 1) gives the ODE:
-                </p>
-                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
-                    <math display="block"><mrow>
-                        <mi>d</mi><mo>&middot;</mo><mi>sin</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo>
-                        <mo>&minus;</mo>
-                        <msup><mi>d</mi><mo>&prime;</mo></msup><mo>&middot;</mo><mi>cos</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo>
-                        <mo>=</mo><msub><mi>R</mi><mn>2</mn></msub>
-                    </mrow></math>
-                </div>
-                <p class="mb-2">Which can be rewritten as:</p>
-                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
-                    <math display="block"><mrow>
-                        <mfrac><mi>d</mi><mrow><mi>d</mi><mi>&theta;</mi></mrow></mfrac>
-                        <mo>[</mo><mi>d</mi><mo>&middot;</mo><mi>cos</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo><mo>]</mo>
-                        <mo>=</mo><mo>&minus;</mo><msub><mi>R</mi><mn>2</mn></msub>
-                    </mrow></math>
-                </div>
-                <p class="mb-2">Integrating with the boundary condition d(&pi;/2) = R<sub>2</sub>:</p>
-                <div class="bg-blue-50 border border-blue-200 rounded p-3 my-3 text-center font-bold">
+                <div class="bg-yellow-50 border rounded p-3 my-3 text-center font-bold">
                     <math display="block"><mrow>
                         <mi>d</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo><mo>=</mo>
                         <mfrac><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>&middot;</mo><mo>(</mo><mfrac><mi>&pi;</mi><mn>2</mn></mfrac><mo>&minus;</mo><mi>&theta;</mi><mo>)</mo></mrow><mrow><mi>cos</mi><mo>(</mo><mi>&theta;</mi><mo>)</mo></mrow></mfrac>
                     </mrow></math>
+                    <span style="float:right; margin-top:-1.5em; color:#888;">(10)</span>
                 </div>
-                <p class="mb-3">
-                    At &theta; = &pi;/2 this evaluates via L'H&ocirc;pital's rule to d = R<sub>2</sub>, confirming continuity.
-                </p>
-
-                <!-- 6. Cubic Hermite Transition -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">6. Cubic Hermite Transition</h3>
                 <p class="mb-2">
-                    At the boundary between the hold zone (angle &pi;/2 &minus; &phi;) and the transition zone,
-                    both the radius and its derivative must be continuous. The hold zone ends with:
-                </p>
-                <div class="bg-gray-50 border rounded p-3 my-3 text-center">
-                    <math display="block"><mrow>
-                        <msub><mi>d</mi><mi>end</mi></msub><mo>=</mo>
-                        <mfrac><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>&middot;</mo><mi>&phi;</mi></mrow><mrow><mi>sin</mi><mo>(</mo><mi>&phi;</mi><mo>)</mo></mrow></mfrac>
-                    </mrow></math>
-                    <math display="block" style="margin-top:0.5em"><mrow>
-                        <msubsup><mi>d</mi><mi>end</mi><mo>&prime;</mo></msubsup><mo>=</mo>
-                        <mfrac><mrow><msub><mi>R</mi><mn>2</mn></msub><mo>&middot;</mo><mo>(</mo><mi>&phi;</mi><mi>cos</mi><mi>&phi;</mi><mo>&minus;</mo><mi>sin</mi><mi>&phi;</mi><mo>)</mo></mrow><mrow><msup><mi>sin</mi><mn>2</mn></msup><mo>(</mo><mi>&phi;</mi><mo>)</mo></mrow></mfrac>
-                    </mrow></math>
-                </div>
-                <p class="mb-3">
-                    A cubic Hermite polynomial interpolates from (d<sub>end</sub>, d&prime;<sub>end</sub>)
-                    to (R<sub>1</sub>, 0) over the remaining angular span &pi; &minus; &phi;,
-                    ensuring C<sup>1</sup> continuity of the velocity profile.
-                </p>
-
-                <!-- 7. Configuration Comparison -->
-                <h3 class="text-lg font-semibold mt-6 mb-2">7. Output Configurations</h3>
-
-                <h4 class="font-semibold mt-4 mb-2">7a. Bell Crank Configuration</h4>
-                <p class="mb-2">
-                    The racetrack frame is the fixed body. Point Q on the compound gear is the output,
-                    connected via a rigid bell-crank arm through a slider on a horizontal rail to a gripper.
-                    The slider&rsquo;s horizontal position tracks Q&rsquo;s x-coordinate.
-                </p>
-                <p class="mb-2">
-                    This works well for a single mechanism set. However, for continuous motion at least two
-                    sets are required &mdash; one gripping during stance while the other returns during swing &mdash;
-                    so that at least one set is always in the working stroke.
-                </p>
-                <p class="mb-3 text-red-700">
-                    <strong>Problem:</strong> With two sets in bell-crank configuration, the two compound gears
-                    occupy the same racetrack and must be 180&deg; out of phase. Connecting them rigidly so they
-                    can be driven by a single actuator is geometrically very difficult &mdash; their centers
-                    are at different positions on the track and the relative geometry between them changes
-                    throughout the cycle.
-                </p>
-
-                <h4 class="font-semibold mt-4 mb-2">7b. Slotted Slider Configuration</h4>
-                <p class="mb-2">
-                    The slider is the body (ground). The gripper is mounted on the racetrack rack section,
-                    which now moves relative to the slider body. Q drives the slider through a vertical slot,
-                    translating Q&rsquo;s horizontal motion directly to the body.
-                </p>
-                <p class="mb-2 text-green-700">
-                    <strong>Advantage:</strong> Since the body (slider) is common to both sets, each compound
-                    gear sees the same relative motion with respect to the body regardless of phase.
-                    The two compound gears of the two sets can therefore be connected by rigid links
-                    and driven by a single actuator &mdash; they maintain fixed relative positions
-                    because their motion relative to the moving body is identical.
-                </p>
-                <p class="mb-3">
-                    This makes the slotted slider the preferred configuration for continuous-motion
-                    applications requiring multiple phase-offset mechanism sets.
+                    At &theta; = &pi;/2 this evaluates via L&rsquo;H&ocirc;pital&rsquo;s rule to
+                    d = R<sub>2</sub>, confirming continuity. At the boundary between the hold zone
+                    (angle &pi;/2 &minus; &phi;) and the transition zone, both the radius and its derivative
+                    are continuous. A cubic Hermite polynomial interpolates from the hold zone endpoint to
+                    (R<sub>1</sub>, 0) over the remaining angular span &pi; &minus; &phi;, ensuring
+                    C<sup>1</sup> continuity of the velocity profile (design aim 4).
                 </p>
 
             </div>
         </div>
 
         <!-- Tab: 3D Design (OpenSCAD) -->
-        <div id="panelDesign3d" class="hidden" style="border-radius:6px; overflow:hidden;">
+        <div id="panelDesign3d" class="tab-panel" style="border-radius:6px; overflow:hidden;">
             <div class="scad-layout">
                 <!-- Sidebar -->
                 <div class="scad-sidebar" id="scadSidebar">
+                    <h3>Configuration</h3>
+                    <div class="scad-param" style="margin-bottom:12px;">
+                        <select id="scadConfigSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
+                            <option value="track-fixed">Racetrack Fixed</option>
+                            <option value="compound-fixed">Compound Fixed</option>
+                        </select>
+                    </div>
+
                     <h3>Parts</h3>
                     <div class="scad-tree">
                         <!-- Root assembly -->
@@ -726,101 +1204,272 @@
                                 <span class="tree-label assembly">Mechanism 61</span>
                             </div>
                             <div class="tree-children">
-                                <!-- Racetrack assembly -->
+                                <!-- Set 1 -->
                                 <div class="tree-node">
                                     <div class="tree-row" onclick="toggleTreeNode(this)">
                                         <span class="tree-arrow">▾</span>
-                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'racetrack')" onclick="event.stopPropagation()">
-                                        <span class="tree-label assembly">Racetrack</span>
+                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'set1')" onclick="event.stopPropagation()">
+                                        <span class="tree-label assembly">Set 1</span>
                                     </div>
                                     <div class="tree-children">
                                         <div class="tree-node leaf">
-                                            <div class="tree-row part-row selected" data-part="outer_rack" onclick="selectScadPart(this, 'outer_rack')">
+                                            <div class="tree-row part-row selected" data-part="racetrack" onclick="selectScadPart(this, 'racetrack')">
                                                 <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'outer_rack')" onclick="event.stopPropagation()">
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'racetrack')" onclick="event.stopPropagation()">
                                                 <span class="dot" style="background:#a855f7"></span>
-                                                <span class="tree-label">Outer Rack</span>
+                                                <span class="tree-label">Racetrack</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                <span class="tree-arrow">▾</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_assy')" onclick="event.stopPropagation()">
+                                                <span class="tree-label assembly">Gear Assembly</span>
+                                            </div>
+                                            <div class="tree-children">
+                                                <div class="tree-node">
+                                                    <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                        <span class="tree-arrow">▾</span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'compound_gear')" onclick="event.stopPropagation()">
+                                                        <span class="tree-label assembly">Compound Gear</span>
+                                                    </div>
+                                                    <div class="tree-children">
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r1" onclick="selectScadPart(this, 'gear_r1')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r1')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#60a5fa"></span>
+                                                                <span class="tree-label">r₁ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r2" onclick="selectScadPart(this, 'gear_r2')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r2')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#60a5fa"></span>
+                                                                <span class="tree-label">r₂ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="compound_spacer" onclick="selectScadPart(this, 'compound_spacer')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'compound_spacer')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#60a5fa"></span>
+                                                                <span class="tree-label">Spacer</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node">
+                                                    <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                        <span class="tree-arrow">▾</span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'driven_gears')" onclick="event.stopPropagation()">
+                                                        <span class="tree-label assembly">Driven Gears</span>
+                                                    </div>
+                                                    <div class="tree-children">
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r3" onclick="selectScadPart(this, 'gear_r3')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r3')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#a855f7"></span>
+                                                                <span class="tree-label">r₃ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r4" onclick="selectScadPart(this, 'gear_r4')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r4')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#f59e0b"></span>
+                                                                <span class="tree-label">r₄ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="inner_rack" onclick="selectScadPart(this, 'inner_rack')">
+                                            <div class="tree-row part-row" data-part="carrier_arm" onclick="selectScadPart(this, 'carrier_arm')">
                                                 <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'inner_rack')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#f59e0b"></span>
-                                                <span class="tree-label">Inner Rack</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'carrier_arm')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#10b981"></span>
+                                                <span class="tree-label">Carrier Arm</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="outer_arm" onclick="selectScadPart(this, 'outer_arm')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'outer_arm')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#f472b6"></span>
+                                                <span class="tree-label">Outer Arm</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="idler_wheel" onclick="selectScadPart(this, 'idler_wheel')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'idler_wheel')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#fb923c"></span>
+                                                <span class="tree-label">Idler Wheel</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="inner_idler" onclick="selectScadPart(this, 'inner_idler')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'inner_idler')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#38bdf8"></span>
+                                                <span class="tree-label">Inner Idler</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Gear Assembly -->
+                                <!-- Set 2 -->
                                 <div class="tree-node">
                                     <div class="tree-row" onclick="toggleTreeNode(this)">
                                         <span class="tree-arrow">▾</span>
-                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_assy')" onclick="event.stopPropagation()">
-                                        <span class="tree-label assembly">Gear Assembly</span>
+                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'set2')" onclick="event.stopPropagation()">
+                                        <span class="tree-label assembly">Set 2</span>
                                     </div>
                                     <div class="tree-children">
-                                        <!-- Compound Gear assembly -->
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="racetrack" onclick="selectScadPart(this, 'racetrack')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_racetrack')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#a855f7"></span>
+                                                <span class="tree-label">Racetrack</span>
+                                            </div>
+                                        </div>
                                         <div class="tree-node">
                                             <div class="tree-row" onclick="toggleTreeNode(this)">
                                                 <span class="tree-arrow">▾</span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'compound_gear')" onclick="event.stopPropagation()">
-                                                <span class="tree-label assembly">Compound Gear</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_gear_assy')" onclick="event.stopPropagation()">
+                                                <span class="tree-label assembly">Gear Assembly</span>
                                             </div>
                                             <div class="tree-children">
-                                                <div class="tree-node leaf">
-                                                    <div class="tree-row part-row" data-part="gear_r1" onclick="selectScadPart(this, 'gear_r1')">
-                                                        <span class="tree-spacer"></span>
-                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r1')" onclick="event.stopPropagation()">
-                                                        <span class="dot" style="background:#60a5fa"></span>
-                                                        <span class="tree-label">r₁ Gear</span>
+                                                <div class="tree-node">
+                                                    <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                        <span class="tree-arrow">▾</span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_compound_gear')" onclick="event.stopPropagation()">
+                                                        <span class="tree-label assembly">Compound Gear</span>
+                                                    </div>
+                                                    <div class="tree-children">
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r1" onclick="selectScadPart(this, 'gear_r1')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_gear_r1')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#60a5fa"></span>
+                                                                <span class="tree-label">r₁ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r2" onclick="selectScadPart(this, 'gear_r2')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_gear_r2')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#60a5fa"></span>
+                                                                <span class="tree-label">r₂ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="compound_spacer" onclick="selectScadPart(this, 'compound_spacer')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_compound_spacer')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#60a5fa"></span>
+                                                                <span class="tree-label">Spacer</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="tree-node leaf">
-                                                    <div class="tree-row part-row" data-part="gear_r2" onclick="selectScadPart(this, 'gear_r2')">
-                                                        <span class="tree-spacer"></span>
-                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r2')" onclick="event.stopPropagation()">
-                                                        <span class="dot" style="background:#38bdf8"></span>
-                                                        <span class="tree-label">r₂ Gear</span>
+                                                <div class="tree-node">
+                                                    <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                        <span class="tree-arrow">▾</span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_driven_gears')" onclick="event.stopPropagation()">
+                                                        <span class="tree-label assembly">Driven Gears</span>
+                                                    </div>
+                                                    <div class="tree-children">
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r3" onclick="selectScadPart(this, 'gear_r3')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_gear_r3')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#a855f7"></span>
+                                                                <span class="tree-label">r₃ Gear</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tree-node leaf">
+                                                            <div class="tree-row part-row" data-part="gear_r4" onclick="selectScadPart(this, 'gear_r4')">
+                                                                <span class="tree-spacer"></span>
+                                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_gear_r4')" onclick="event.stopPropagation()">
+                                                                <span class="dot" style="background:#f59e0b"></span>
+                                                                <span class="tree-label">r₄ Gear</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Driven Gears assembly -->
-                                        <div class="tree-node">
-                                            <div class="tree-row" onclick="toggleTreeNode(this)">
-                                                <span class="tree-arrow">▾</span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'driven_gears')" onclick="event.stopPropagation()">
-                                                <span class="tree-label assembly">Driven Gears</span>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="carrier_arm" onclick="selectScadPart(this, 'carrier_arm')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_carrier_arm')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#10b981"></span>
+                                                <span class="tree-label">Carrier Arm</span>
                                             </div>
-                                            <div class="tree-children">
-                                                <div class="tree-node leaf">
-                                                    <div class="tree-row part-row" data-part="gear_r3" onclick="selectScadPart(this, 'gear_r3')">
-                                                        <span class="tree-spacer"></span>
-                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r3')" onclick="event.stopPropagation()">
-                                                        <span class="dot" style="background:#a855f7"></span>
-                                                        <span class="tree-label">r₃ Gear</span>
-                                                    </div>
-                                                </div>
-                                                <div class="tree-node leaf">
-                                                    <div class="tree-row part-row" data-part="gear_r4" onclick="selectScadPart(this, 'gear_r4')">
-                                                        <span class="tree-spacer"></span>
-                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'gear_r4')" onclick="event.stopPropagation()">
-                                                        <span class="dot" style="background:#f59e0b"></span>
-                                                        <span class="tree-label">r₄ Gear</span>
-                                                    </div>
-                                                </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="outer_arm" onclick="selectScadPart(this, 'outer_arm')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_outer_arm')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#f472b6"></span>
+                                                <span class="tree-label">Outer Arm</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="idler_wheel" onclick="selectScadPart(this, 'idler_wheel')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_idler_wheel')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#fb923c"></span>
+                                                <span class="tree-label">Idler Wheel</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="inner_idler" onclick="selectScadPart(this, 'inner_idler')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_inner_idler')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#38bdf8"></span>
+                                                <span class="tree-label">Inner Idler</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Slider -->
-                                <div class="tree-node leaf">
-                                    <div class="tree-row">
-                                        <span class="tree-spacer"></span>
-                                        <input type="checkbox" disabled>
-                                        <span class="dot" style="background:#10b981; opacity:0.3"></span>
-                                        <span class="tree-label disabled">Slider Body</span>
+                                <!-- Drive System -->
+                                <div class="tree-node">
+                                    <div class="tree-row" onclick="toggleTreeNode(this)">
+                                        <span class="tree-arrow">▾</span>
+                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'drive_assy')" onclick="event.stopPropagation()">
+                                        <span class="tree-label assembly">Drive System</span>
+                                    </div>
+                                    <div class="tree-children">
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="drive_shaft" onclick="selectScadPart(this, 'drive_shaft')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'drive_shaft')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#e879f9"></span>
+                                                <span class="tree-label">Drive Shaft</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="bevel_shaft" onclick="selectScadPart(this, 'bevel_shaft')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'bevel_shaft')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#c084fc"></span>
+                                                <span class="tree-label">Bevel (Shaft)</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node leaf">
+                                            <div class="tree-row part-row" data-part="bevel_compound" onclick="selectScadPart(this, 'bevel_compound')">
+                                                <span class="tree-spacer"></span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'bevel_compound')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#a78bfa"></span>
+                                                <span class="tree-label">Bevel (Compound)</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -841,8 +1490,18 @@
                         <input type="range" id="baseThickSlider" min="2" max="15" value="5" step="0.5">
                     </div>
 
+                    <h3>Mechanism</h3>
+                    <div class="scad-param">
+                        <label><span>Stance Fraction f</span><span id="scadFValue">0.60</span></label>
+                        <input type="range" id="scadFSlider" min="0.30" max="0.95" value="0.60" step="0.01">
+                        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-top:2px;">
+                            <span>f<sub>max</sub> = <span id="scadFMaxDisplay">0.67</span></span>
+                            <span>L = <span id="scadLValue">300</span></span>
+                        </div>
+                    </div>
+
                     <div class="note">
-                        Mechanism parameters (r₁, r₂, r₃, L, δ) are pulled from the Mechanism tab.
+                        Other mechanism parameters (r₁, r₂, r₃, δ) are pulled from the Mechanism tab.
                     </div>
 
                     <div class="sidebar-actions">
@@ -867,6 +1526,21 @@
                         <button onclick="toggleScadFullpage()" id="scadFullpageBtn">⛶ Fullpage</button>
                     </div>
 
+                    <!-- Simulation slider -->
+                    <div style="display:flex; align-items:center; gap:8px; padding:4px 12px; background:#161b22; border-bottom:1px solid #30363d;">
+                        <span style="font-size:12px; color:#8b949e; white-space:nowrap;">Position</span>
+                        <input type="range" id="scadThetaSlider" min="0" max="1000" value="0" style="flex:1; accent-color:#58a6ff;">
+                        <span id="scadThetaValue" style="font-size:12px; color:#c9d1d9; min-width:30px; text-align:right;">0%</span>
+                        <button id="scadPlayBtn" onclick="toggleScadPlay()" style="background:#21262d; border:1px solid #30363d; color:#c9d1d9; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:14px;" title="Play/Pause">▶</button>
+                        <select id="scadSpeedSelect" onchange="scadPlaySpeed=parseFloat(this.value)" style="background:#21262d; border:1px solid #30363d; color:#c9d1d9; padding:2px 4px; border-radius:4px; font-size:11px; cursor:pointer;">
+                            <option value="0.25">0.25×</option>
+                            <option value="0.5">0.5×</option>
+                            <option value="1" selected>1×</option>
+                            <option value="2">2×</option>
+                            <option value="4">4×</option>
+                        </select>
+                    </div>
+
                     <!-- Content area -->
                     <div class="scad-split" id="scadContentArea">
                         <div class="scad-viewer" id="scadViewerWrap">
@@ -882,9 +1556,9 @@
     </div>
 
 <script>
-// Tab switching
+// Tab switching with localStorage persistence
 function switchTab(tab) {
-    const tabs = {
+    const panels = {
         mechanism: document.getElementById('panelMechanism'),
         notes: document.getElementById('panelNotes'),
         design3d: document.getElementById('panelDesign3d')
@@ -894,16 +1568,13 @@ function switchTab(tab) {
         notes: document.getElementById('tabNotes'),
         design3d: document.getElementById('tabDesign3d')
     };
-    const activeClass = 'px-4 py-2 text-sm font-medium rounded-t bg-white border border-b-white border-gray-300 -mb-px text-gray-800';
-    const inactiveClass = 'px-4 py-2 text-sm font-medium rounded-t bg-gray-200 border border-transparent text-gray-500 hover:text-gray-700';
-    Object.keys(tabs).forEach(k => {
+    Object.keys(panels).forEach(k => {
         const active = k === tab;
-        tabs[k].classList.toggle('hidden', !active);
-        if (k === 'mechanism') tabs[k].style.display = active ? 'grid' : 'none';
-        btns[k].className = active ? activeClass : inactiveClass;
+        panels[k].classList.toggle('active', active);
+        btns[k].classList.toggle('active', active);
     });
+    localStorage.setItem('m61-active-tab', tab);
     if (tab === 'design3d') {
-        // Defer init so container has dimensions
         setTimeout(() => {
             initThreeJS();
             updateScadCode();
@@ -911,6 +1582,13 @@ function switchTab(tab) {
         }, 50);
     }
 }
+// Restore last active tab on load
+(function() {
+    const saved = localStorage.getItem('m61-active-tab');
+    if (saved && ['mechanism', 'notes', 'design3d'].includes(saved)) {
+        switchTab(saved);
+    }
+})();
 // ============================================================
 // Canvas setup
 // ============================================================
@@ -931,7 +1609,7 @@ const ratioSlider = document.getElementById('ratioSlider');
 const deltaSlider = document.getElementById('deltaSlider');
 const r1Slider = document.getElementById('r1Slider');
 const r3Slider = document.getElementById('r3Slider');
-const lSlider = document.getElementById('lSlider');
+const fSlider = document.getElementById('fSlider');
 const phiSlider = document.getElementById('phiSlider');
 const speedSlider = document.getElementById('speedSlider');
 const playBtn = document.getElementById('playBtn');
@@ -939,6 +1617,9 @@ const dirForward = document.getElementById('dirForward');
 const dirBackward = document.getElementById('dirBackward');
 const dirPingPong = document.getElementById('dirPingPong');
 const gripperSelect = document.getElementById('gripperSelect');
+const configSelect = document.getElementById('configSelect');
+const scadConfigSelect = document.getElementById('scadConfigSelect');
+const scadFSlider = document.getElementById('scadFSlider');
 const railOffsetSlider = document.getElementById('railOffsetSlider');
 
 // ============================================================
@@ -958,7 +1639,6 @@ function getP() {
     const r1 = parseFloat(r1Slider.value);
     const k = parseFloat(ratioSlider.value);
     const r3 = parseFloat(r3Slider.value);
-    const L = parseFloat(lSlider.value);
     const delta = parseFloat(deltaSlider.value) * Math.PI / 180;
     const phi = parseFloat(phiSlider.value) * Math.PI / 180;
 
@@ -969,13 +1649,31 @@ function getP() {
     const orbitB = r1 + r3;
     const orbitD = r2 + r4;
 
+    // Stance fraction → L (equation 8)
+    const fMax = k / (k + 1);
+    let f = parseFloat(fSlider.value);
+    if (f >= fMax) f = fMax - 0.01;
+    const denom = k * (1 - f) - f;
+    const L = 4 * Math.PI * f * (r1 + r3) / denom;
+
     // Update displays
     document.getElementById('ratioValue').textContent = k.toFixed(1);
     document.getElementById('deltaValue').textContent = deltaSlider.value;
     document.getElementById('phiValue').textContent = phiSlider.value;
     document.getElementById('r1Value').textContent = r1;
     document.getElementById('r3Value').textContent = r3;
-    document.getElementById('lValue').textContent = L;
+    document.getElementById('fValue').textContent = f.toFixed(2);
+    document.getElementById('fMaxDisplay').textContent = fMax.toFixed(2);
+    document.getElementById('lValue').textContent = L.toFixed(0);
+    // Sync 3D tab stance fraction displays
+    const scadFValEl = document.getElementById('scadFValue');
+    const scadFMaxEl = document.getElementById('scadFMaxDisplay');
+    const scadLValEl = document.getElementById('scadLValue');
+    if (scadFValEl) scadFValEl.textContent = f.toFixed(2);
+    if (scadFMaxEl) scadFMaxEl.textContent = fMax.toFixed(2);
+    if (scadLValEl) scadLValEl.textContent = L.toFixed(0);
+    // Clamp 3D tab slider too
+    if (scadFSlider) scadFSlider.max = (fMax - 0.01).toFixed(2);
     document.getElementById('r2Display').textContent = r2.toFixed(1);
     document.getElementById('r4Display').textContent = r4.toFixed(1);
     document.getElementById('R1Display').textContent = R1.toFixed(1);
@@ -984,6 +1682,8 @@ function getP() {
     const check = Math.abs(r1 * r4 - r2 * r3) < 0.01;
     document.getElementById('constraintDisplay').textContent = check ? '\u2713' : '\u2717';
     document.getElementById('constraintDisplay').className = 'font-mono font-bold ' + (check ? 'text-green-600' : 'text-red-600');
+    // Clamp slider max to fMax
+    fSlider.max = (fMax - 0.01).toFixed(2);
 
     return { r1, r2, r3, r4, R1, R2, orbitB, orbitD, k, L, delta, phi };
 }
@@ -992,12 +1692,11 @@ function getP() {
 // Time durations for each section (at omega = 1)
 // ============================================================
 function getTimes(p) {
-    const tBot = p.L / p.r2;
-    const tRight = Math.PI * p.R1 / p.r1;
-    const tTop = p.L / p.r1;
-    const tLeft = Math.PI * p.R1 / p.r1;
-    const tTotal = tBot + tRight + tTop + tLeft;
-    return { tBot, tRight, tTop, tLeft, tTotal };
+    const tBot = p.L / p.r2;                              // stance: L / v_stance, v_stance = ωc·r₂
+    const tTurn = 2 * Math.PI * (p.r1 + p.r3) / p.r1;    // each semicircular turn (lift or drop)
+    const tTop = p.L / p.r1;                              // swing: L / v_swing, v_swing = ωc·r₁
+    const tTotal = tBot + tTurn + tTop + tTurn;
+    return { tBot, tRight: tTurn, tTop, tLeft: tTurn, tTotal };
 }
 
 // ============================================================
@@ -1269,6 +1968,17 @@ function draw() {
     document.getElementById('thetaDisplay').textContent = state.compTheta.toFixed(2);
     document.getElementById('progressValue').textContent = Math.round(progress) + '%';
 
+    // --- Configuration: frame of reference ---
+    const config = configSelect.value;  // 'track-fixed' or 'compound-fixed'
+    let trackOffsetX = 0;
+    let drawCompX = state.compX;
+    let drawCompY = state.compY;
+    if (config === 'compound-fixed') {
+        trackOffsetX = -state.compX;
+        drawCompX = 0;
+        drawCompY = 0;
+    }
+
     // --- Mechanism canvas ---
     const W = mechCanvas.width, H = mechCanvas.height;
     mechCtx.clearRect(0, 0, W, H);
@@ -1316,8 +2026,10 @@ function draw() {
     for (let i = 0; i <= locusN; i++) {
         const f = i / locusN;
         const st = getStateFromTime(f, p);
-        const lx = st.compX + st.radX * st.pDist;
-        const ly = st.compY + st.radY * st.pDist;
+        const lcx = config === 'compound-fixed' ? 0 : st.compX;
+        const lcy = config === 'compound-fixed' ? 0 : st.compY;
+        const lx = lcx + st.radX * st.pDist;
+        const ly = lcy + st.radY * st.pDist;
         if (i === 0) mechCtx.moveTo(lx, ly);
         else mechCtx.lineTo(lx, ly);
     }
@@ -1333,8 +2045,10 @@ function draw() {
     for (let i = 0; i <= locusN; i++) {
         const f = i / locusN;
         const st = getStateFromTime(f, p);
-        const lx = st.compX + st.radX * st.qDist;
-        const ly = st.compY + st.radY * st.qDist;
+        const lcx = config === 'compound-fixed' ? 0 : st.compX;
+        const lcy = config === 'compound-fixed' ? 0 : st.compY;
+        const lx = lcx + st.radX * st.qDist;
+        const ly = lcy + st.radY * st.qDist;
         if (i === 0) mechCtx.moveTo(lx, ly);
         else mechCtx.lineTo(lx, ly);
     }
@@ -1345,43 +2059,59 @@ function draw() {
     mechCtx.stroke();
     mechCtx.setLineDash([]);
 
-    // Racks
-    straightRack(mechCtx, -p.L / 2, p.L / 2, p.R2, innerColor);
-    straightRack(mechCtx, -p.L / 2, p.L / 2, -p.R1, outerColor);
-    const rCx = p.L / 2;
+    // Racks (shifted by trackOffsetX in compound-fixed mode)
+    const tOx = trackOffsetX;
+    straightRack(mechCtx, -p.L / 2 + tOx, p.L / 2 + tOx, p.R2, innerColor);
+    straightRack(mechCtx, -p.L / 2 + tOx, p.L / 2 + tOx, -p.R1, outerColor);
+    const rCx = p.L / 2 + tOx;
     arcRack(mechCtx, rCx, 0, p.R1, -Math.PI / 2, Math.PI / 2 - p.delta, outerColor);
     arcRack(mechCtx, rCx, 0, p.R2, -Math.PI / 2 + p.delta, Math.PI / 2, innerColor);
-    const lCx = -p.L / 2;
+    const lCx = -p.L / 2 + tOx;
     arcRack(mechCtx, lCx, 0, p.R1, Math.PI / 2 + p.delta, 3 * Math.PI / 2, outerColor);
     arcRack(mechCtx, lCx, 0, p.R2, Math.PI / 2, 3 * Math.PI / 2 - p.delta, innerColor);
 
     // Center line
     mechCtx.beginPath();
-    mechCtx.moveTo(-p.L / 2 - p.R1 - 10, 0);
-    mechCtx.lineTo(p.L / 2 + p.R1 + 10, 0);
+    mechCtx.moveTo(-p.L / 2 - p.R1 - 10 + tOx, 0);
+    mechCtx.lineTo(p.L / 2 + p.R1 + 10 + tOx, 0);
     mechCtx.strokeStyle = 'rgba(255,255,255,0.08)';
     mechCtx.lineWidth = 1;
     mechCtx.stroke();
 
-    // Gears
-    const { compX, compY, radX, radY, compTheta } = state;
-    const dx = compX + radX * p.orbitD;
-    const dy = compY + radY * p.orbitD;
-    const bx = compX + radX * p.orbitB;
-    const by = compY + radY * p.orbitB;
+    // Compound fixed-point marker
+    if (config === 'compound-fixed') {
+        mechCtx.beginPath();
+        mechCtx.arc(0, 0, 5, 0, Math.PI * 2);
+        mechCtx.strokeStyle = 'rgba(96,165,250,0.4)';
+        mechCtx.lineWidth = 1.5;
+        mechCtx.setLineDash([3, 3]);
+        mechCtx.stroke();
+        mechCtx.setLineDash([]);
+        mechCtx.beginPath();
+        mechCtx.arc(0, 0, 2, 0, Math.PI * 2);
+        mechCtx.fillStyle = 'rgba(96,165,250,0.5)';
+        mechCtx.fill();
+    }
+
+    // Gears (use drawCompX/Y for compound-fixed transform)
+    const { radX, radY, compTheta } = state;
+    const dx = drawCompX + radX * p.orbitD;
+    const dy = drawCompY + radY * p.orbitD;
+    const bx = drawCompX + radX * p.orbitB;
+    const by = drawCompY + radY * p.orbitB;
 
     const nTO = Math.max(12, Math.round(p.r1 / 3));
     const nTI = Math.max(8, Math.round(p.r2 / 3));
-    drawGear(mechCtx, compX, compY, p.r1, nTO, -compTheta, compColor, 1.5);
-    drawGear(mechCtx, compX, compY, p.r2, nTI, -compTheta, compColor, 1.5);
+    drawGear(mechCtx, drawCompX, drawCompY, p.r1, nTO, -compTheta, compColor, 1.5);
+    drawGear(mechCtx, drawCompX, drawCompY, p.r2, nTI, -compTheta, compColor, 1.5);
     drawGear(mechCtx, bx, by, p.r3, Math.max(8, Math.round(p.r3 / 3)), compTheta * (p.r1 / p.r3), outerColor, 1.5);
     drawGear(mechCtx, dx, dy, p.r4, Math.max(6, Math.round(p.r4 / 3)), compTheta * (p.r2 / p.r4), innerColor, 1.5);
 
     // Radial line
-    const pX = compX + radX * state.pDist;
-    const pY = compY + radY * state.pDist;
+    const pX = drawCompX + radX * state.pDist;
+    const pY = drawCompY + radY * state.pDist;
     mechCtx.beginPath();
-    mechCtx.moveTo(compX, compY);
+    mechCtx.moveTo(drawCompX, drawCompY);
     mechCtx.lineTo(pX, pY);
     mechCtx.strokeStyle = 'rgba(255,255,255,0.25)';
     mechCtx.lineWidth = 0.5;
@@ -1402,8 +2132,8 @@ function draw() {
     mechCtx.fillText('P', pX + 6, pY - 6);
 
     // Point Q
-    const qX = compX + radX * state.qDist;
-    const qY = compY + radY * state.qDist;
+    const qX = drawCompX + radX * state.qDist;
+    const qY = drawCompY + radY * state.qDist;
     mechCtx.beginPath();
     mechCtx.arc(qX, qY, 4, 0, Math.PI * 2);
     mechCtx.fillStyle = '#22d3ee';
@@ -1626,7 +2356,7 @@ function draw() {
     // Gear labels
     mechCtx.font = '10px sans-serif';
     mechCtx.fillStyle = compColor;
-    mechCtx.fillText('C', compX + 4, compY - p.r1 - 6);
+    mechCtx.fillText('C', drawCompX + 4, drawCompY - p.r1 - 6);
     mechCtx.fillStyle = outerColor;
     mechCtx.fillText('B', bx + 4, by - p.r3 - 5);
     mechCtx.fillStyle = innerColor;
@@ -1646,8 +2376,8 @@ function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, c
     ctx.clearRect(0, 0, W, H);
 
     const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-    bgGrad.addColorStop(0, '#fafafa');
-    bgGrad.addColorStop(1, '#f3f4f6');
+    bgGrad.addColorStop(0, '#0f1419');
+    bgGrad.addColorStop(1, '#0d1117');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
@@ -1666,8 +2396,8 @@ function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, c
 
     // Section backgrounds
     const sectionFills = [
-        'rgba(245,158,11,0.07)', 'rgba(34,197,94,0.07)',
-        'rgba(168,85,247,0.07)', 'rgba(239,68,68,0.07)',
+        'rgba(245,158,11,0.08)', 'rgba(34,197,94,0.08)',
+        'rgba(168,85,247,0.08)', 'rgba(239,68,68,0.08)',
     ];
     for (let i = 0; i < 4; i++) {
         const x0 = pad.left + boundaries[i] * plotW;
@@ -1677,7 +2407,7 @@ function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, c
     }
 
     // Grid lines
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = '#1e2a36';
     ctx.lineWidth = 0.5;
     for (let i = 1; i <= 3; i++) {
         const y = pad.top + (i / 4) * plotH;
@@ -1685,7 +2415,7 @@ function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, c
     }
 
     // Section dividers
-    ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#2a3646'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
     for (let i = 1; i < 4; i++) {
         const x = pad.left + boundaries[i] * plotW;
         ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + plotH); ctx.stroke();
@@ -1693,12 +2423,12 @@ function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, c
     ctx.setLineDash([]);
 
     // Zero line + Y axis
-    ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 1;
+    ctx.strokeStyle = '#3d4f63'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(pad.left + plotW, zeroY); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + plotH); ctx.stroke();
 
     // Y labels
-    ctx.fillStyle = '#6b7280'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#5a6d82'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
     const topVal = vMax.toFixed(0);
     ctx.fillText('+' + topVal, pad.left - 5, pad.top + 12);
     ctx.fillText('-' + topVal, pad.left - 5, pad.top + plotH - 4);
@@ -1747,7 +2477,7 @@ function drawProfile(ctx, canvas, samplesP, samplesQ, boundaries, currentFrac, c
 
     // Y-axis title
     ctx.save(); ctx.translate(14, pad.top + plotH / 2); ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#6b7280'; ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center'; ctx.fillStyle = '#5a6d82'; ctx.font = '11px sans-serif';
     ctx.fillText(yAxisLabel, 0, 0); ctx.restore();
 }
 
@@ -1804,18 +2534,12 @@ function drawAllProfiles(p, currentFrac) {
 // Direction button UI
 // ============================================================
 function updateDirectionButtons() {
-    dirForward.classList.toggle('bg-blue-500', animationMode === 'forward');
-    dirForward.classList.toggle('text-white', animationMode === 'forward');
-    dirForward.classList.toggle('bg-gray-300', animationMode !== 'forward');
-    dirForward.classList.toggle('text-gray-700', animationMode !== 'forward');
-    dirBackward.classList.toggle('bg-blue-500', animationMode === 'backward');
-    dirBackward.classList.toggle('text-white', animationMode === 'backward');
-    dirBackward.classList.toggle('bg-gray-300', animationMode !== 'backward');
-    dirBackward.classList.toggle('text-gray-700', animationMode !== 'backward');
-    dirPingPong.classList.toggle('bg-blue-500', animationMode === 'pingpong');
-    dirPingPong.classList.toggle('text-white', animationMode === 'pingpong');
-    dirPingPong.classList.toggle('bg-gray-300', animationMode !== 'pingpong');
-    dirPingPong.classList.toggle('text-gray-700', animationMode !== 'pingpong');
+    [dirForward, dirBackward, dirPingPong].forEach(btn => {
+        const mode = btn === dirForward ? 'forward' : btn === dirBackward ? 'backward' : 'pingpong';
+        const isActive = animationMode === mode;
+        btn.style.background = isActive ? '#3b82f6' : 'var(--bg-surface)';
+        btn.style.color = isActive ? '#fff' : 'var(--text-secondary)';
+    });
 }
 
 // ============================================================
@@ -1860,8 +2584,13 @@ function animate() {
 // Event listeners
 // ============================================================
 progressSlider.addEventListener('input', (e) => { progress = parseFloat(e.target.value); draw(); });
-[ratioSlider, deltaSlider, phiSlider, r1Slider, r3Slider, lSlider].forEach(s => { s.addEventListener('input', draw); });
+[ratioSlider, deltaSlider, phiSlider, r1Slider, r3Slider, fSlider].forEach(s => { s.addEventListener('input', draw); });
 gripperSelect.addEventListener('change', draw);
+configSelect.addEventListener('change', () => {
+    scadConfigSelect.value = configSelect.value;
+    draw();
+    if (threeInitialized) updateScadCode();
+});
 railOffsetSlider.addEventListener('input', () => {
     document.getElementById('railOffsetValue').textContent = railOffsetSlider.value;
     draw();
@@ -1875,7 +2604,7 @@ const toothHeightSlider = document.getElementById('toothHeightSlider');
 const baseThickSlider = document.getElementById('baseThickSlider');
 const scadCodeArea = document.getElementById('scadCodeArea');
 
-let scadCurrentPart = 'outer_rack';
+let scadCurrentPart = 'racetrack';
 let scadViewMode = 'preview';  // 'preview' | 'code' | 'split'
 let scadFullpage = false;
 let threeScene, threeCamera, threeRenderer, threeControls;
@@ -1883,7 +2612,11 @@ let threeInitialized = false;
 let threeMeshGroup;
 
 // Part visibility state
-const scadVisible = { outer_rack: true, inner_rack: true, gear_r1: true, gear_r2: true, gear_r3: true, gear_r4: true };
+const scadVisible = {
+    racetrack: true, gear_r1: true, gear_r2: true, compound_spacer: true, gear_r3: true, gear_r4: true, carrier_arm: true, outer_arm: true, idler_wheel: true, inner_idler: true,
+    s2_racetrack: true, s2_gear_r1: true, s2_gear_r2: true, s2_compound_spacer: true, s2_gear_r3: true, s2_gear_r4: true, s2_carrier_arm: true, s2_outer_arm: true, s2_idler_wheel: true, s2_inner_idler: true,
+    drive_shaft: true, bevel_shaft: true, bevel_compound: true
+};
 
 function selectScadPart(el, part) {
     document.querySelectorAll('.part-row').forEach(e => e.classList.remove('selected'));
@@ -1902,7 +2635,7 @@ function toggleTreeNode(rowEl) {
 }
 
 function toggleTreeVis(checkbox, key) {
-    const assemblyKeys = ['root', 'racetrack', 'gear_assy', 'compound_gear', 'driven_gears'];
+    const assemblyKeys = ['root', 'set1', 'set2', 'gear_assy', 'compound_gear', 'driven_gears', 's2_gear_assy', 's2_compound_gear', 's2_driven_gears', 'drive_assy'];
     if (assemblyKeys.includes(key)) {
         // Assembly toggle: propagate to children
         const node = checkbox.closest('.tree-node');
@@ -1923,12 +2656,87 @@ function rebuild3D() {
     if (!threeInitialized) return;
     while (threeMeshGroup.children.length) threeMeshGroup.remove(threeMeshGroup.children[0]);
     const p = getP();
-    if (scadVisible.outer_rack) buildOuterRack3D(p, false);
-    if (scadVisible.inner_rack) buildInnerRack3D(p, false);
-    if (scadVisible.gear_r1) buildGearR1_3D(p);
-    if (scadVisible.gear_r2) buildGearR2_3D(p);
-    if (scadVisible.gear_r3) buildGearR3_3D(p);
-    if (scadVisible.gear_r4) buildGearR4_3D(p);
+    const thetaSlider = document.getElementById('scadThetaSlider');
+    const tFrac = parseFloat(thetaSlider.value) / 1000;
+    const depth = parseFloat(rackDepthSlider.value);
+    const baseT = parseFloat(baseThickSlider.value);
+
+    // Phase offset: when Set 1 is at mid-stance, Set 2 is at mid-swing
+    // offset = (tBot/2 + tRight + tTop/2) / tTotal
+    const t = getTimes(p);
+    const phaseOffset = (t.tBot / 2 + t.tRight + t.tTop / 2) / t.tTotal;
+
+    // X offset for Set 2: enough to clear Set 1
+    const setGap = 10;
+    const set2X = p.L + 2 * (p.R1 + baseT) + setGap;
+
+    // Configuration: compound-fixed shifts track, not gears
+    const cfg = configSelect.value;
+
+    // Inner idler shares the r4 Z layer. Extra spacer thickness needed so the
+    // outer rack (r1/r3 gear layer) clears the inner idler on the r3 shaft.
+    const innerIdlerThick = depth;   // inner idler same thickness as gears
+    const idlerClearance = 2;
+    const zShift = innerIdlerThick + idlerClearance;
+
+    // Build a set at given X offset using given visibility prefix and tFrac
+    function buildSet(xOff, prefix, setTFrac) {
+        const vis = k => scadVisible[prefix + k];
+        const state = getStateFromTime(setTFrac, p);
+
+        // In compound-fixed mode, gears stay at origin and track shifts
+        const trackShiftX = cfg === 'compound-fixed' ? -state.compX : 0;
+        const drawState = cfg === 'compound-fixed'
+            ? { ...state, compX: 0, compY: 0 }
+            : state;
+
+        const prevCount = threeMeshGroup.children.length;
+        const preRacetrackCount = threeMeshGroup.children.length;
+
+        if (vis('racetrack')) buildRacetrack3D(p, zShift);
+
+        // Shift racetrack meshes in compound-fixed mode
+        if (cfg === 'compound-fixed' && trackShiftX !== 0) {
+            for (let i = preRacetrackCount; i < threeMeshGroup.children.length; i++) {
+                threeMeshGroup.children[i].position.x += trackShiftX;
+            }
+        }
+
+        const preGearCount = threeMeshGroup.children.length;
+        if (vis('gear_r1')) buildGearR1_3D(p, drawState, depth, zShift);
+        if (vis('gear_r2')) buildGearR2_3D(p, drawState, depth, zShift);
+        if (vis('compound_spacer')) buildCompoundSpacer3D(p, drawState, depth, zShift);
+        if (vis('gear_r3')) buildGearR3_3D(p, drawState, depth, zShift);
+        if (vis('gear_r4')) buildGearR4_3D(p, drawState, depth, zShift);
+        if (vis('carrier_arm')) buildCarrierArm3D(p, drawState, depth, zShift);
+        if (vis('outer_arm')) buildOuterArm3D(p, drawState, depth, zShift);
+        if (vis('idler_wheel')) buildIdlerWheel3D(p, drawState, depth, zShift);
+        if (vis('inner_idler')) buildInnerIdlerWheel3D(p, drawState, depth, zShift);
+
+        // Offset all newly added meshes for Set 2 positioning
+        if (xOff !== 0) {
+            for (let i = prevCount; i < threeMeshGroup.children.length; i++) {
+                threeMeshGroup.children[i].position.x += xOff;
+            }
+        }
+    }
+
+    // Set 1 at x=0
+    buildSet(0, '', tFrac);
+    // Set 2 only for paired configurations (not single-set inversions)
+    if (cfg !== 'track-fixed' && cfg !== 'compound-fixed') {
+        const tFrac2 = (tFrac + phaseOffset) % 1;
+        buildSet(set2X, 's2_', tFrac2);
+    }
+
+    // Drive system (independent of sets)
+    const state1 = getStateFromTime(tFrac, p);
+    const driveState = cfg === 'compound-fixed'
+        ? { ...state1, compX: 0, compY: 0 }
+        : state1;
+    if (scadVisible.drive_shaft) buildDriveShaft3D(p, driveState, depth);
+    if (scadVisible.bevel_shaft) buildBevelShaft3D(p, driveState, depth);
+    if (scadVisible.bevel_compound) buildBevelCompound3D(p, driveState, depth);
 }
 
 function setScadView(mode) {
@@ -1991,7 +2799,7 @@ function initThreeJS() {
     threeControls.enableDamping = true;
     threeControls.dampingFactor = 0.08;
 
-    // Lighting
+    // Lighting — illuminate from both sides of the racetrack
     threeScene.add(new THREE.AmbientLight(0x404040, 0.6));
     const dl1 = new THREE.DirectionalLight(0xffffff, 0.8);
     dl1.position.set(150, 150, 250);
@@ -1999,6 +2807,12 @@ function initThreeJS() {
     const dl2 = new THREE.DirectionalLight(0xffffff, 0.3);
     dl2.position.set(-100, -100, 100);
     threeScene.add(dl2);
+    const dl3 = new THREE.DirectionalLight(0xffffff, 0.5);
+    dl3.position.set(100, 100, -200);
+    threeScene.add(dl3);
+    const dl4 = new THREE.DirectionalLight(0xffffff, 0.25);
+    dl4.position.set(-80, -80, -150);
+    threeScene.add(dl4);
 
     // Grid
     const grid = new THREE.GridHelper(600, 30, 0x1a1f26, 0x151a21);
@@ -2036,219 +2850,200 @@ function resetScadCamera() {
 }
 
 // Build 3D geometry for the outer rack
-function buildOuterRack3D(p, clear = true) {
-    if (clear) while (threeMeshGroup.children.length) threeMeshGroup.remove(threeMeshGroup.children[0]);
-
+// Build 3D geometry for the complete racetrack (inner rack + spacer + outer rack as one body)
+function buildRacetrack3D(p, zShift) {
     const depth = parseFloat(rackDepthSlider.value);
     const toothH = parseFloat(toothHeightSlider.value);
     const baseT = parseFloat(baseThickSlider.value);
     const delta = parseFloat(deltaSlider.value) * Math.PI / 180;
+    const outerR = p.R1 + baseT;
+    const arcSegs = 64;
+
     const mat = new THREE.MeshPhongMaterial({ color: 0xa855f7, transparent: true, opacity: 0.85 });
-    const matTooth = new THREE.MeshPhongMaterial({ color: 0xc084fc });
 
-    // Top straight rack base plate (y = -R1, teeth point toward y=0 i.e. downward)
-    const plateGeo = new THREE.BoxGeometry(p.L, baseT, depth);
-    const plate = new THREE.Mesh(plateGeo, mat);
-    plate.position.set(0, -(p.R1 + baseT / 2), depth / 2);
-    threeMeshGroup.add(plate);
-
-    // Teeth along top straight rack
-    const nTeeth = Math.max(12, Math.round(p.r1 / 3));
-    const mod = (2 * p.r1) / nTeeth;
-    const pitch = mod * Math.PI;
-    const nStraight = Math.floor(p.L / pitch);
-    const wTop = pitch * 0.2, wBot = pitch * 0.3;
-    const toothShape = new THREE.Shape();
-    toothShape.moveTo(-wBot, 0);
-    toothShape.lineTo(-wTop, toothH);
-    toothShape.lineTo(wTop, toothH);
-    toothShape.lineTo(wBot, 0);
-    toothShape.closePath();
-    const toothGeo = new THREE.ExtrudeGeometry(toothShape, { depth: depth, bevelEnabled: false });
-
-    for (let i = 0; i < nStraight; i++) {
-        const x = -p.L / 2 + pitch / 2 + i * pitch;
-        const tooth = new THREE.Mesh(toothGeo, matTooth);
-        tooth.position.set(x, -p.R1, 0);
-        // Teeth point inward (toward y=0 = positive y direction)
-        threeMeshGroup.add(tooth);
+    // --- Helper: build racetrack wall (annular ring) at given z, with given inner radius ---
+    function addRacetackWall(zOff, wallDepth, innerRadius) {
+        const wallThick = outerR - innerRadius;
+        // Top straight wall
+        const topGeo = new THREE.BoxGeometry(p.L, wallThick, wallDepth);
+        const topPlate = new THREE.Mesh(topGeo, mat);
+        topPlate.position.set(0, -(innerRadius + wallThick / 2), zOff + wallDepth / 2);
+        threeMeshGroup.add(topPlate);
+        // Bottom straight wall
+        const botPlate = new THREE.Mesh(topGeo, mat);
+        botPlate.position.set(0, innerRadius + wallThick / 2, zOff + wallDepth / 2);
+        threeMeshGroup.add(botPlate);
+        // Right semicircular arc (-90° to 90°)
+        const rightShape = new THREE.Shape();
+        for (let i = 0; i <= arcSegs; i++) {
+            const ang = -Math.PI / 2 + (i / arcSegs) * Math.PI;
+            if (i === 0) rightShape.moveTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+            else rightShape.lineTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+        }
+        for (let i = arcSegs; i >= 0; i--) {
+            const ang = -Math.PI / 2 + (i / arcSegs) * Math.PI;
+            rightShape.lineTo(innerRadius * Math.cos(ang), innerRadius * Math.sin(ang));
+        }
+        rightShape.closePath();
+        const rightGeo = new THREE.ExtrudeGeometry(rightShape, { depth: wallDepth, bevelEnabled: false });
+        const rightArc = new THREE.Mesh(rightGeo, mat);
+        rightArc.position.set(p.L / 2, 0, zOff);
+        threeMeshGroup.add(rightArc);
+        // Left semicircular arc (90° to 270°)
+        const leftShape = new THREE.Shape();
+        for (let i = 0; i <= arcSegs; i++) {
+            const ang = Math.PI / 2 + (i / arcSegs) * Math.PI;
+            if (i === 0) leftShape.moveTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+            else leftShape.lineTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+        }
+        for (let i = arcSegs; i >= 0; i--) {
+            const ang = Math.PI / 2 + (i / arcSegs) * Math.PI;
+            leftShape.lineTo(innerRadius * Math.cos(ang), innerRadius * Math.sin(ang));
+        }
+        leftShape.closePath();
+        const leftGeo = new THREE.ExtrudeGeometry(leftShape, { depth: wallDepth, bevelEnabled: false });
+        const leftArc = new THREE.Mesh(leftGeo, mat);
+        leftArc.position.set(-p.L / 2, 0, zOff);
+        threeMeshGroup.add(leftArc);
     }
 
-    // Right semicircular arc base
-    const arcSegs = 64;
-    // Right arc: from -90° to (90° - delta) centered at x = L/2
-    const rightStart = -Math.PI / 2;
-    const rightEnd = Math.PI / 2 - delta;
-    const rightArcShape = new THREE.Shape();
-    for (let i = 0; i <= arcSegs; i++) {
-        const ang = rightStart + (i / arcSegs) * (rightEnd - rightStart);
-        const r = p.R1 + baseT;
-        if (i === 0) rightArcShape.moveTo(r * Math.cos(ang), r * Math.sin(ang));
-        else rightArcShape.lineTo(r * Math.cos(ang), r * Math.sin(ang));
-    }
-    for (let i = arcSegs; i >= 0; i--) {
-        const ang = rightStart + (i / arcSegs) * (rightEnd - rightStart);
-        rightArcShape.lineTo(p.R1 * Math.cos(ang), p.R1 * Math.sin(ang));
-    }
-    rightArcShape.closePath();
-    const rightArcGeo = new THREE.ExtrudeGeometry(rightArcShape, { depth: depth, bevelEnabled: false });
-    const rightArc = new THREE.Mesh(rightArcGeo, mat);
-    rightArc.position.set(p.L / 2, 0, 0);
-    threeMeshGroup.add(rightArc);
-
-    // Right arc teeth
-    const rightArcLen = p.R1 * (rightEnd - rightStart);
-    const nRightTeeth = Math.floor(rightArcLen / pitch);
-    const rightAngStep = (rightEnd - rightStart) / Math.max(nRightTeeth, 1);
-    for (let i = 0; i < nRightTeeth; i++) {
-        const ang = rightStart + rightAngStep / 2 + i * rightAngStep;
-        const tooth = new THREE.Mesh(toothGeo, matTooth);
-        tooth.position.set(p.L / 2 + p.R1 * Math.cos(ang), p.R1 * Math.sin(ang), 0);
-        tooth.rotation.z = ang + Math.PI / 2;
-        threeMeshGroup.add(tooth);
+    // --- Helper: add teeth along a straight section ---
+    function addStraightTeeth(toothGeo, matTooth, pitch, yPos, zOff, flip) {
+        const nStraight = Math.floor(p.L / pitch);
+        for (let i = 0; i < nStraight; i++) {
+            const x = -p.L / 2 + pitch / 2 + i * pitch;
+            const tooth = new THREE.Mesh(toothGeo, matTooth);
+            tooth.position.set(x, yPos, zOff);
+            if (flip) tooth.rotation.z = Math.PI;
+            threeMeshGroup.add(tooth);
+        }
     }
 
-    // Left semicircular arc base
-    const leftStart = Math.PI / 2 + delta;
-    const leftEnd = 3 * Math.PI / 2;
-    const leftArcShape = new THREE.Shape();
-    for (let i = 0; i <= arcSegs; i++) {
-        const ang = leftStart + (i / arcSegs) * (leftEnd - leftStart);
-        const r = p.R1 + baseT;
-        if (i === 0) leftArcShape.moveTo(r * Math.cos(ang), r * Math.sin(ang));
-        else leftArcShape.lineTo(r * Math.cos(ang), r * Math.sin(ang));
-    }
-    for (let i = arcSegs; i >= 0; i--) {
-        const ang = leftStart + (i / arcSegs) * (leftEnd - leftStart);
-        leftArcShape.lineTo(p.R1 * Math.cos(ang), p.R1 * Math.sin(ang));
-    }
-    leftArcShape.closePath();
-    const leftArcGeo = new THREE.ExtrudeGeometry(leftArcShape, { depth: depth, bevelEnabled: false });
-    const leftArc = new THREE.Mesh(leftArcGeo, mat);
-    leftArc.position.set(-p.L / 2, 0, 0);
-    threeMeshGroup.add(leftArc);
-
-    // Left arc teeth
-    const leftArcLen = p.R1 * (leftEnd - leftStart);
-    const nLeftTeeth = Math.floor(leftArcLen / pitch);
-    const leftAngStep = (leftEnd - leftStart) / Math.max(nLeftTeeth, 1);
-    for (let i = 0; i < nLeftTeeth; i++) {
-        const ang = leftStart + leftAngStep / 2 + i * leftAngStep;
-        const tooth = new THREE.Mesh(toothGeo, matTooth);
-        tooth.position.set(-p.L / 2 + p.R1 * Math.cos(ang), p.R1 * Math.sin(ang), 0);
-        tooth.rotation.z = ang + Math.PI / 2;
-        threeMeshGroup.add(tooth);
-    }
-}
-
-// Build 3D geometry for the inner rack
-function buildInnerRack3D(p, clear = true) {
-    if (clear) while (threeMeshGroup.children.length) threeMeshGroup.remove(threeMeshGroup.children[0]);
-
-    const depth = parseFloat(rackDepthSlider.value);
-    const toothH = parseFloat(toothHeightSlider.value);
-    const baseT = parseFloat(baseThickSlider.value);
-    const delta = parseFloat(deltaSlider.value) * Math.PI / 180;
-    const mat = new THREE.MeshPhongMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.85 });
-    const matTooth = new THREE.MeshPhongMaterial({ color: 0xfbbf24 });
-
-    // Inner rack uses r2/r4 for tooth sizing
-    const nTeeth = Math.max(8, Math.round(p.r2 / 3));
-    const mod = (2 * p.r2) / nTeeth;
-    const pitch = mod * Math.PI;
-    const wTop = pitch * 0.2, wBot = pitch * 0.3;
-    const toothShape = new THREE.Shape();
-    toothShape.moveTo(-wBot, 0);
-    toothShape.lineTo(-wTop, toothH);
-    toothShape.lineTo(wTop, toothH);
-    toothShape.lineTo(wBot, 0);
-    toothShape.closePath();
-    const toothGeo = new THREE.ExtrudeGeometry(toothShape, { depth: depth, bevelEnabled: false });
-
-    // Bottom straight rack base plate (y = R2, teeth point toward y=0 i.e. upward/negative y)
-    const plateGeo = new THREE.BoxGeometry(p.L, baseT, depth);
-    const plate = new THREE.Mesh(plateGeo, mat);
-    plate.position.set(0, p.R2 + baseT / 2, depth / 2);
-    threeMeshGroup.add(plate);
-
-    // Teeth along bottom straight rack (pointing inward = negative y)
-    const nStraight = Math.floor(p.L / pitch);
-    for (let i = 0; i < nStraight; i++) {
-        const x = -p.L / 2 + pitch / 2 + i * pitch;
-        const tooth = new THREE.Mesh(toothGeo, matTooth);
-        tooth.position.set(x, p.R2, 0);
-        tooth.rotation.z = Math.PI;  // flip teeth to point inward (negative y)
-        threeMeshGroup.add(tooth);
+    // --- Helper: add teeth along an arc section ---
+    function addArcTeeth(toothGeo, matTooth, pitch, radius, cx, startAng, endAng, zOff) {
+        const arcLen = radius * (endAng - startAng);
+        const nTeeth = Math.floor(arcLen / pitch);
+        const angStep = (endAng - startAng) / Math.max(nTeeth, 1);
+        for (let i = 0; i < nTeeth; i++) {
+            const ang = startAng + angStep / 2 + i * angStep;
+            const tooth = new THREE.Mesh(toothGeo, matTooth);
+            tooth.position.set(cx + radius * Math.cos(ang), radius * Math.sin(ang), zOff);
+            tooth.rotation.z = ang + Math.PI / 2;
+            threeMeshGroup.add(tooth);
+        }
     }
 
-    // Right semicircular arc: from (-90° + delta) to 90°, radius R2, centered at x = L/2
-    const arcSegs = 64;
-    const rightStart = -Math.PI / 2 + delta;
-    const rightEnd = Math.PI / 2;
-    const rightArcShape = new THREE.Shape();
-    for (let i = 0; i <= arcSegs; i++) {
-        const ang = rightStart + (i / arcSegs) * (rightEnd - rightStart);
-        const r = p.R2 + baseT;
-        if (i === 0) rightArcShape.moveTo(r * Math.cos(ang), r * Math.sin(ang));
-        else rightArcShape.lineTo(r * Math.cos(ang), r * Math.sin(ang));
-    }
-    for (let i = arcSegs; i >= 0; i--) {
-        const ang = rightStart + (i / arcSegs) * (rightEnd - rightStart);
-        rightArcShape.lineTo(p.R2 * Math.cos(ang), p.R2 * Math.sin(ang));
-    }
-    rightArcShape.closePath();
-    const rightArcGeo = new THREE.ExtrudeGeometry(rightArcShape, { depth: depth, bevelEnabled: false });
-    const rightArc = new THREE.Mesh(rightArcGeo, mat);
-    rightArc.position.set(p.L / 2, 0, 0);
-    threeMeshGroup.add(rightArc);
+    // ===== LAYER 1: Inner rack (z=0 to z=depth), inner radius = R2 =====
+    // Inner idler shares this layer (same Z, different radial position)
+    addRacetackWall(0, depth, p.R2);
 
-    // Right arc teeth
-    const rightArcLen = p.R2 * (rightEnd - rightStart);
-    const nRightTeeth = Math.floor(rightArcLen / pitch);
-    const rightAngStep = (rightEnd - rightStart) / Math.max(nRightTeeth, 1);
-    for (let i = 0; i < nRightTeeth; i++) {
-        const ang = rightStart + rightAngStep / 2 + i * rightAngStep;
-        const tooth = new THREE.Mesh(toothGeo, matTooth);
-        tooth.position.set(p.L / 2 + p.R2 * Math.cos(ang), p.R2 * Math.sin(ang), 0);
-        tooth.rotation.z = ang + Math.PI / 2;
-        threeMeshGroup.add(tooth);
-    }
+    // Inner rack teeth (r2/r4 module)
+    const nTeethInner = Math.max(8, Math.round(p.r2 / 3));
+    const modInner = (2 * p.r2) / nTeethInner;
+    const pitchInner = modInner * Math.PI;
+    const wTopI = pitchInner * 0.2, wBotI = pitchInner * 0.3;
+    const innerToothShape = new THREE.Shape();
+    innerToothShape.moveTo(-wBotI, 0);
+    innerToothShape.lineTo(-wTopI, toothH);
+    innerToothShape.lineTo(wTopI, toothH);
+    innerToothShape.lineTo(wBotI, 0);
+    innerToothShape.closePath();
+    const innerToothGeo = new THREE.ExtrudeGeometry(innerToothShape, { depth: depth, bevelEnabled: false });
+    const matToothInner = new THREE.MeshPhongMaterial({ color: 0xc084fc });
 
-    // Left semicircular arc: from 90° to (270° - delta), radius R2, centered at x = -L/2
-    const leftStart = Math.PI / 2;
-    const leftEnd = 3 * Math.PI / 2 - delta;
-    const leftArcShape = new THREE.Shape();
-    for (let i = 0; i <= arcSegs; i++) {
-        const ang = leftStart + (i / arcSegs) * (leftEnd - leftStart);
-        const r = p.R2 + baseT;
-        if (i === 0) leftArcShape.moveTo(r * Math.cos(ang), r * Math.sin(ang));
-        else leftArcShape.lineTo(r * Math.cos(ang), r * Math.sin(ang));
-    }
-    for (let i = arcSegs; i >= 0; i--) {
-        const ang = leftStart + (i / arcSegs) * (leftEnd - leftStart);
-        leftArcShape.lineTo(p.R2 * Math.cos(ang), p.R2 * Math.sin(ang));
-    }
-    leftArcShape.closePath();
-    const leftArcGeo = new THREE.ExtrudeGeometry(leftArcShape, { depth: depth, bevelEnabled: false });
-    const leftArc = new THREE.Mesh(leftArcGeo, mat);
-    leftArc.position.set(-p.L / 2, 0, 0);
-    threeMeshGroup.add(leftArc);
+    // Bottom straight teeth (at y=R2, pointing inward)
+    addStraightTeeth(innerToothGeo, matToothInner, pitchInner, p.R2, 0, true);
+    // Right arc teeth (only meshing section: -90°+delta to 90°)
+    addArcTeeth(innerToothGeo, matToothInner, pitchInner, p.R2, p.L / 2, -Math.PI / 2 + delta, Math.PI / 2, 0);
+    // Left arc teeth (only meshing section: 90° to 270°-delta)
+    addArcTeeth(innerToothGeo, matToothInner, pitchInner, p.R2, -p.L / 2, Math.PI / 2, 3 * Math.PI / 2 - delta, 0);
 
-    // Left arc teeth
-    const leftArcLen = p.R2 * (leftEnd - leftStart);
-    const nLeftTeeth = Math.floor(leftArcLen / pitch);
-    const leftAngStep = (leftEnd - leftStart) / Math.max(nLeftTeeth, 1);
-    for (let i = 0; i < nLeftTeeth; i++) {
-        const ang = leftStart + leftAngStep / 2 + i * leftAngStep;
-        const tooth = new THREE.Mesh(toothGeo, matTooth);
-        tooth.position.set(-p.L / 2 + p.R2 * Math.cos(ang), p.R2 * Math.sin(ang), 0);
-        tooth.rotation.z = ang + Math.PI / 2;
-        threeMeshGroup.add(tooth);
-    }
+    // ===== LAYER 2: Spacer (z=depth to z=2*depth+zShift), inner radius = R1 =====
+    // Extended by zShift to accommodate inner idler on the r3 shaft
+    addRacetackWall(depth, depth + zShift, p.R1);
+
+    // ===== LAYER 3: Outer rack (z=2*depth+zShift to z=3*depth+zShift), inner radius = R1 =====
+    addRacetackWall(2 * depth + zShift, depth, p.R1);
+
+    // ===== Flanges — extrude from racetrack back face (z=0 side) for drive shaft bearings =====
+    // These are integral parts of the racetrack body, same material.
+    // The gears/teeth face is at z=3*depth (front). The back face is z=0.
+    // Flanges extrude from z=0 into -Z.
+    // Shape: annular arc (inner + outer radius), not solid semicircle, to clear bevel gears.
+    // One side has a flat cut on the outer edge for motor mounting.
+    const flangeExt = 20;              // how far the flanges extend behind the back face
+    const shaftHoleR = 4;              // drive shaft bearing hole radius
+    const flangeInnerR = outerR * 0.45; // inner radius — large enough to clear bevel gears
+    const flangeHoleMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const motorFlatX = outerR * 0.7;   // how far out the flat is from center (along local X)
+
+    // Each flange is an annular arc extruded from the back face (z=0 into -Z).
+    // Right flange at x = +L/2 (arc from -90° to 90°, 0° is the outermost point)
+    // Left flange at x = -L/2 (arc from 90° to 270°, 180° is the outermost point)
+    // Only the RIGHT flange has a motor mount flat machined at 0° (the outermost point).
+    [{ cx: p.L / 2, startAng: -Math.PI / 2, endAng: Math.PI / 2, motorFlat: true },
+     { cx: -p.L / 2, startAng: Math.PI / 2, endAng: 3 * Math.PI / 2, motorFlat: false }].forEach(({ cx, startAng, endAng, motorFlat }) => {
+        const fSegs = 64;
+        const flangeShape = new THREE.Shape();
+
+        // Outer arc — if motorFlat, clamp the local X coordinate to motorFlatX
+        // at the 0° region (outermost point of the right semicircle).
+        // In local coords of the right flange, 0° points in +X (outward from racetrack).
+        for (let i = 0; i <= fSegs; i++) {
+            const ang = startAng + (i / fSegs) * (endAng - startAng);
+            let ox = outerR * Math.cos(ang);
+            let oy = outerR * Math.sin(ang);
+            if (motorFlat && ox > motorFlatX) {
+                ox = motorFlatX;  // clamp X — creates a vertical chord (flat) at 0°
+            }
+            if (i === 0) flangeShape.moveTo(ox, oy);
+            else flangeShape.lineTo(ox, oy);
+        }
+        // Inner arc (reverse direction to close the annular shape)
+        for (let i = fSegs; i >= 0; i--) {
+            const ang = startAng + (i / fSegs) * (endAng - startAng);
+            flangeShape.lineTo(flangeInnerR * Math.cos(ang), flangeInnerR * Math.sin(ang));
+        }
+        flangeShape.closePath();
+
+        const flangeGeo = new THREE.ExtrudeGeometry(flangeShape, { depth: flangeExt, bevelEnabled: false });
+        const flange = new THREE.Mesh(flangeGeo, mat);  // same material as racetrack
+        flange.position.set(cx, 0, -flangeExt);  // extrude from z=0 into -Z
+        threeMeshGroup.add(flange);
+
+        // Shaft hole (dark cylinder along Z through flange depth)
+        const holeGeo = new THREE.CylinderGeometry(shaftHoleR, shaftHoleR, flangeExt + 0.5, 16);
+        const holeMesh = new THREE.Mesh(holeGeo, flangeHoleMat);
+        holeMesh.rotation.x = Math.PI / 2;  // align cylinder along Z
+        holeMesh.position.set(cx, 0, -flangeExt / 2);
+        threeMeshGroup.add(holeMesh);
+    });
+
+    // Outer rack teeth (r1/r3 module)
+    const nTeethOuter = Math.max(12, Math.round(p.r1 / 3));
+    const modOuter = (2 * p.r1) / nTeethOuter;
+    const pitchOuter = modOuter * Math.PI;
+    const wTopO = pitchOuter * 0.2, wBotO = pitchOuter * 0.3;
+    const outerToothShape = new THREE.Shape();
+    outerToothShape.moveTo(-wBotO, 0);
+    outerToothShape.lineTo(-wTopO, toothH);
+    outerToothShape.lineTo(wTopO, toothH);
+    outerToothShape.lineTo(wBotO, 0);
+    outerToothShape.closePath();
+    const outerToothGeo = new THREE.ExtrudeGeometry(outerToothShape, { depth: depth, bevelEnabled: false });
+    const matToothOuter = new THREE.MeshPhongMaterial({ color: 0xc084fc });
+    const zOff = 2 * depth + zShift;
+
+    // Top straight teeth (at y=-R1, pointing downward)
+    addStraightTeeth(outerToothGeo, matToothOuter, pitchOuter, -p.R1, zOff, false);
+    // Right arc teeth (meshing section: -90° to 90°-delta)
+    addArcTeeth(outerToothGeo, matToothOuter, pitchOuter, p.R1, p.L / 2, -Math.PI / 2, Math.PI / 2 - delta, zOff);
+    // Left arc teeth (meshing section: 90°+delta to 270°)
+    addArcTeeth(outerToothGeo, matToothOuter, pitchOuter, p.R1, -p.L / 2, Math.PI / 2 + delta, 3 * Math.PI / 2, zOff);
 }
 
 // Helper: build a spur gear 3D mesh (tooth profile matching drawGear)
-function buildGear3D(radius, nTeeth, depth, color, cx, cy, cz = 0) {
+function buildGear3D(radius, nTeeth, depth, color, cx, cy, cz = 0, holeRadius = null, rotZ = 0) {
     const toothHeight = Math.max(2, radius * 0.18);
     const innerR = radius - toothHeight / 2;
     const outerR = radius + toothHeight / 2;
@@ -2270,8 +3065,8 @@ function buildGear3D(radius, nTeeth, depth, color, cx, cy, cz = 0) {
     }
     shape.closePath();
 
-    // Add center hole (20% of radius)
-    const holeR = radius * 0.2;
+    // Add center hole
+    const holeR = holeRadius || radius * 0.2;
     const hole = new THREE.Path();
     for (let i = 0; i <= 32; i++) {
         const a = (i / 32) * 2 * Math.PI;
@@ -2284,133 +3079,391 @@ function buildGear3D(radius, nTeeth, depth, color, cx, cy, cz = 0) {
     const mat = new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.85 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(cx, cy, cz);
+    if (rotZ) mesh.rotation.z = rotZ;
     threeMeshGroup.add(mesh);
 }
 
-// r1 gear (compound, outer) - centered at origin, bottom layer
-function buildGearR1_3D(p) {
-    const depth = parseFloat(rackDepthSlider.value);
+// r1 gear (compound, outer/bigger) - on top layer
+function buildGearR1_3D(p, state, depth, zShift) {
     const nTeeth = Math.max(12, Math.round(p.r1 / 3));
-    buildGear3D(p.r1, nTeeth, depth, 0x60a5fa, 0, 0, 0);
+    const shaftR = p.r2 * 0.2;
+    const rot = -state.compTheta;  // compound rotation
+    buildGear3D(p.r1, nTeeth, depth, 0x60a5fa, state.compX, state.compY, 2 * depth + zShift, shaftR, rot);
 }
 
-// r2 gear (compound, inner) - centered at origin, stacked on top of r1
-function buildGearR2_3D(p) {
-    const depth = parseFloat(rackDepthSlider.value);
+// r2 gear (compound, inner/smaller) - bottom layer at z=0
+function buildGearR2_3D(p, state, depth, zShift) {
     const nTeeth = Math.max(8, Math.round(p.r2 / 3));
-    buildGear3D(p.r2, nTeeth, depth, 0x38bdf8, 0, 0, depth);
+    const shaftR = p.r2 * 0.2;
+    const rot = -state.compTheta;
+    buildGear3D(p.r2, nTeeth, depth, 0x60a5fa, state.compX, state.compY, 0, shaftR, rot);
 }
 
-// r3 gear (driven, outer) - orbits at distance r1+r3 from center
-function buildGearR3_3D(p) {
-    const depth = parseFloat(rackDepthSlider.value);
+// r3 gear (driven, outer) - meshes with r1 at z=2*depth+zShift
+function buildGearR3_3D(p, state, depth, zShift) {
     const nTeeth = Math.max(8, Math.round(p.r3 / 3));
-    // Position at right side (theta=0 default position)
-    const orbitR = p.r1 + p.r3;
-    buildGear3D(p.r3, nTeeth, depth, 0xa855f7, orbitR, 0, 0);
+    const bx = state.compX + state.radX * p.orbitB;
+    const by = state.compY + state.radY * p.orbitB;
+    const rot = state.compTheta * (p.r1 / p.r3);
+    buildGear3D(p.r3, nTeeth, depth, 0xa855f7, bx, by, 2 * depth + zShift, null, rot);
 }
 
-// r4 gear (driven, inner) - orbits at distance r2+r4, same Z plane as r2
-function buildGearR4_3D(p) {
-    const depth = parseFloat(rackDepthSlider.value);
+// r4 gear (driven, inner) - meshes with r2 at z=0
+function buildGearR4_3D(p, state, depth, zShift) {
     const nTeeth = Math.max(6, Math.round(p.r4 / 3));
-    const orbitR = p.r2 + p.r4;
-    buildGear3D(p.r4, nTeeth, depth, 0xf59e0b, orbitR, 0, depth);
+    const dx = state.compX + state.radX * p.orbitD;
+    const dy = state.compY + state.radY * p.orbitD;
+    const rot = state.compTheta * (p.r2 / p.r4);
+    buildGear3D(p.r4, nTeeth, depth, 0xf59e0b, dx, dy, 0, null, rot);
 }
 
-function generateInnerRack(p) {
+// Compound gear spacer — cylinder between r2 (z=0) and r1 (z=2*depth+zShift)
+// Extended by zShift to accommodate inner idler clearance
+function buildCompoundSpacer3D(p, state, depth, zShift) {
+    const shaftR = p.r2 * 0.2;
+    const outerR = p.r2 * 0.45;
+    const spacerH = depth + zShift;  // extended spacer
+
+    // Outer cylinder
+    const outerGeo = new THREE.CylinderGeometry(outerR, outerR, spacerH, 32);
+    const mat = new THREE.MeshPhongMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.85 });
+    const mesh = new THREE.Mesh(outerGeo, mat);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.position.set(state.compX, state.compY, depth + spacerH / 2);
+    threeMeshGroup.add(mesh);
+
+    // Shaft hole (dark cylinder to fake the hole)
+    const holeGeo = new THREE.CylinderGeometry(shaftR, shaftR, spacerH + 0.2, 16);
+    const holeMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+    holeMesh.rotation.x = Math.PI / 2;
+    holeMesh.position.set(state.compX, state.compY, depth + spacerH / 2);
+    threeMeshGroup.add(holeMesh);
+}
+
+// Carrier arm — connects compound center to driven gear shafts
+function buildCarrierArm3D(p, state, depth, zShift) {
+    const armColor = 0x10b981;
+    const mat = new THREE.MeshPhongMaterial({ color: armColor, transparent: true, opacity: 0.85 });
+    const spacerOuterR = p.r2 * 0.45;        // spacer outer radius (must match spacer)
+    const gearShaftR = p.r2 * 0.2;           // gear shaft hole radius
+    const centerHoleR = spacerOuterR + 1;    // arm center hole: clearance around spacer
+    const armW = (spacerOuterR + 1) * 2.5;   // arm width: wider than spacer diameter
+    const clearance = 1;                      // clearance on each side
+    const armThick = depth - 2 * clearance;   // slightly thinner than spacer
+
+    const orbitB = p.orbitB;  // r1+r3 distance for r3 shaft
+    const orbitD = p.orbitD;  // r2+r4 distance for r4 shaft
+    const armLen = Math.max(orbitB, orbitD);
+
+    // Build arm shape in 2D (along X axis from 0 to armLen)
+    const armShape = new THREE.Shape();
+    armShape.moveTo(0, -armW / 2);
+    armShape.lineTo(armLen, -armW / 2);
+    armShape.arc(0, armW / 2, armW / 2, -Math.PI / 2, Math.PI / 2, false);
+    armShape.lineTo(0, armW / 2);
+    armShape.arc(0, -armW / 2, armW / 2, Math.PI / 2, -Math.PI / 2, false);
+    armShape.closePath();
+
+    // Center hole — must be bigger than spacer outer diameter
+    const centerHole = new THREE.Path();
+    for (let i = 0; i <= 32; i++) {
+        const a = (i / 32) * 2 * Math.PI;
+        if (i === 0) centerHole.moveTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
+        else centerHole.lineTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
+    }
+    armShape.holes.push(centerHole);
+
+    const armGeo = new THREE.ExtrudeGeometry(armShape, { depth: armThick, bevelEnabled: false });
+    const armMesh = new THREE.Mesh(armGeo, mat);
+
+    // Position arm just below r1 gear (offset by gearClearance from r1 bottom face)
+    // r1 bottom face is at z = 2*depth + zShift
+    const angle = Math.atan2(state.radY, state.radX);
+    const gearClearance = 2;
+    const armZ = 2 * depth + zShift - gearClearance - armThick;  // arm top near r1
+    armMesh.position.set(state.compX, state.compY, armZ);
+    armMesh.rotation.z = angle;
+    threeMeshGroup.add(armMesh);
+
+    // Shaft pegs — each sized to fit its gear's hole (radius * 0.2)
+    const pegMat = new THREE.MeshPhongMaterial({ color: 0x6ee7b7 });
+
+    // Shaft peg for r4 (extends down from arm to r4 gear at z=0)
+    const pegR4 = p.r4 * 0.2 * 0.95;  // snug fit in r4 hole
+    const pegH4 = armZ;  // from arm bottom down to z=0
+    const r4PegGeo = new THREE.CylinderGeometry(pegR4, pegR4, pegH4, 16);
+    const r4Peg = new THREE.Mesh(r4PegGeo, pegMat);
+    r4Peg.rotation.x = Math.PI / 2;
+    const r4x = state.compX + state.radX * orbitD;
+    const r4y = state.compY + state.radY * orbitD;
+    r4Peg.position.set(r4x, r4y, pegH4 / 2);
+    threeMeshGroup.add(r4Peg);
+
+    // Shaft peg for r3 — extends UP from carrier arm through r3, r1, into outer arm
+    const pegR3 = p.r3 * 0.2 * 0.95;  // snug fit in r3 hole
+    const armTop = armZ + armThick;
+    const outerArmTop = 3 * depth + zShift + gearClearance + depth;  // top of outer arm
+    const pegH3Up = outerArmTop - armTop;
+    const r3UpPegGeo = new THREE.CylinderGeometry(pegR3, pegR3, pegH3Up, 16);
+    const r3UpPeg = new THREE.Mesh(r3UpPegGeo, pegMat);
+    r3UpPeg.rotation.x = Math.PI / 2;
+    const r3x = state.compX + state.radX * orbitB;
+    const r3y = state.compY + state.radY * orbitB;
+    r3UpPeg.position.set(r3x, r3y, armTop + pegH3Up / 2);
+    threeMeshGroup.add(r3UpPeg);
+
+    // Shaft peg for r3 — extends DOWN from carrier arm through inner idler wheel
+    // Inner idler sits just below the arm in the spacer region
+    const innerIdlerGearClear = 2;
+    const innerIdlerTopZ = armZ - innerIdlerGearClear;
+    const innerIdlerBottomZ = innerIdlerTopZ - depth;  // inner idler thickness = depth
+    const pegH3Down = armZ - innerIdlerBottomZ;  // from arm bottom to inner idler bottom
+    const r3DownPegGeo = new THREE.CylinderGeometry(pegR3, pegR3, pegH3Down, 16);
+    const r3DownPeg = new THREE.Mesh(r3DownPegGeo, pegMat);
+    r3DownPeg.rotation.x = Math.PI / 2;
+    r3DownPeg.position.set(r3x, r3y, innerIdlerBottomZ + pegH3Down / 2);
+    threeMeshGroup.add(r3DownPeg);
+}
+
+// Outer arm — sits on outer side (above r1/r3 plane), holds outer idler wheel
+function buildOuterArm3D(p, state, depth, zShift) {
+    const mat = new THREE.MeshPhongMaterial({ color: 0xf472b6, transparent: true, opacity: 0.85 });
+    const baseT = parseFloat(baseThickSlider.value);
+    const compShaftR = p.r2 * 0.2;       // compound shaft radius
+    const centerHoleR = compShaftR * 1.05; // clearance around compound shaft
+    const r3ShaftR = p.r3 * 0.2;
+    const r3HoleR = r3ShaftR * 0.95 * 1.02;  // just slightly bigger than peg     // clearance around r3 shaft
+    const orbitB = p.orbitB;
+
+    // Idler rolls on outside of outer rack
+    const idlerR = p.r3;
+    const idlerDist = p.R1 + baseT + idlerR;
+
+    const armW = Math.max(centerHoleR * 4, r3HoleR * 4, idlerR * 0.5);
+    const gearClearance = 2;              // clearance between r1 gear top and arm bottom
+    const armThick = depth;
+    const armLen = idlerDist;
+
+    // r1 gear top face is at z=3*depth+zShift, so arm bottom = 3*depth+zShift + gearClearance
+    const armZ = 3 * depth + zShift + gearClearance;
+
+    // Arm shape
+    const armShape = new THREE.Shape();
+    armShape.moveTo(0, -armW / 2);
+    armShape.lineTo(armLen, -armW / 2);
+    armShape.arc(0, armW / 2, armW / 2, -Math.PI / 2, Math.PI / 2, false);
+    armShape.lineTo(0, armW / 2);
+    armShape.arc(0, -armW / 2, armW / 2, Math.PI / 2, -Math.PI / 2, false);
+    armShape.closePath();
+
+    // Center hole (compound shaft diameter with clearance)
+    const hole1 = new THREE.Path();
+    for (let i = 0; i <= 32; i++) {
+        const a = (i / 32) * 2 * Math.PI;
+        if (i === 0) hole1.moveTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
+        else hole1.lineTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
+    }
+    armShape.holes.push(hole1);
+
+    // r3 shaft hole
+    const hole2 = new THREE.Path();
+    for (let i = 0; i <= 32; i++) {
+        const a = (i / 32) * 2 * Math.PI;
+        if (i === 0) hole2.moveTo(orbitB + Math.cos(a) * r3HoleR, Math.sin(a) * r3HoleR);
+        else hole2.lineTo(orbitB + Math.cos(a) * r3HoleR, Math.sin(a) * r3HoleR);
+    }
+    armShape.holes.push(hole2);
+
+    const armGeo = new THREE.ExtrudeGeometry(armShape, { depth: armThick, bevelEnabled: false });
+    const armMesh = new THREE.Mesh(armGeo, mat);
+
+    const angle = Math.atan2(state.radY, state.radX);
+    armMesh.position.set(state.compX, state.compY, armZ);
+    armMesh.rotation.z = angle;
+    threeMeshGroup.add(armMesh);
+
+    // Idler shaft peg — extends from arm down to idler wheel
+    const idlerPegR = idlerR * 0.2 * 0.95;
+    const pegMat = new THREE.MeshPhongMaterial({ color: 0xfda4af });
+    // Outer idler wheel is at rack midplane: z = 2*depth+zShift to 3*depth+zShift
+    const idlerBottom = 2 * depth + zShift;
+    const pegH = armZ + armThick - idlerBottom;  // from arm top down to wheel bottom
+    const pegGeo = new THREE.CylinderGeometry(idlerPegR, idlerPegR, pegH, 16);
+    const peg = new THREE.Mesh(pegGeo, pegMat);
+    peg.rotation.x = Math.PI / 2;
+    const ix = state.compX + state.radX * idlerDist;
+    const iy = state.compY + state.radY * idlerDist;
+    peg.position.set(ix, iy, idlerBottom + pegH / 2);
+    threeMeshGroup.add(peg);
+}
+
+// Outer idler wheel — rolls on outside of outer rack, midplane aligned with rack midplane
+function buildIdlerWheel3D(p, state, depth, zShift) {
+    const baseT = parseFloat(baseThickSlider.value);
+    const idlerR = p.r3;
+    const idlerDist = p.R1 + baseT + idlerR;
+
+    // Outer rack: z=2*depth+zShift to z=3*depth+zShift, midplane = 2.5*depth+zShift
+    const rackMidZ = 2 * depth + zShift + depth / 2;
+    const wheelThick = depth;  // same as rack thickness
+
+    const mat = new THREE.MeshPhongMaterial({ color: 0xfb923c, transparent: true, opacity: 0.85 });
+    const geo = new THREE.CylinderGeometry(idlerR, idlerR, wheelThick, 32);
+    const wheel = new THREE.Mesh(geo, mat);
+    wheel.rotation.x = Math.PI / 2;
+
+    const angle = Math.atan2(state.radY, state.radX);
+    const ix = state.compX + Math.cos(angle) * idlerDist;
+    const iy = state.compY + Math.sin(angle) * idlerDist;
+    wheel.position.set(ix, iy, rackMidZ);
+    threeMeshGroup.add(wheel);
+
+    // Hub hole
+    const holeR = idlerR * 0.2;
+    const holeMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const holeGeo = new THREE.CylinderGeometry(holeR, holeR, wheelThick + 0.2, 16);
+    const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+    holeMesh.rotation.x = Math.PI / 2;
+    holeMesh.position.set(ix, iy, rackMidZ);
+    threeMeshGroup.add(holeMesh);
+}
+
+// Inner idler wheel — coaxial with r3, rolls on inside of R1 wall
+// Positioned just below the carrier arm in the spacer region
+// Radius reduced to avoid interference with r4
+function buildInnerIdlerWheel3D(p, state, depth, zShift) {
+    // Max radius before hitting r4: distance between r3 center and r4 outer edge
+    const maxR = p.orbitB - p.orbitD - p.r4 - 1;  // 1 unit clearance
+    const idlerR = Math.max(3, maxR);  // minimum 3 to be visible
+    const wheelThick = depth;
+    // Position just below the carrier arm (offset by clearance)
+    const clearance = 1;
+    const armThick = depth - 2 * clearance;
+    const gearClearance = 2;
+    const armZ = 2 * depth + zShift - gearClearance - armThick;
+    const idlerTopZ = armZ - gearClearance;  // clearance below arm
+    const wheelMidZ = idlerTopZ - wheelThick / 2;
+
+    const mat = new THREE.MeshPhongMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
+    const geo = new THREE.CylinderGeometry(idlerR, idlerR, wheelThick, 32);
+    const wheel = new THREE.Mesh(geo, mat);
+    wheel.rotation.x = Math.PI / 2;
+
+    // Same position as r3 gear (coaxial, at orbitB from compound center)
+    const angle = Math.atan2(state.radY, state.radX);
+    const ix = state.compX + Math.cos(angle) * p.orbitB;
+    const iy = state.compY + Math.sin(angle) * p.orbitB;
+    wheel.position.set(ix, iy, wheelMidZ);
+    threeMeshGroup.add(wheel);
+
+    // Hub hole
+    const holeR = Math.min(idlerR * 0.35, p.r3 * 0.2);
+    const holeMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const holeGeo = new THREE.CylinderGeometry(holeR, holeR, wheelThick + 0.2, 16);
+    const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+    holeMesh.rotation.x = Math.PI / 2;
+    holeMesh.position.set(ix, iy, wheelMidZ);
+    threeMeshGroup.add(holeMesh);
+}
+
+// ============================================================
+// Drive System — shaft + bevel gears
+// ============================================================
+// The drive shaft runs parallel to the racetrack straights (along X),
+// positioned behind the racetrack back face (z=0 side) at y=0, z = -flangeExt/2.
+// It passes through bearing holes in the racetrack flanges at x = ±L/2.
+// The compound gear's shaft (perpendicular, along Z) carries a bevel gear
+// that meshes with a bevel gear sliding along the horizontal drive shaft.
+
+function buildDriveShaft3D(p, state, depth) {
+    const baseT = parseFloat(baseThickSlider.value);
+    const outerR = p.R1 + baseT;
+    const shaftR = 3;  // drive shaft radius
+    const flangeExt = 20;
+    const shaftZ = -flangeExt / 2;  // centered in the flanges, behind z=0 face
+    const shaftLen = p.L + 2 * outerR + 40;    // extends beyond racetrack ends
+
+    const mat = new THREE.MeshPhongMaterial({ color: 0xe879f9, transparent: true, opacity: 0.8 });
+    const geo = new THREE.CylinderGeometry(shaftR, shaftR, shaftLen, 16);
+    const shaft = new THREE.Mesh(geo, mat);
+    // Cylinder default is along Y — rotate to lie along X
+    shaft.rotation.z = Math.PI / 2;
+    shaft.position.set(0, 0, shaftZ);  // at y=0 (racetrack midplane), behind back face
+    threeMeshGroup.add(shaft);
+}
+
+function buildBevelShaft3D(p, state, depth) {
+    const flangeExt = 20;
+    const shaftZ = -flangeExt / 2;  // drive shaft Z position (behind z=0 face)
+    const bevelR = 12;
+    const bevelH = 10;
+
+    const mat = new THREE.MeshPhongMaterial({ color: 0xc084fc, transparent: true, opacity: 0.85 });
+
+    // Bevel gear on drive shaft — cone with base at shaft, tip pointing toward compound (+Z toward racetrack)
+    const geo = new THREE.ConeGeometry(bevelR, bevelH, 20);
+    const bevel = new THREE.Mesh(geo, mat);
+    // Cone tip at +Y by default. We want tip pointing toward +Z (toward racetrack).
+    // Rotate -90° around X: tip goes from +Y to +Z
+    bevel.rotation.x = -Math.PI / 2;
+    bevel.position.set(state.compX, 0, shaftZ + bevelH / 2);
+    threeMeshGroup.add(bevel);
+}
+
+function buildBevelCompound3D(p, state, depth) {
+    const bevelR = 12;
+    const bevelH = 10;
+
+    const mat = new THREE.MeshPhongMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.85 });
+
+    // Bevel gear on compound shaft — cone with base at z=0 (back face), tip pointing toward drive shaft (-Z)
+    const geo = new THREE.ConeGeometry(bevelR, bevelH, 20);
+    const bevel = new THREE.Mesh(geo, mat);
+    // Cone tip at +Y by default. We want tip pointing toward -Z (toward drive shaft).
+    // Rotate +90° around X: tip goes from +Y to -Z
+    bevel.rotation.x = Math.PI / 2;
+    bevel.position.set(state.compX, 0, -bevelH / 2);
+    threeMeshGroup.add(bevel);
+}
+
+function generateRacetrack(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const toothH = parseFloat(toothHeightSlider.value);
     const baseT = parseFloat(baseThickSlider.value);
     const delta = parseFloat(deltaSlider.value);
-    const nTeeth = Math.max(8, Math.round(p.r2 / 3));
-    const mod = (2 * p.r2) / nTeeth;
+    const nTeethInner = Math.max(8, Math.round(p.r2 / 3));
+    const modInner = (2 * p.r2) / nTeethInner;
+    const nTeethOuter = Math.max(12, Math.round(p.r1 / 3));
+    const modOuter = (2 * p.r1) / nTeethOuter;
 
-    return `// Mechanism 61 - Inner Rack
-// Generated from mechanism parameters
-// Rack for inner driven gear (r4=${p.r4.toFixed(1)})
+    return `// Mechanism 61 - Racetrack (Complete Body)
+// Combined inner rack + spacer + outer rack as one solid part
+// Inner rack at z=0, spacer at z=depth, outer rack at z=2*depth
 
 // --- Parameters ---
-R2 = ${p.R2.toFixed(2)};           // inner track radius
+R1 = ${p.R1.toFixed(2)};           // outer track radius (r1 tooth face)
+R2 = ${p.R2.toFixed(2)};           // inner track radius (r4 tooth face)
 L  = ${p.L.toFixed(2)};            // rack length (straight section)
 delta = ${delta};                   // offset angle (degrees)
-depth = ${depth};                   // extrusion depth (z)
+depth = ${depth};                   // single layer extrusion depth
 tooth_h = ${toothH};                // tooth height
-base_t = ${baseT};                  // base thickness (below teeth)
-mod = ${mod.toFixed(3)};            // gear module (from r2)
-n_teeth_r2 = ${nTeeth};             // number of teeth on r2
+base_t = ${baseT};                  // base thickness
+mod_inner = ${modInner.toFixed(3)}; // gear module (inner, from r2)
+mod_outer = ${modOuter.toFixed(3)}; // gear module (outer, from r1)
 
 // Derived
-pitch = mod * PI;                   // circular pitch
-half_pitch = pitch / 2;
+outer_r = R1 + base_t;             // outer wall radius (same for all layers)
+pitch_inner = mod_inner * PI;
+pitch_outer = mod_outer * PI;
+half_pitch_inner = pitch_inner / 2;
+half_pitch_outer = pitch_outer / 2;
+total_z = 3 * depth;               // total height of racetrack
 
 $fn = 120;
 
 // --- Modules ---
 
-// Single rack tooth (2D cross-section)
-module rack_tooth_2d() {
-    w_top = half_pitch * 0.4;
-    w_bot = half_pitch * 0.6;
-    polygon([
-        [-w_bot/2, 0],
-        [-w_top/2, tooth_h],
-        [ w_top/2, tooth_h],
-        [ w_bot/2, 0]
-    ]);
-}
-
-// Straight rack section with teeth on the inside face
-module straight_rack(length, y_pos) {
-    n = floor(length / pitch);
-    // Base plate
-    translate([0, y_pos, 0])
-        linear_extrude(depth)
-            translate([-length/2, 0])
-                square([length, base_t]);
-
-    // Teeth along inner face
-    for (i = [0 : n-1]) {
-        x = -length/2 + pitch/2 + i * pitch;
-        translate([x, y_pos, 0])
-            linear_extrude(depth)
-                mirror([0, y_pos > 0 ? 1 : 0, 0])
-                    rack_tooth_2d();
-    }
-}
-
-// Semicircular arc rack section with teeth on inner face
-module arc_rack(cx, start_ang, end_ang) {
-    arc_len = R2 * abs(end_ang - start_ang) * PI / 180;
-    n = floor(arc_len / pitch);
-    ang_step = (end_ang - start_ang) / max(n, 1);
-
-    // Base arc (annular sector)
-    translate([cx, 0, 0])
-        linear_extrude(depth)
-            difference() {
-                intersection() {
-                    circle(r = R2 + base_t);
-                    rotate([0, 0, min(start_ang, end_ang)])
-                        pie_slice(abs(end_ang - start_ang), R2 + base_t + 1);
-                }
-                circle(r = R2);
-            }
-
-    // Teeth along arc (inner face)
-    for (i = [0 : n-1]) {
-        ang = start_ang + ang_step/2 + i * ang_step;
-        translate([cx, 0, 0])
-            rotate([0, 0, ang])
-                translate([R2, 0, 0])
-                    rotate([0, 0, 90])
-                        linear_extrude(depth)
-                            mirror([0, 1, 0])
-                                rack_tooth_2d();
-    }
-}
-
-// Pie slice helper for intersection
 module pie_slice(angle, r) {
     if (angle <= 180) {
         intersection() {
@@ -2431,15 +3484,104 @@ module pie_slice(angle, r) {
     }
 }
 
+// Racetrack wall: annular ring with given inner radius
+module racetrack_layer(z_off, layer_depth, inner_r) {
+    translate([0, 0, z_off]) {
+        wall = outer_r - inner_r;
+        // Top straight wall
+        translate([-L/2, -outer_r, 0])
+            cube([L, wall, layer_depth]);
+        // Bottom straight wall
+        translate([-L/2, inner_r, 0])
+            cube([L, wall, layer_depth]);
+        // Right semicircular arc
+        translate([L/2, 0, 0])
+            linear_extrude(layer_depth)
+                difference() {
+                    intersection() {
+                        circle(r = outer_r);
+                        rotate([0, 0, -90]) pie_slice(180, outer_r + 1);
+                    }
+                    circle(r = inner_r);
+                }
+        // Left semicircular arc
+        translate([-L/2, 0, 0])
+            linear_extrude(layer_depth)
+                difference() {
+                    intersection() {
+                        circle(r = outer_r);
+                        rotate([0, 0, 90]) pie_slice(180, outer_r + 1);
+                    }
+                    circle(r = inner_r);
+                }
+    }
+}
+
+// Inner rack tooth (r4 module)
+module inner_tooth_2d() {
+    w_top = half_pitch_inner * 0.4;
+    w_bot = half_pitch_inner * 0.6;
+    polygon([[-w_bot/2, 0], [-w_top/2, tooth_h], [w_top/2, tooth_h], [w_bot/2, 0]]);
+}
+
+// Outer rack tooth (r1 module)
+module outer_tooth_2d() {
+    w_top = half_pitch_outer * 0.4;
+    w_bot = half_pitch_outer * 0.6;
+    polygon([[-w_bot/2, 0], [-w_top/2, tooth_h], [w_top/2, tooth_h], [w_bot/2, 0]]);
+}
+
+// Straight teeth row
+module straight_teeth(pitch, y_pos, z_off, layer_depth, flip) {
+    n = floor(L / pitch);
+    for (i = [0 : n-1]) {
+        x = -L/2 + pitch/2 + i * pitch;
+        translate([x, y_pos, z_off])
+            linear_extrude(layer_depth)
+                mirror([0, flip ? 1 : 0, 0])
+                    if (pitch == pitch_inner) inner_tooth_2d();
+                    else outer_tooth_2d();
+    }
+}
+
+// Arc teeth
+module arc_teeth(pitch, radius, cx, start_ang, end_ang, z_off, layer_depth, is_inner) {
+    arc_len = radius * abs(end_ang - start_ang) * PI / 180;
+    n = floor(arc_len / pitch);
+    ang_step = (end_ang - start_ang) / max(n, 1);
+    for (i = [0 : n-1]) {
+        ang = start_ang + ang_step/2 + i * ang_step;
+        translate([cx, 0, z_off])
+            rotate([0, 0, ang])
+                translate([radius, 0, 0])
+                    rotate([0, 0, 90])
+                        linear_extrude(layer_depth)
+                            mirror([0, 1, 0])
+                                if (is_inner) inner_tooth_2d();
+                                else outer_tooth_2d();
+    }
+}
+
 // --- Assembly ---
-// Bottom straight rack (inner, at y = R2)
-straight_rack(L, R2);
 
-// Right semicircular arc
-arc_rack(L/2, -90 + delta, 90);
+// Layer 1: Inner rack (z=0 to depth), inner radius = R2
+racetrack_layer(0, depth, R2);
 
-// Left semicircular arc
-arc_rack(-L/2, 90, 270 - delta);
+// Inner rack teeth (bottom straight + arcs, meshing sections only)
+straight_teeth(pitch_inner, R2, 0, depth, true);
+arc_teeth(pitch_inner, R2, L/2, -90 + delta, 90, 0, depth, true);
+arc_teeth(pitch_inner, R2, -L/2, 90, 270 - delta, 0, depth, true);
+
+// Layer 2: Spacer (z=depth to 2*depth), inner radius = R1
+racetrack_layer(depth, depth, R1);
+
+// Layer 3: Outer rack (z=2*depth to 3*depth), inner radius = R1
+racetrack_layer(2 * depth, depth, R1);
+
+// Outer rack teeth (top straight + arcs, meshing sections only)
+straight_teeth(pitch_outer, -R1, 2 * depth, depth, false);
+arc_teeth(pitch_outer, R1, L/2, -90, 90 - delta, 2 * depth, depth, false);
+arc_teeth(pitch_outer, R1, -L/2, 90 + delta, 270, 2 * depth, depth, false);
 `;
 }
 
@@ -2506,13 +3648,39 @@ spur_gear();
 function generateGearR1(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const nTeeth = Math.max(12, Math.round(p.r1 / 3));
-    return generateSpurGear(`r₁ Gear (Compound, Outer) — r₁=${p.r1.toFixed(1)}`, p.r1, nTeeth, depth, p.r1 * 0.2);
+    const shaftR = p.r2 * 0.2;  // same shaft as r2
+    return generateSpurGear(`r₁ Gear (Compound, Outer) — r₁=${p.r1.toFixed(1)}`, p.r1, nTeeth, depth, shaftR);
 }
 
 function generateGearR2(p) {
     const depth = parseFloat(rackDepthSlider.value);
     const nTeeth = Math.max(8, Math.round(p.r2 / 3));
-    return generateSpurGear(`r₂ Gear (Compound, Inner) — r₂=${p.r2.toFixed(1)}`, p.r2, nTeeth, depth, p.r2 * 0.2);
+    const shaftR = p.r2 * 0.2;  // same shaft as r1
+    return generateSpurGear(`r₂ Gear (Compound, Inner) — r₂=${p.r2.toFixed(1)}`, p.r2, nTeeth, depth, shaftR);
+}
+
+function generateCompoundSpacer(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const shaftR = p.r2 * 0.2;
+    const outerR = p.r2 * 0.45;
+    const spacerH = depth;
+    return `// Mechanism 61 - Compound Gear Spacer
+// Connects r₁ and r₂ gears on the same shaft
+
+// --- Parameters ---
+outer_r = ${outerR.toFixed(2)};       // spacer outer radius
+hole_r = ${shaftR.toFixed(2)};        // shaft hole radius (matches gears)
+height = ${spacerH.toFixed(2)};       // spacer height
+
+$fn = 64;
+
+// --- Assembly ---
+difference() {
+    cylinder(r = outer_r, h = height);
+    translate([0, 0, -1])
+        cylinder(r = hole_r, h = height + 2);
+}
+`;
 }
 
 function generateGearR3(p) {
@@ -2527,6 +3695,186 @@ function generateGearR4(p) {
     return generateSpurGear(`r₄ Gear (Driven, Inner) — r₄=${p.r4.toFixed(1)}`, p.r4, nTeeth, depth, p.r4 * 0.2);
 }
 
+function generateCarrierArm(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const spacerOuterR = p.r2 * 0.45;
+    const gearShaftR = p.r2 * 0.2;
+    const centerHoleR = spacerOuterR + 1;
+    const armW = (spacerOuterR + 1) * 2.5;
+    const clearance = 1;
+    const armThick = depth - 2 * clearance;
+    const orbitB = p.orbitB;
+    const orbitD = p.orbitD;
+    const armLen = Math.max(orbitB, orbitD);
+    const pegR3 = p.r3 * 0.2 * 0.95;
+    const pegR4 = p.r4 * 0.2 * 0.95;
+
+    return `// Mechanism 61 - Carrier Arm
+// Holds driven gears at orbit distances from compound center
+// Center hole for compound gear spacer to pass through
+// r₃ shaft peg on top side, r₄ shaft peg on bottom side
+
+// --- Parameters ---
+arm_len = ${armLen.toFixed(2)};         // arm length (max orbit distance)
+arm_w = ${armW.toFixed(2)};             // arm width (wider than spacer)
+arm_thick = ${armThick.toFixed(2)};     // arm thickness (spacer - clearance)
+center_hole_r = ${centerHoleR.toFixed(2)};  // center hole (spacer outer + clearance)
+orbit_B = ${orbitB.toFixed(2)};          // r₃ shaft distance (r₁+r₃)
+orbit_D = ${orbitD.toFixed(2)};          // r₄ shaft distance (r₂+r₄)
+peg_r3 = ${pegR3.toFixed(2)};            // r₃ shaft peg radius (fits r₃ hole)
+peg_r4 = ${pegR4.toFixed(2)};            // r₄ shaft peg radius (fits r₄ hole)
+peg_h = ${depth};                        // shaft peg height
+
+$fn = 64;
+
+// --- Modules ---
+
+module arm_body() {
+    difference() {
+        linear_extrude(arm_thick)
+            hull() {
+                // Hub end
+                circle(r = arm_w / 2);
+                // Far end
+                translate([arm_len, 0])
+                    circle(r = arm_w / 2);
+            }
+        // Center hole for compound spacer
+        translate([0, 0, -1])
+            linear_extrude(arm_thick + 2)
+                circle(r = center_hole_r);
+    }
+}
+
+module shaft_peg(x_pos, z_offset, r) {
+    translate([x_pos, 0, z_offset])
+        cylinder(r = r, h = peg_h);
+}
+
+// --- Assembly ---
+arm_body();
+
+// r₄ shaft peg (extends downward from arm bottom)
+shaft_peg(orbit_D, -peg_h, peg_r4);
+
+// r₃ shaft peg (extends upward from arm top)
+shaft_peg(orbit_B, arm_thick, peg_r3);
+`;
+}
+
+function generateOuterArm(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const baseT = parseFloat(baseThickSlider.value);
+    const compShaftR = p.r2 * 0.2;
+    const centerHoleR = compShaftR * 1.05;
+    const r3ShaftR = p.r3 * 0.2;
+    const r3HoleR = r3ShaftR * 0.95 * 1.02;  // just slightly bigger than peg
+    const orbitB = p.orbitB;
+    const idlerR = p.r3;
+    const idlerDist = p.R1 + baseT + idlerR;
+    const armW = Math.max(centerHoleR * 4, r3HoleR * 4, idlerR * 0.5);
+    const armThick = depth;
+    const idlerPegR = idlerR * 0.2 * 0.95;
+
+    return `// Mechanism 61 - Outer Arm
+// Sits above r₁/r₃ plane, holds idler wheel on outer track
+// Holes for compound shaft and r₃ shaft
+
+// --- Parameters ---
+arm_len = ${idlerDist.toFixed(2)};        // arm length (to idler center)
+arm_w = ${armW.toFixed(2)};               // arm width
+arm_thick = ${armThick.toFixed(2)};       // arm thickness
+center_hole_r = ${centerHoleR.toFixed(2)};  // compound shaft clearance hole
+r3_hole_r = ${r3HoleR.toFixed(2)};        // r₃ shaft hole
+orbit_B = ${orbitB.toFixed(2)};            // r₃ shaft distance
+idler_dist = ${idlerDist.toFixed(2)};     // idler center distance
+idler_peg_r = ${idlerPegR.toFixed(2)};    // idler shaft peg radius
+peg_h = ${depth};
+
+$fn = 64;
+
+module outer_arm_body() {
+    difference() {
+        linear_extrude(arm_thick)
+            hull() {
+                circle(r = arm_w / 2);
+                translate([arm_len, 0])
+                    circle(r = arm_w / 2);
+            }
+        // Center hole
+        translate([0, 0, -1])
+            linear_extrude(arm_thick + 2)
+                circle(r = center_hole_r);
+        // r₃ shaft hole
+        translate([orbit_B, 0, -1])
+            linear_extrude(arm_thick + 2)
+                circle(r = r3_hole_r);
+    }
+}
+
+// --- Assembly ---
+outer_arm_body();
+
+// Idler shaft peg (extends upward)
+translate([idler_dist, 0, arm_thick])
+    cylinder(r = idler_peg_r, h = peg_h);
+`;
+}
+
+function generateIdlerWheel(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const clearance = 1;
+    const armThick = depth - 2 * clearance;
+    const idlerR = p.r3;
+    const holeR = idlerR * 0.2;
+
+    return `// Mechanism 61 - Idler Wheel
+// Rolls on outside of outer racetrack
+// Plain wheel (no teeth)
+
+// --- Parameters ---
+idler_r = ${idlerR.toFixed(2)};     // wheel radius
+hole_r = ${holeR.toFixed(2)};       // shaft hole
+thickness = ${armThick.toFixed(2)}; // wheel thickness
+
+$fn = 64;
+
+// --- Assembly ---
+difference() {
+    cylinder(r = idler_r, h = thickness);
+    translate([0, 0, -1])
+        cylinder(r = hole_r, h = thickness + 2);
+}
+`;
+}
+
+function generateInnerIdlerWheel(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const maxR = p.orbitB - p.orbitD - p.r4 - 1;
+    const idlerR = Math.max(3, maxR);
+    const holeR = Math.min(idlerR * 0.35, p.r3 * 0.2);
+
+    return `// Mechanism 61 - Inner Idler Wheel
+// Rolls on inside of R1 wall (spacer inner surface)
+// Coaxial with r3 driven gear
+// Plain wheel (no teeth)
+
+// --- Parameters ---
+idler_r = ${idlerR.toFixed(2)};     // wheel radius (= r3)
+hole_r = ${holeR.toFixed(2)};       // shaft hole
+thickness = ${depth.toFixed(2)};    // wheel thickness
+
+$fn = 64;
+
+// --- Assembly ---
+difference() {
+    cylinder(r = idler_r, h = thickness);
+    translate([0, 0, -1])
+        cylinder(r = hole_r, h = thickness + 2);
+}
+`;
+}
+
 function updateScadCode() {
     if (!scadCodeArea) return;
     const p = getP();
@@ -2535,147 +3883,18 @@ function updateScadCode() {
     document.getElementById('baseThickValue').textContent = baseThickSlider.value;
 
     let code = '';
-    if (scadCurrentPart === 'outer_rack') code = generateOuterRack(p);
-    else if (scadCurrentPart === 'inner_rack') code = generateInnerRack(p);
+    if (scadCurrentPart === 'racetrack') code = generateRacetrack(p);
     else if (scadCurrentPart === 'gear_r1') code = generateGearR1(p);
     else if (scadCurrentPart === 'gear_r2') code = generateGearR2(p);
+    else if (scadCurrentPart === 'compound_spacer') code = generateCompoundSpacer(p);
     else if (scadCurrentPart === 'gear_r3') code = generateGearR3(p);
     else if (scadCurrentPart === 'gear_r4') code = generateGearR4(p);
+    else if (scadCurrentPart === 'carrier_arm') code = generateCarrierArm(p);
+    else if (scadCurrentPart === 'outer_arm') code = generateOuterArm(p);
+    else if (scadCurrentPart === 'idler_wheel') code = generateIdlerWheel(p);
+    else if (scadCurrentPart === 'inner_idler') code = generateInnerIdlerWheel(p);
     scadCodeArea.value = code;
     rebuild3D();
-}
-
-function generateOuterRack(p) {
-    const depth = parseFloat(rackDepthSlider.value);
-    const toothH = parseFloat(toothHeightSlider.value);
-    const baseT = parseFloat(baseThickSlider.value);
-    const delta = parseFloat(deltaSlider.value);
-    // Module from gear: m = 2*r / nTeeth. Use r1 with nTeeth = r1/3 (matching draw)
-    const nTeeth = Math.max(12, Math.round(p.r1 / 3));
-    const mod = (2 * p.r1) / nTeeth;
-    const pitchLen = mod * Math.PI;  // circular pitch
-
-    return `// Mechanism 61 - Outer Rack
-// Generated from mechanism parameters
-// Rack for outer driven gear (r3=${p.r3.toFixed(1)})
-
-// --- Parameters ---
-R1 = ${p.R1.toFixed(2)};           // outer track radius
-L  = ${p.L.toFixed(2)};            // rack length (straight section)
-delta = ${delta};                   // offset angle (degrees)
-depth = ${depth};                   // extrusion depth (z)
-tooth_h = ${toothH};                // tooth height
-base_t = ${baseT};                  // base thickness (below teeth)
-mod = ${mod.toFixed(3)};            // gear module
-n_teeth_r1 = ${nTeeth};             // number of teeth on r1
-
-// Derived
-pitch = mod * PI;                   // circular pitch
-half_pitch = pitch / 2;
-
-$fn = 120;
-
-// --- Modules ---
-
-// Single rack tooth (2D cross-section)
-module rack_tooth_2d() {
-    // Trapezoidal tooth profile
-    w_top = half_pitch * 0.4;
-    w_bot = half_pitch * 0.6;
-    polygon([
-        [-w_bot/2, 0],
-        [-w_top/2, tooth_h],
-        [ w_top/2, tooth_h],
-        [ w_bot/2, 0]
-    ]);
-}
-
-// Straight rack section with teeth on the inside face
-// Teeth point inward (toward center y=0)
-module straight_rack(length, y_pos) {
-    n = floor(length / pitch);
-    // Base plate
-    translate([0, y_pos, 0])
-        linear_extrude(depth)
-            translate([-length/2, 0])
-                square([length, base_t]);
-
-    // Teeth along inner face
-    for (i = [0 : n-1]) {
-        x = -length/2 + pitch/2 + i * pitch;
-        translate([x, y_pos, 0])
-            linear_extrude(depth)
-                // Teeth point downward (toward y=0) for top rack
-                // or upward for bottom rack
-                mirror([0, y_pos > 0 ? 1 : 0, 0])
-                    rack_tooth_2d();
-    }
-}
-
-// Semicircular arc rack section with teeth on inner face
-module arc_rack(cx, start_ang, end_ang) {
-    arc_len = R1 * abs(end_ang - start_ang) * PI / 180;
-    n = floor(arc_len / pitch);
-    ang_step = (end_ang - start_ang) / max(n, 1);
-
-    // Base arc (annular sector)
-    translate([cx, 0, 0])
-        linear_extrude(depth)
-            difference() {
-                // Outer boundary
-                intersection() {
-                    circle(r = R1 + base_t);
-                    rotate([0, 0, min(start_ang, end_ang)])
-                        pie_slice(abs(end_ang - start_ang), R1 + base_t + 1);
-                }
-                // Inner boundary
-                circle(r = R1);
-            }
-
-    // Teeth along arc (inner face)
-    for (i = [0 : n-1]) {
-        ang = start_ang + ang_step/2 + i * ang_step;
-        translate([cx, 0, 0])
-            rotate([0, 0, ang])
-                translate([R1, 0, 0])
-                    rotate([0, 0, 90])
-                        linear_extrude(depth)
-                            mirror([0, 1, 0])
-                                rack_tooth_2d();
-    }
-}
-
-// Pie slice helper for intersection
-module pie_slice(angle, r) {
-    if (angle <= 180) {
-        intersection() {
-            circle(r = r);
-            polygon([
-                [0, 0],
-                [r * cos(0), r * sin(0)],
-                [r * cos(angle/2), r * sin(angle/2)],
-                [r * cos(angle), r * sin(angle)]
-            ]);
-        }
-    } else {
-        union() {
-            pie_slice(180, r);
-            rotate([0, 0, 180])
-                pie_slice(angle - 180, r);
-        }
-    }
-}
-
-// --- Assembly ---
-// Top straight rack (outer, at y = -R1)
-straight_rack(L, -R1);
-
-// Right semicircular arc
-arc_rack(L/2, -90, 90 - delta);
-
-// Left semicircular arc
-arc_rack(-L/2, 90 + delta, 270);
-`;
 }
 
 function copyScadCode() {
@@ -2698,11 +3917,72 @@ function downloadScadCode() {
     s.addEventListener('input', updateScadCode);
 });
 window.addEventListener('resize', resizeThreeJS);
+// Simulation theta slider
+let scadPlaying = false;
+let scadPlaySpeed = 1;
+let scadAnimFrame = null;
+let scadLastTime = null;
+
+document.getElementById('scadThetaSlider').addEventListener('input', function() {
+    const pct = (parseFloat(this.value) / 10).toFixed(0);
+    document.getElementById('scadThetaValue').textContent = pct + '%';
+    rebuild3D();
+});
+
+function toggleScadPlay() {
+    scadPlaying = !scadPlaying;
+    document.getElementById('scadPlayBtn').textContent = scadPlaying ? '⏸' : '▶';
+    if (scadPlaying) {
+        scadLastTime = null;
+        scadAnimFrame = requestAnimationFrame(scadAnimStep);
+    } else {
+        if (scadAnimFrame) cancelAnimationFrame(scadAnimFrame);
+        scadAnimFrame = null;
+    }
+}
+
+function scadAnimStep(timestamp) {
+    if (!scadPlaying) return;
+    if (scadLastTime === null) scadLastTime = timestamp;
+    const dt = (timestamp - scadLastTime) / 1000;
+    scadLastTime = timestamp;
+
+    const slider = document.getElementById('scadThetaSlider');
+    // One full cycle in ~5 seconds at 1× speed
+    const step = (dt / 5) * scadPlaySpeed * 1000;
+    let val = parseFloat(slider.value) + step;
+    if (val > 1000) val -= 1000;
+    slider.value = val;
+
+    const pct = (val / 10).toFixed(0);
+    document.getElementById('scadThetaValue').textContent = pct + '%';
+    rebuild3D();
+
+    scadAnimFrame = requestAnimationFrame(scadAnimStep);
+}
 // Also update 3D when mechanism params change
-[ratioSlider, deltaSlider, r1Slider, r3Slider, lSlider].forEach(s => {
+[ratioSlider, deltaSlider, r1Slider, r3Slider, fSlider].forEach(s => {
     s.addEventListener('input', () => {
         if (threeInitialized) updateScadCode();
     });
+});
+
+// Sync scadConfigSelect ↔ configSelect
+scadConfigSelect.addEventListener('change', () => {
+    configSelect.value = scadConfigSelect.value;
+    draw();
+    if (threeInitialized) updateScadCode();
+});
+
+// Sync scadFSlider ↔ fSlider (bidirectional)
+scadFSlider.addEventListener('input', () => {
+    fSlider.value = scadFSlider.value;
+    draw();  // updates mechanism tab + recomputes L via getP()
+    if (threeInitialized) updateScadCode();
+});
+// Keep 3D tab slider in sync when mechanism tab slider changes
+fSlider.addEventListener('input', () => {
+    scadFSlider.value = fSlider.value;
 });
 
 // Initial draw
