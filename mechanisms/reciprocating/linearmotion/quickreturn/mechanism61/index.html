@@ -560,7 +560,30 @@
                     <select id="configSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
                         <option value="track-fixed">Racetrack Fixed</option>
                         <option value="compound-fixed">Compound Fixed</option>
+                        <!-- <option value="paired">Paired</option> -->
                     </select>
+                </div>
+                <div class="mb-3">
+                    <label class="text-sm mb-1 block" style="color: var(--text-secondary)">Drive Type</label>
+                    <select id="driveTypeSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
+                        <option value="bevel">Bevel Gear</option>
+                        <option value="crankshaft">Crankshaft</option>
+                    </select>
+                </div>
+                <div id="setSpacingWrap" class="mb-3" style="display:none">
+                    <label class="flex justify-between text-sm mb-1">
+                        <span>Slot Spacing (×L)</span>
+                        <span class="text-blue-600 font-bold" id="setSpacingValue">2.0</span>
+                    </label>
+                    <input type="range" id="setSpacingSlider" min="1.0" max="4.0" value="2.0" step="0.01" class="w-full">
+                    <label class="flex justify-between text-sm mb-1 mt-2">
+                        <span>Set 2 Start (%)</span>
+                        <span class="text-green-600 font-bold" id="set2StartValue">50</span>
+                    </label>
+                    <input type="range" id="set2StartSlider" min="0" max="100" value="50" step="1" class="w-full">
+                    <div class="flex justify-between text-xs mt-1" style="color: var(--text-muted);">
+                        <span>Bar Length: <span id="barLengthReadout" class="text-yellow-500">—</span></span>
+                    </div>
                 </div>
 
                 <h3 class="font-medium mb-2">Compound Gear</h3>
@@ -1191,6 +1214,14 @@
                         <select id="scadConfigSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
                             <option value="track-fixed">Racetrack Fixed</option>
                             <option value="compound-fixed">Compound Fixed</option>
+                            <!-- <option value="paired">Paired</option> -->
+                        </select>
+                    </div>
+                    <div class="scad-param" style="margin-bottom:12px;">
+                        <label style="font-size:12px; color:var(--text-muted);">Drive Type</label>
+                        <select id="scadDriveTypeSelect" class="w-full px-2 py-1 text-sm border rounded" style="border-color: var(--border-medium); background: var(--bg-surface); color: var(--text-primary)">
+                            <option value="bevel">Bevel Gear</option>
+                            <option value="crankshaft">Crankshaft</option>
                         </select>
                     </div>
 
@@ -1285,38 +1316,111 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="carrier_arm" onclick="selectScadPart(this, 'carrier_arm')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'carrier_arm')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#10b981"></span>
+                                                        <span class="tree-label">Carrier Arm</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="outer_arm" onclick="selectScadPart(this, 'outer_arm')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'outer_arm')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f472b6"></span>
+                                                        <span class="tree-label">Outer Arm</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="idler_wheel" onclick="selectScadPart(this, 'idler_wheel')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'idler_wheel')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#fb923c"></span>
+                                                        <span class="tree-label">Idler Wheel</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="outer_idler2" onclick="selectScadPart(this, 'outer_idler2')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'outer_idler2')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f97316"></span>
+                                                        <span class="tree-label">Outer Idler 2</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="inner_idler" onclick="selectScadPart(this, 'inner_idler')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'inner_idler')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#38bdf8"></span>
+                                                        <span class="tree-label">Inner Idler</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="shaft_tube" onclick="selectScadPart(this, 'shaft_tube')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'shaft_tube')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#94a3b8"></span>
+                                                        <span class="tree-label">Shaft Tube</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="output_arm" onclick="selectScadPart(this, 'output_arm')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'output_arm')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#ec4899"></span>
+                                                        <span class="tree-label">Output Arm</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                <span class="tree-arrow">▾</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'drive_assy')" onclick="event.stopPropagation()">
+                                                <span class="tree-label assembly">Drive System</span>
+                                            </div>
+                                            <div class="tree-children">
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="drive_shaft" onclick="selectScadPart(this, 'drive_shaft')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'drive_shaft')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#e879f9"></span>
+                                                        <span class="tree-label">Drive Shaft</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="bevel_shaft" onclick="selectScadPart(this, 'bevel_shaft')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'bevel_shaft')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#c084fc"></span>
+                                                        <span class="tree-label">Bevel (Shaft)</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="bevel_compound" onclick="selectScadPart(this, 'bevel_compound')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'bevel_compound')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#a78bfa"></span>
+                                                        <span class="tree-label">Bevel (Compound)</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="crankshaft_drive" onclick="selectScadPart(this, 'crankshaft_drive')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'crankshaft_drive')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f59e0b"></span>
+                                                        <span class="tree-label">Crankshaft Drive</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="carrier_arm" onclick="selectScadPart(this, 'carrier_arm')">
+                                            <div class="tree-row part-row" data-part="casing" onclick="selectScadPart(this, 'casing')">
                                                 <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'carrier_arm')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#10b981"></span>
-                                                <span class="tree-label">Carrier Arm</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="outer_arm" onclick="selectScadPart(this, 'outer_arm')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'outer_arm')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#f472b6"></span>
-                                                <span class="tree-label">Outer Arm</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="idler_wheel" onclick="selectScadPart(this, 'idler_wheel')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'idler_wheel')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#fb923c"></span>
-                                                <span class="tree-label">Idler Wheel</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="inner_idler" onclick="selectScadPart(this, 'inner_idler')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'inner_idler')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#38bdf8"></span>
-                                                <span class="tree-label">Inner Idler</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'casing')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#64748b"></span>
+                                                <span class="tree-label">Casing</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1402,72 +1506,111 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="carrier_arm" onclick="selectScadPart(this, 'carrier_arm')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_carrier_arm')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#10b981"></span>
+                                                        <span class="tree-label">Carrier Arm</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="outer_arm" onclick="selectScadPart(this, 'outer_arm')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_outer_arm')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f472b6"></span>
+                                                        <span class="tree-label">Outer Arm</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="idler_wheel" onclick="selectScadPart(this, 'idler_wheel')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_idler_wheel')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#fb923c"></span>
+                                                        <span class="tree-label">Idler Wheel</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="outer_idler2" onclick="selectScadPart(this, 'outer_idler2')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_outer_idler2')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f97316"></span>
+                                                        <span class="tree-label">Outer Idler 2</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="inner_idler" onclick="selectScadPart(this, 'inner_idler')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_inner_idler')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#38bdf8"></span>
+                                                        <span class="tree-label">Inner Idler</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="shaft_tube" onclick="selectScadPart(this, 'shaft_tube')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_shaft_tube')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#94a3b8"></span>
+                                                        <span class="tree-label">Shaft Tube</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="output_arm" onclick="selectScadPart(this, 'output_arm')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_output_arm')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#ec4899"></span>
+                                                        <span class="tree-label">Output Arm</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-row" onclick="toggleTreeNode(this)">
+                                                <span class="tree-arrow">▾</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_drive_assy')" onclick="event.stopPropagation()">
+                                                <span class="tree-label assembly">Drive System</span>
+                                            </div>
+                                            <div class="tree-children">
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="drive_shaft" onclick="selectScadPart(this, 'drive_shaft')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_drive_shaft')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#e879f9"></span>
+                                                        <span class="tree-label">Drive Shaft</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="bevel_shaft" onclick="selectScadPart(this, 'bevel_shaft')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_bevel_shaft')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#c084fc"></span>
+                                                        <span class="tree-label">Bevel (Shaft)</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="bevel_compound" onclick="selectScadPart(this, 'bevel_compound')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_bevel_compound')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#a78bfa"></span>
+                                                        <span class="tree-label">Bevel (Compound)</span>
+                                                    </div>
+                                                </div>
+                                                <div class="tree-node leaf">
+                                                    <div class="tree-row part-row" data-part="crankshaft_drive" onclick="selectScadPart(this, 'crankshaft_drive')">
+                                                        <span class="tree-spacer"></span>
+                                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_crankshaft_drive')" onclick="event.stopPropagation()">
+                                                        <span class="dot" style="background:#f59e0b"></span>
+                                                        <span class="tree-label">Crankshaft Drive</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="carrier_arm" onclick="selectScadPart(this, 'carrier_arm')">
+                                            <div class="tree-row part-row" data-part="casing" onclick="selectScadPart(this, 'casing')">
                                                 <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_carrier_arm')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#10b981"></span>
-                                                <span class="tree-label">Carrier Arm</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="outer_arm" onclick="selectScadPart(this, 'outer_arm')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_outer_arm')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#f472b6"></span>
-                                                <span class="tree-label">Outer Arm</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="idler_wheel" onclick="selectScadPart(this, 'idler_wheel')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_idler_wheel')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#fb923c"></span>
-                                                <span class="tree-label">Idler Wheel</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="inner_idler" onclick="selectScadPart(this, 'inner_idler')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_inner_idler')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#38bdf8"></span>
-                                                <span class="tree-label">Inner Idler</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Drive System -->
-                                <div class="tree-node">
-                                    <div class="tree-row" onclick="toggleTreeNode(this)">
-                                        <span class="tree-arrow">▾</span>
-                                        <input type="checkbox" checked onchange="toggleTreeVis(this, 'drive_assy')" onclick="event.stopPropagation()">
-                                        <span class="tree-label assembly">Drive System</span>
-                                    </div>
-                                    <div class="tree-children">
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="drive_shaft" onclick="selectScadPart(this, 'drive_shaft')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'drive_shaft')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#e879f9"></span>
-                                                <span class="tree-label">Drive Shaft</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="bevel_shaft" onclick="selectScadPart(this, 'bevel_shaft')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'bevel_shaft')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#c084fc"></span>
-                                                <span class="tree-label">Bevel (Shaft)</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node leaf">
-                                            <div class="tree-row part-row" data-part="bevel_compound" onclick="selectScadPart(this, 'bevel_compound')">
-                                                <span class="tree-spacer"></span>
-                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 'bevel_compound')" onclick="event.stopPropagation()">
-                                                <span class="dot" style="background:#a78bfa"></span>
-                                                <span class="tree-label">Bevel (Compound)</span>
+                                                <input type="checkbox" checked onchange="toggleTreeVis(this, 's2_casing')" onclick="event.stopPropagation()">
+                                                <span class="dot" style="background:#64748b"></span>
+                                                <span class="tree-label">Casing</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1497,6 +1640,18 @@
                         <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-top:2px;">
                             <span>f<sub>max</sub> = <span id="scadFMaxDisplay">0.67</span></span>
                             <span>L = <span id="scadLValue">300</span></span>
+                        </div>
+                    </div>
+
+                    <div id="scadSetSpacingWrap" class="scad-param" style="display:none">
+                        <label><span>Slot Spacing (×L)</span><span id="scadSetSpacingValue">2.0</span></label>
+                        <input type="range" id="scadSetSpacingSlider" min="1.0" max="4.0" value="2.0" step="0.01">
+                    </div>
+                    <div id="scadSet2StartWrap" class="scad-param" style="display:none">
+                        <label><span>Set 2 Start (%)</span><span id="scadSet2StartValue">50</span></label>
+                        <input type="range" id="scadSet2StartSlider" min="0" max="100" value="50" step="1">
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                            Bar Length: <span id="scadBarLengthReadout" style="color:#eab308;">—</span>
                         </div>
                     </div>
 
@@ -1540,6 +1695,9 @@
                             <option value="4">4×</option>
                         </select>
                     </div>
+
+                    <!-- Paired mode error -->
+                    <div id="pairedError" style="display:none; padding:6px 12px; background:#7f1d1d; color:#fca5a5; font-size:12px; border-bottom:1px solid #991b1b;"></div>
 
                     <!-- Content area -->
                     <div class="scad-split" id="scadContentArea">
@@ -1621,6 +1779,107 @@ const configSelect = document.getElementById('configSelect');
 const scadConfigSelect = document.getElementById('scadConfigSelect');
 const scadFSlider = document.getElementById('scadFSlider');
 const railOffsetSlider = document.getElementById('railOffsetSlider');
+const setSpacingSlider = document.getElementById('setSpacingSlider');
+const setSpacingWrap = document.getElementById('setSpacingWrap');
+const scadSetSpacingSlider = document.getElementById('scadSetSpacingSlider');
+const scadSetSpacingWrap = document.getElementById('scadSetSpacingWrap');
+const set2StartSlider = document.getElementById('set2StartSlider');
+const scadSet2StartSlider = document.getElementById('scadSet2StartSlider');
+const scadSet2StartWrap = document.getElementById('scadSet2StartWrap');
+const driveTypeSelect = document.getElementById('driveTypeSelect');
+const scadDriveTypeSelect = document.getElementById('scadDriveTypeSelect');
+
+// Persist stance fraction, config, set spacing, set2 start, and drive type across page refreshes
+const LS_PREFIX = 'mech61_';
+const savedConfig = localStorage.getItem(LS_PREFIX + 'config');
+if (savedConfig) {
+    configSelect.value = savedConfig;
+    scadConfigSelect.value = savedConfig;
+}
+const savedF = localStorage.getItem(LS_PREFIX + 'stanceFrac');
+if (savedF) {
+    fSlider.value = savedF;
+    scadFSlider.value = savedF;
+}
+const savedSpacing = localStorage.getItem(LS_PREFIX + 'setSpacing');
+if (savedSpacing) {
+    setSpacingSlider.value = savedSpacing;
+    scadSetSpacingSlider.value = savedSpacing;
+}
+const savedSet2Start = localStorage.getItem(LS_PREFIX + 'set2Start');
+if (savedSet2Start) {
+    set2StartSlider.value = savedSet2Start;
+    scadSet2StartSlider.value = savedSet2Start;
+}
+const savedDriveType = localStorage.getItem(LS_PREFIX + 'driveType');
+if (savedDriveType) {
+    driveTypeSelect.value = savedDriveType;
+    scadDriveTypeSelect.value = savedDriveType;
+}
+// Show/hide paired-only sliders based on config
+function updatePairedVis() {
+    const isPaired = configSelect.value === 'paired';
+    setSpacingWrap.style.display = isPaired ? 'block' : 'none';
+    scadSetSpacingWrap.style.display = isPaired ? 'block' : 'none';
+    scadSet2StartWrap.style.display = isPaired ? 'block' : 'none';
+    const val = parseFloat(setSpacingSlider.value).toFixed(2);
+    document.getElementById('setSpacingValue').textContent = val;
+    document.getElementById('scadSetSpacingValue').textContent = val;
+    const startVal = Math.round(parseFloat(set2StartSlider.value));
+    document.getElementById('set2StartValue').textContent = startVal;
+    document.getElementById('scadSet2StartValue').textContent = startVal;
+}
+updatePairedVis();
+configSelect.addEventListener('change', () => {
+    localStorage.setItem(LS_PREFIX + 'config', configSelect.value);
+    scadConfigSelect.value = configSelect.value;
+    updatePairedVis();
+    draw();
+    if (threeInitialized) rebuild3D();
+});
+fSlider.addEventListener('input', () => {
+    localStorage.setItem(LS_PREFIX + 'stanceFrac', fSlider.value);
+});
+setSpacingSlider.addEventListener('input', () => {
+    localStorage.setItem(LS_PREFIX + 'setSpacing', setSpacingSlider.value);
+    scadSetSpacingSlider.value = setSpacingSlider.value;
+    updatePairedVis();
+    draw();
+    if (threeInitialized) rebuild3D();
+});
+scadSetSpacingSlider.addEventListener('input', () => {
+    setSpacingSlider.value = scadSetSpacingSlider.value;
+    localStorage.setItem(LS_PREFIX + 'setSpacing', scadSetSpacingSlider.value);
+    updatePairedVis();
+    draw();
+    if (threeInitialized) updateScadCode();
+});
+set2StartSlider.addEventListener('input', () => {
+    localStorage.setItem(LS_PREFIX + 'set2Start', set2StartSlider.value);
+    scadSet2StartSlider.value = set2StartSlider.value;
+    updatePairedVis();
+    draw();
+    if (threeInitialized) rebuild3D();
+});
+scadSet2StartSlider.addEventListener('input', () => {
+    set2StartSlider.value = scadSet2StartSlider.value;
+    localStorage.setItem(LS_PREFIX + 'set2Start', scadSet2StartSlider.value);
+    updatePairedVis();
+    draw();
+    if (threeInitialized) updateScadCode();
+});
+driveTypeSelect.addEventListener('change', () => {
+    localStorage.setItem(LS_PREFIX + 'driveType', driveTypeSelect.value);
+    scadDriveTypeSelect.value = driveTypeSelect.value;
+    draw();
+    if (threeInitialized) rebuild3D();
+});
+scadDriveTypeSelect.addEventListener('change', () => {
+    driveTypeSelect.value = scadDriveTypeSelect.value;
+    localStorage.setItem(LS_PREFIX + 'driveType', scadDriveTypeSelect.value);
+    draw();
+    if (threeInitialized) updateScadCode();
+});
 
 // ============================================================
 // Animation state
@@ -2613,9 +2872,8 @@ let threeMeshGroup;
 
 // Part visibility state
 const scadVisible = {
-    racetrack: true, gear_r1: true, gear_r2: true, compound_spacer: true, gear_r3: true, gear_r4: true, carrier_arm: true, outer_arm: true, idler_wheel: true, inner_idler: true,
-    s2_racetrack: true, s2_gear_r1: true, s2_gear_r2: true, s2_compound_spacer: true, s2_gear_r3: true, s2_gear_r4: true, s2_carrier_arm: true, s2_outer_arm: true, s2_idler_wheel: true, s2_inner_idler: true,
-    drive_shaft: true, bevel_shaft: true, bevel_compound: true
+    racetrack: true, gear_r1: true, gear_r2: true, compound_spacer: true, gear_r3: true, gear_r4: true, carrier_arm: true, outer_arm: true, idler_wheel: true, outer_idler2: true, inner_idler: true, shaft_tube: true, output_arm: true, drive_shaft: true, bevel_shaft: true, bevel_compound: true, crankshaft_drive: true, casing: true,
+    s2_racetrack: true, s2_gear_r1: true, s2_gear_r2: true, s2_compound_spacer: true, s2_gear_r3: true, s2_gear_r4: true, s2_carrier_arm: true, s2_outer_arm: true, s2_idler_wheel: true, s2_outer_idler2: true, s2_inner_idler: true, s2_shaft_tube: true, s2_output_arm: true, s2_drive_shaft: true, s2_bevel_shaft: true, s2_bevel_compound: true, s2_crankshaft_drive: true, s2_casing: true
 };
 
 function selectScadPart(el, part) {
@@ -2654,24 +2912,31 @@ function toggleTreeVis(checkbox, key) {
 
 function rebuild3D() {
     if (!threeInitialized) return;
-    while (threeMeshGroup.children.length) threeMeshGroup.remove(threeMeshGroup.children[0]);
+    // Dispose old geometries to prevent GPU memory leak (materials are cached)
+    while (threeMeshGroup.children.length) {
+        const child = threeMeshGroup.children[0];
+        if (child.geometry) child.geometry.dispose();
+        threeMeshGroup.remove(child);
+    }
     const p = getP();
     const thetaSlider = document.getElementById('scadThetaSlider');
     const tFrac = parseFloat(thetaSlider.value) / 1000;
     const depth = parseFloat(rackDepthSlider.value);
     const baseT = parseFloat(baseThickSlider.value);
 
+    // Configuration
+    const cfg = configSelect.value;
+
     // Phase offset: when Set 1 is at mid-stance, Set 2 is at mid-swing
     // offset = (tBot/2 + tRight + tTop/2) / tTotal
     const t = getTimes(p);
     const phaseOffset = (t.tBot / 2 + t.tRight + t.tTop / 2) / t.tTotal;
 
-    // X offset for Set 2: enough to clear Set 1
+    // X offset for Set 2
     const setGap = 10;
-    const set2X = p.L + 2 * (p.R1 + baseT) + setGap;
-
-    // Configuration: compound-fixed shifts track, not gears
-    const cfg = configSelect.value;
+    const setSpacingFactor = parseFloat(setSpacingSlider.value);
+    const set2StartPct = parseFloat(set2StartSlider.value) / 100;  // 0 to 1
+    const set2X = cfg === 'paired' ? setSpacingFactor * p.L : p.L + 2 * (p.R1 + baseT) + setGap;
 
     // Inner idler shares the r4 Z layer. Extra spacer thickness needed so the
     // outer rack (r1/r3 gear layer) clears the inner idler on the r3 shaft.
@@ -2679,24 +2944,26 @@ function rebuild3D() {
     const idlerClearance = 2;
     const zShift = innerIdlerThick + idlerClearance;
 
-    // Build a set at given X offset using given visibility prefix and tFrac
+    // Build a set at given X offset using given visibility prefix and tFrac.
+    // Returns the compound center X after all offsets (for paired mode).
     function buildSet(xOff, prefix, setTFrac) {
         const vis = k => scadVisible[prefix + k];
         const state = getStateFromTime(setTFrac, p);
 
-        // In compound-fixed mode, gears stay at origin and track shifts
-        const trackShiftX = cfg === 'compound-fixed' ? -state.compX : 0;
-        const drawState = cfg === 'compound-fixed'
+        // In compound-fixed or paired mode, gears stay at origin and track shifts
+        const isCompoundFixed = cfg === 'compound-fixed' || cfg === 'paired';
+        const trackShiftX = isCompoundFixed ? -state.compX : 0;
+        const drawState = isCompoundFixed
             ? { ...state, compX: 0, compY: 0 }
             : state;
 
         const prevCount = threeMeshGroup.children.length;
         const preRacetrackCount = threeMeshGroup.children.length;
 
-        if (vis('racetrack')) buildRacetrack3D(p, zShift);
+        if (vis('racetrack')) buildRacetrack3D(p, zShift, cfg);
 
-        // Shift racetrack meshes in compound-fixed mode
-        if (cfg === 'compound-fixed' && trackShiftX !== 0) {
+        // Shift racetrack meshes in compound-fixed/paired mode
+        if (isCompoundFixed && trackShiftX !== 0) {
             for (let i = preRacetrackCount; i < threeMeshGroup.children.length; i++) {
                 threeMeshGroup.children[i].position.x += trackShiftX;
             }
@@ -2711,7 +2978,52 @@ function rebuild3D() {
         if (vis('carrier_arm')) buildCarrierArm3D(p, drawState, depth, zShift);
         if (vis('outer_arm')) buildOuterArm3D(p, drawState, depth, zShift);
         if (vis('idler_wheel')) buildIdlerWheel3D(p, drawState, depth, zShift);
+        if (vis('outer_idler2')) buildOuterIdler2_3D(p, drawState, depth, zShift);
         if (vis('inner_idler')) buildInnerIdlerWheel3D(p, drawState, depth, zShift);
+        if (vis('shaft_tube')) buildShaftTube3D(p, drawState, depth, zShift);
+        if (vis('output_arm')) buildOutputArm3D(p, drawState, depth, zShift);
+
+        // Transfer gear on compound shaft (paired config only)
+        if (cfg === 'paired') buildTransferGear3D(p, drawState, depth, zShift);
+
+        // Drive system (per-set) — skipped in paired config
+        if (cfg !== 'paired') {
+            const driveState = cfg === 'compound-fixed'
+                ? { ...drawState, compX: 0, compY: 0 }
+                : drawState;
+            const driveType = driveTypeSelect.value;
+            if (driveType === 'bevel') {
+                if (vis('drive_shaft')) buildDriveShaft3D(p, driveState, depth);
+                if (vis('bevel_shaft')) buildBevelShaft3D(p, driveState, depth);
+                if (vis('bevel_compound')) buildBevelCompound3D(p, driveState, depth);
+            } else if (driveType === 'crankshaft') {
+                if (vis('crankshaft_drive')) buildCrankshaftDrive3D(p, driveState, depth);
+            }
+        }
+
+        // Casing (per-set) — moves with racetrack in paired/compound-fixed mode
+        const preCasingCount = threeMeshGroup.children.length;
+        if (vis('casing')) buildCasing3D(p, depth, zShift);
+        if (isCompoundFixed && trackShiftX !== 0) {
+            for (let i = preCasingCount; i < threeMeshGroup.children.length; i++) {
+                threeMeshGroup.children[i].position.x += trackShiftX;
+            }
+        }
+
+        // In paired mode, offset entire set so the body shaft pin stays in the slot.
+        // Body shaft is at (radX * bodyShaftDist) from compound center.
+        // Slot is at xOff (fixed). So shift everything by -radX * bodyShaftDist.
+        if (cfg === 'paired') {
+            const baseT2 = parseFloat(baseThickSlider.value);
+            const idlerR2 = p.r3;
+            const idlerDist2 = p.R1 + baseT2 + idlerR2;
+            const bodyShaftDist = idlerDist2 * 0.6;
+            const bodyShaftX = drawState.radX * bodyShaftDist;
+            const pairedShiftX = -bodyShaftX;
+            for (let i = prevCount; i < threeMeshGroup.children.length; i++) {
+                threeMeshGroup.children[i].position.x += pairedShiftX;
+            }
+        }
 
         // Offset all newly added meshes for Set 2 positioning
         if (xOff !== 0) {
@@ -2719,24 +3031,48 @@ function rebuild3D() {
                 threeMeshGroup.children[i].position.x += xOff;
             }
         }
+
+        // Return the compound center X after all offsets (for paired mode positioning)
+        const pairedShift = cfg === 'paired' ? -(drawState.radX * (p.R1 + parseFloat(baseThickSlider.value) + p.r3) * 0.6) : 0;
+        return xOff + pairedShift;
     }
 
     // Set 1 at x=0
-    buildSet(0, '', tFrac);
-    // Set 2 only for paired configurations (not single-set inversions)
-    if (cfg !== 'track-fixed' && cfg !== 'compound-fixed') {
-        const tFrac2 = (tFrac + phaseOffset) % 1;
-        buildSet(set2X, 's2_', tFrac2);
-    }
+    const comp1X = buildSet(0, '', tFrac);
+    // Set 2 only for paired configuration
+    if (cfg === 'paired') {
+        // Set 2 starts at the user-chosen percentage offset.
+        // Both sets advance at the same angular rate (gear-linked),
+        // so phase offset is constant: tFrac2 = (set2StartPct + tFrac) % 1.
+        const tFrac2 = (tFrac + set2StartPct) % 1;
+        const comp2X = buildSet(set2X, 's2_', tFrac2);
 
-    // Drive system (independent of sets)
-    const state1 = getStateFromTime(tFrac, p);
-    const driveState = cfg === 'compound-fixed'
-        ? { ...state1, compX: 0, compY: 0 }
-        : state1;
-    if (scadVisible.drive_shaft) buildDriveShaft3D(p, driveState, depth);
-    if (scadVisible.bevel_shaft) buildBevelShaft3D(p, driveState, depth);
-    if (scadVisible.bevel_compound) buildBevelCompound3D(p, driveState, depth);
+        // Bar length is derived from compound positions
+        const actualBarDist = comp2X - comp1X;
+
+        // Update bar length readouts
+        const barReadout1 = document.getElementById('barLengthReadout');
+        const barReadout2 = document.getElementById('scadBarLengthReadout');
+        const errEl = document.getElementById('pairedError');
+        if (actualBarDist <= 0) {
+            if (barReadout1) barReadout1.textContent = 'INVALID';
+            if (barReadout2) barReadout2.textContent = 'INVALID';
+            if (errEl) { errEl.textContent = 'Bar length is negative or zero — adjust Set 2 Start or Slot Spacing'; errEl.style.display = 'block'; }
+        } else {
+            const barStr = actualBarDist.toFixed(1);
+            if (barReadout1) barReadout1.textContent = barStr;
+            if (barReadout2) barReadout2.textContent = barStr;
+            if (errEl) errEl.style.display = 'none';
+        }
+
+        // Transfer gear train — bar spans from comp1X to comp2X
+        if (actualBarDist > 0) {
+            buildTransferGearTrain3D(p, depth, actualBarDist, tFrac, set2StartPct, comp1X);
+        }
+
+        // Body — fixed frame with slotted bars at slot spacing distance
+        buildBody3D(p, depth, zShift, set2X);
+    }
 }
 
 function setScadView(mode) {
@@ -2790,7 +3126,7 @@ function initThreeJS() {
     threeRenderer = new THREE.WebGLRenderer({ antialias: true });
     const wrap = document.getElementById('scadViewerWrap');
     threeRenderer.setSize(wrap.clientWidth, wrap.clientHeight, false);
-    threeRenderer.setPixelRatio(window.devicePixelRatio);
+    threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     threeRenderer.domElement.style.width = '100%';
     threeRenderer.domElement.style.height = '100%';
     container.appendChild(threeRenderer.domElement);
@@ -2849,17 +3185,31 @@ function resetScadCamera() {
     threeControls.reset();
 }
 
+// Reduce geometry detail during animation for performance
+function getArcSegs() { return scadPlaying ? 16 : 64; }
+function getCircleSegs() { return scadPlaying ? 12 : 32; }
+
+// Cache materials to avoid creating identical ones every frame
+const materialCache = {};
+function getCachedMaterial(color, opacity = 0.85) {
+    const key = color + '_' + opacity;
+    if (!materialCache[key]) {
+        materialCache[key] = new THREE.MeshPhongMaterial({ color, transparent: true, opacity });
+    }
+    return materialCache[key];
+}
+
 // Build 3D geometry for the outer rack
 // Build 3D geometry for the complete racetrack (inner rack + spacer + outer rack as one body)
-function buildRacetrack3D(p, zShift) {
+function buildRacetrack3D(p, zShift, cfg) {
     const depth = parseFloat(rackDepthSlider.value);
     const toothH = parseFloat(toothHeightSlider.value);
     const baseT = parseFloat(baseThickSlider.value);
     const delta = parseFloat(deltaSlider.value) * Math.PI / 180;
     const outerR = p.R1 + baseT;
-    const arcSegs = 64;
+    const arcSegs = getArcSegs();
 
-    const mat = new THREE.MeshPhongMaterial({ color: 0xa855f7, transparent: true, opacity: 0.85 });
+    const mat = getCachedMaterial(0xa855f7);
 
     // --- Helper: build racetrack wall (annular ring) at given z, with given inner radius ---
     function addRacetackWall(zOff, wallDepth, innerRadius) {
@@ -2949,7 +3299,7 @@ function buildRacetrack3D(p, zShift) {
     innerToothShape.lineTo(wBotI, 0);
     innerToothShape.closePath();
     const innerToothGeo = new THREE.ExtrudeGeometry(innerToothShape, { depth: depth, bevelEnabled: false });
-    const matToothInner = new THREE.MeshPhongMaterial({ color: 0xc084fc });
+    const matToothInner = getCachedMaterial(0xc084fc, 1.0);
 
     // Bottom straight teeth (at y=R2, pointing inward)
     addStraightTeeth(innerToothGeo, matToothInner, pitchInner, p.R2, 0, true);
@@ -2962,10 +3312,219 @@ function buildRacetrack3D(p, zShift) {
     // Extended by zShift to accommodate inner idler on the r3 shaft
     addRacetackWall(depth, depth + zShift, p.R1);
 
+    // ===== Inner idler rolling surface — thin ring inside spacer at idler Z level =====
+    // The inner idler (coaxial with r3) has been reduced in diameter and no longer
+    // reaches R1, so we add a dedicated rolling surface at radius orbitB + idlerR.
+    {
+        const maxR = p.orbitB - p.orbitD - p.r4 - 1;
+        const idlerR = Math.max(3, maxR);
+        const rollingR = p.orbitB + idlerR;  // inner surface the idler rolls against
+        // Only add if the rolling surface is smaller than R1 (otherwise R1 itself suffices)
+        if (rollingR < p.R1) {
+            // Compute inner idler Z range (same logic as buildInnerIdlerWheel3D)
+            const clearance1 = 1;
+            const armThick1 = depth - 2 * clearance1;
+            const gearClearance1 = 2;
+            const armZ1 = 2 * depth + zShift - gearClearance1 - armThick1;
+            const idlerTopZ1 = armZ1 - gearClearance1;
+            const idlerBottomZ1 = idlerTopZ1 - depth;
+            // Add rolling surface wall at the idler's Z range
+            addRacetackWall(idlerBottomZ1, depth, rollingR);
+        }
+    }
+
     // ===== LAYER 3: Outer rack (z=2*depth+zShift to z=3*depth+zShift), inner radius = R1 =====
     addRacetackWall(2 * depth + zShift, depth, p.R1);
 
+    // ===== V-slot ridges on outer racetrack surface for outer idler wheels =====
+    // V-shaped protrusions running along the outer perimeter at each outer idler's Z midplane.
+    // Built as two tapered racetrack rings (bottom half widens, top half narrows) to form V profile.
+    {
+        const vRidgeH = Math.min(p.r3 * 0.25, depth * 0.4);  // ridge height (radially outward)
+        const vHalfW = depth * 0.35;  // half-width of ridge in Z
+        const peakR = outerR + vRidgeH;  // peak radius of V-ridge
+        const ridgeSegs = 64;
+
+        // Helper: build a V-ridge ring (racetrack-shaped) at a given Z midplane.
+        // Uses two layers: bottom half tapers from outerR to peakR, top half from peakR back to outerR.
+        function addVRidge(zMid) {
+            // Bottom half: from zMid-vHalfW to zMid, outer radius tapers from outerR to peakR
+            // Top half: from zMid to zMid+vHalfW, outer radius tapers from peakR to outerR
+            // Approximate V with multiple thin slices for smooth taper
+            const nSlices = 6;
+            for (let s = 0; s < nSlices * 2; s++) {
+                const t = s / (nSlices * 2);  // 0 to ~1
+                const t1 = (s + 1) / (nSlices * 2);
+                const zBot = zMid - vHalfW + t * 2 * vHalfW;
+                const zTop = zMid - vHalfW + t1 * 2 * vHalfW;
+                const sliceH = zTop - zBot;
+                // V-profile: max at center (t=0.5), zero at edges (t=0, t=1)
+                const tMid = (t + t1) / 2;
+                const rAt = outerR + vRidgeH * (1 - Math.abs(2 * tMid - 1));  // peaks at center
+                // Build as annular ring from outerR to rAt
+                if (rAt <= outerR + 0.1) continue;  // skip negligible slices
+
+                // Straight sections (top and bottom walls)
+                const wallThick = rAt - outerR;
+                const topGeo = new THREE.BoxGeometry(p.L, wallThick, sliceH);
+                const topMat = mat;  // same racetrack material
+                const topMesh = new THREE.Mesh(topGeo, topMat);
+                topMesh.position.set(0, -(outerR + wallThick / 2), zBot + sliceH / 2);
+                threeMeshGroup.add(topMesh);
+                const botMesh = new THREE.Mesh(topGeo, topMat);
+                botMesh.position.set(0, outerR + wallThick / 2, zBot + sliceH / 2);
+                threeMeshGroup.add(botMesh);
+
+                // Right arc
+                const rightShape = new THREE.Shape();
+                for (let i = 0; i <= ridgeSegs; i++) {
+                    const ang = -Math.PI / 2 + (i / ridgeSegs) * Math.PI;
+                    if (i === 0) rightShape.moveTo(rAt * Math.cos(ang), rAt * Math.sin(ang));
+                    else rightShape.lineTo(rAt * Math.cos(ang), rAt * Math.sin(ang));
+                }
+                for (let i = ridgeSegs; i >= 0; i--) {
+                    const ang = -Math.PI / 2 + (i / ridgeSegs) * Math.PI;
+                    rightShape.lineTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+                }
+                rightShape.closePath();
+                const rightGeo = new THREE.ExtrudeGeometry(rightShape, { depth: sliceH, bevelEnabled: false });
+                const rightMesh = new THREE.Mesh(rightGeo, topMat);
+                rightMesh.position.set(p.L / 2, 0, zBot);
+                threeMeshGroup.add(rightMesh);
+
+                // Left arc
+                const leftShape = new THREE.Shape();
+                for (let i = 0; i <= ridgeSegs; i++) {
+                    const ang = Math.PI / 2 + (i / ridgeSegs) * Math.PI;
+                    if (i === 0) leftShape.moveTo(rAt * Math.cos(ang), rAt * Math.sin(ang));
+                    else leftShape.lineTo(rAt * Math.cos(ang), rAt * Math.sin(ang));
+                }
+                for (let i = ridgeSegs; i >= 0; i--) {
+                    const ang = Math.PI / 2 + (i / ridgeSegs) * Math.PI;
+                    leftShape.lineTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+                }
+                leftShape.closePath();
+                const leftGeo = new THREE.ExtrudeGeometry(leftShape, { depth: sliceH, bevelEnabled: false });
+                const leftMesh = new THREE.Mesh(leftGeo, topMat);
+                leftMesh.position.set(-p.L / 2, 0, zBot);
+                threeMeshGroup.add(leftMesh);
+            }
+        }
+
+        // V-ridge 1: at outer idler 1 Z midplane (outer rack layer)
+        addVRidge(2 * depth + zShift + depth / 2);
+
+        // V-ridge 2: at outer idler 2 Z midplane (spacer layer)
+        const clearanceV = 1;
+        const armThickV = depth - 2 * clearanceV;
+        const gearClearanceV = 2;
+        const armZv = 2 * depth + zShift - gearClearanceV - armThickV;
+        const idler2TopZv = armZv - gearClearanceV;
+        addVRidge(idler2TopZv - depth / 2);
+    }
+
+    // ===== Casing mounting flange — thin ring around entire racetrack perimeter at back face =====
+    // Extends outward beyond outerR to provide bolt holes for attaching a rear casing/cover.
+    // Skipped in paired config (uses different transmission system)
+    if (cfg !== 'paired') {
+        const idlerR = p.r3;
+        const idlerDist = p.R1 + baseT + idlerR;     // outer idler center distance
+        const idlerOuterEdge = idlerDist + idlerR;    // outermost edge of outer idlers
+        const screwMargin = 6;                        // clearance beyond idler edge to screw center
+        const screwR = 1.5;                           // screw hole radius
+        const screwCenterR = idlerOuterEdge + screwMargin;  // screw holes beyond idler outer edge
+        const casingOuterR = screwCenterR + screwR + 4;     // flange edge beyond screw holes
+        const casingFlangeW = casingOuterR - outerR;         // total radial width
+        const casingFlangeT = 3;                     // thickness (thin)
+        const screwHoleMat = getCachedMaterial(0x0d1117, 1.0);
+
+        // Build flange as a racetrack-shaped ring from outerR to casingOuterR
+        // Top straight wall
+        const topGeo = new THREE.BoxGeometry(p.L, casingFlangeW, casingFlangeT);
+        const topMesh = new THREE.Mesh(topGeo, mat);
+        topMesh.position.set(0, -(outerR + casingFlangeW / 2), -casingFlangeT / 2);
+        threeMeshGroup.add(topMesh);
+        // Bottom straight wall
+        const botMesh = new THREE.Mesh(topGeo, mat);
+        botMesh.position.set(0, outerR + casingFlangeW / 2, -casingFlangeT / 2);
+        threeMeshGroup.add(botMesh);
+
+        // Right semicircular arc flange
+        const cSegs = 64;
+        const rightShape = new THREE.Shape();
+        for (let i = 0; i <= cSegs; i++) {
+            const ang = -Math.PI / 2 + (i / cSegs) * Math.PI;
+            if (i === 0) rightShape.moveTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+            else rightShape.lineTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+        }
+        for (let i = cSegs; i >= 0; i--) {
+            const ang = -Math.PI / 2 + (i / cSegs) * Math.PI;
+            rightShape.lineTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+        }
+        rightShape.closePath();
+        const rightGeo = new THREE.ExtrudeGeometry(rightShape, { depth: casingFlangeT, bevelEnabled: false });
+        const rightMesh = new THREE.Mesh(rightGeo, mat);
+        rightMesh.position.set(p.L / 2, 0, -casingFlangeT);
+        threeMeshGroup.add(rightMesh);
+
+        // Left semicircular arc flange
+        const leftShape = new THREE.Shape();
+        for (let i = 0; i <= cSegs; i++) {
+            const ang = Math.PI / 2 + (i / cSegs) * Math.PI;
+            if (i === 0) leftShape.moveTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+            else leftShape.lineTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+        }
+        for (let i = cSegs; i >= 0; i--) {
+            const ang = Math.PI / 2 + (i / cSegs) * Math.PI;
+            leftShape.lineTo(outerR * Math.cos(ang), outerR * Math.sin(ang));
+        }
+        leftShape.closePath();
+        const leftGeo = new THREE.ExtrudeGeometry(leftShape, { depth: casingFlangeT, bevelEnabled: false });
+        const leftMesh = new THREE.Mesh(leftGeo, mat);
+        leftMesh.position.set(-p.L / 2, 0, -casingFlangeT);
+        threeMeshGroup.add(leftMesh);
+
+        // Screw holes around the flange perimeter
+        // Top straight edge screws
+        const straightScrewSpacing = 30;
+        const nStraightScrews = Math.max(2, Math.floor(p.L / straightScrewSpacing));
+        const straightStep = p.L / (nStraightScrews + 1);
+        for (let i = 1; i <= nStraightScrews; i++) {
+            const sx = -p.L / 2 + i * straightStep;
+            // Top edge
+            const hGeo = new THREE.CylinderGeometry(screwR, screwR, casingFlangeT + 0.4, 12);
+            const hMesh = new THREE.Mesh(hGeo, screwHoleMat);
+            hMesh.rotation.x = Math.PI / 2;
+            hMesh.position.set(sx, -(screwCenterR), -casingFlangeT / 2);
+            threeMeshGroup.add(hMesh);
+            // Bottom edge
+            const hMesh2 = new THREE.Mesh(hGeo, screwHoleMat);
+            hMesh2.rotation.x = Math.PI / 2;
+            hMesh2.position.set(sx, screwCenterR, -casingFlangeT / 2);
+            threeMeshGroup.add(hMesh2);
+        }
+
+        // Arc screws (right and left semicircles)
+        const nArcScrews = 5;  // per semicircle
+        [p.L / 2, -p.L / 2].forEach((cx, idx) => {
+            const startA = idx === 0 ? -Math.PI / 2 : Math.PI / 2;
+            const endA = idx === 0 ? Math.PI / 2 : 3 * Math.PI / 2;
+            for (let i = 1; i <= nArcScrews; i++) {
+                const ang = startA + (i / (nArcScrews + 1)) * (endA - startA);
+                const hx = cx + screwCenterR * Math.cos(ang);
+                const hy = screwCenterR * Math.sin(ang);
+                const hGeo = new THREE.CylinderGeometry(screwR, screwR, casingFlangeT + 0.4, 12);
+                const hMesh = new THREE.Mesh(hGeo, screwHoleMat);
+                hMesh.rotation.x = Math.PI / 2;
+                hMesh.position.set(hx, hy, -casingFlangeT / 2);
+                threeMeshGroup.add(hMesh);
+            }
+        });
+    }
+
     // ===== Flanges — extrude from racetrack back face (z=0 side) for drive shaft bearings =====
+    // Skipped in paired config and crankshaft drive (flanges are for bevel gear drive shaft)
+    if (cfg !== 'paired' && driveTypeSelect.value === 'bevel') {
     // These are integral parts of the racetrack body, same material.
     // The gears/teeth face is at z=3*depth (front). The back face is z=0.
     // Flanges extrude from z=0 into -Z.
@@ -2974,7 +3533,7 @@ function buildRacetrack3D(p, zShift) {
     const flangeExt = 20;              // how far the flanges extend behind the back face
     const shaftHoleR = 4;              // drive shaft bearing hole radius
     const flangeInnerR = outerR * 0.45; // inner radius — large enough to clear bevel gears
-    const flangeHoleMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const flangeHoleMat = getCachedMaterial(0x0d1117, 1.0);
     const motorFlatX = outerR * 0.7;   // how far out the flat is from center (along local X)
 
     // Each flange is an annular arc extruded from the back face (z=0 into -Z).
@@ -3018,6 +3577,7 @@ function buildRacetrack3D(p, zShift) {
         holeMesh.position.set(cx, 0, -flangeExt / 2);
         threeMeshGroup.add(holeMesh);
     });
+    } // end cfg !== 'paired'
 
     // Outer rack teeth (r1/r3 module)
     const nTeethOuter = Math.max(12, Math.round(p.r1 / 3));
@@ -3031,7 +3591,7 @@ function buildRacetrack3D(p, zShift) {
     outerToothShape.lineTo(wBotO, 0);
     outerToothShape.closePath();
     const outerToothGeo = new THREE.ExtrudeGeometry(outerToothShape, { depth: depth, bevelEnabled: false });
-    const matToothOuter = new THREE.MeshPhongMaterial({ color: 0xc084fc });
+    const matToothOuter = getCachedMaterial(0xc084fc, 1.0);
     const zOff = 2 * depth + zShift;
 
     // Top straight teeth (at y=-R1, pointing downward)
@@ -3068,15 +3628,15 @@ function buildGear3D(radius, nTeeth, depth, color, cx, cy, cz = 0, holeRadius = 
     // Add center hole
     const holeR = holeRadius || radius * 0.2;
     const hole = new THREE.Path();
-    for (let i = 0; i <= 32; i++) {
-        const a = (i / 32) * 2 * Math.PI;
+    for (let i = 0, cs = getCircleSegs(); i <= cs; i++) {
+        const a = (i / cs) * 2 * Math.PI;
         if (i === 0) hole.moveTo(Math.cos(a) * holeR, Math.sin(a) * holeR);
         else hole.lineTo(Math.cos(a) * holeR, Math.sin(a) * holeR);
     }
     shape.holes.push(hole);
 
     const geo = new THREE.ExtrudeGeometry(shape, { depth: depth, bevelEnabled: false });
-    const mat = new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.85 });
+    const mat = getCachedMaterial(color);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(cx, cy, cz);
     if (rotZ) mesh.rotation.z = rotZ;
@@ -3117,6 +3677,18 @@ function buildGearR4_3D(p, state, depth, zShift) {
     buildGear3D(p.r4, nTeeth, depth, 0xf59e0b, dx, dy, 0, null, rot);
 }
 
+// Transfer gear — additional spur gear on the compound shaft, below r2 (z < 0).
+// Only used in paired configuration. Meshes with the idler gear train.
+function buildTransferGear3D(p, state, depth, zShift) {
+    const transferDepth = depth;
+    const transferZ = -transferDepth - 2;  // below z=0 with clearance
+    const transferR = p.r2;  // same radius as r2 for now (will be sized by gear train)
+    const nTeeth = Math.max(8, Math.round(transferR / 3));
+    const shaftR = p.r2 * 0.2;
+    const rot = -state.compTheta;  // same rotation as compound
+    buildGear3D(transferR, nTeeth, transferDepth, 0x6366f1, state.compX, state.compY, transferZ, shaftR, rot);
+}
+
 // Compound gear spacer — cylinder between r2 (z=0) and r1 (z=2*depth+zShift)
 // Extended by zShift to accommodate inner idler clearance
 function buildCompoundSpacer3D(p, state, depth, zShift) {
@@ -3125,8 +3697,8 @@ function buildCompoundSpacer3D(p, state, depth, zShift) {
     const spacerH = depth + zShift;  // extended spacer
 
     // Outer cylinder
-    const outerGeo = new THREE.CylinderGeometry(outerR, outerR, spacerH, 32);
-    const mat = new THREE.MeshPhongMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.85 });
+    const outerGeo = new THREE.CylinderGeometry(outerR, outerR, spacerH, getCircleSegs());
+    const mat = getCachedMaterial(0x60a5fa);
     const mesh = new THREE.Mesh(outerGeo, mat);
     mesh.rotation.x = Math.PI / 2;
     mesh.position.set(state.compX, state.compY, depth + spacerH / 2);
@@ -3134,7 +3706,7 @@ function buildCompoundSpacer3D(p, state, depth, zShift) {
 
     // Shaft hole (dark cylinder to fake the hole)
     const holeGeo = new THREE.CylinderGeometry(shaftR, shaftR, spacerH + 0.2, 16);
-    const holeMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const holeMat = getCachedMaterial(0x0d1117, 1.0);
     const holeMesh = new THREE.Mesh(holeGeo, holeMat);
     holeMesh.rotation.x = Math.PI / 2;
     holeMesh.position.set(state.compX, state.compY, depth + spacerH / 2);
@@ -3144,7 +3716,7 @@ function buildCompoundSpacer3D(p, state, depth, zShift) {
 // Carrier arm — connects compound center to driven gear shafts
 function buildCarrierArm3D(p, state, depth, zShift) {
     const armColor = 0x10b981;
-    const mat = new THREE.MeshPhongMaterial({ color: armColor, transparent: true, opacity: 0.85 });
+    const mat = getCachedMaterial(armColor);
     const spacerOuterR = p.r2 * 0.45;        // spacer outer radius (must match spacer)
     const gearShaftR = p.r2 * 0.2;           // gear shaft hole radius
     const centerHoleR = spacerOuterR + 1;    // arm center hole: clearance around spacer
@@ -3167,8 +3739,8 @@ function buildCarrierArm3D(p, state, depth, zShift) {
 
     // Center hole — must be bigger than spacer outer diameter
     const centerHole = new THREE.Path();
-    for (let i = 0; i <= 32; i++) {
-        const a = (i / 32) * 2 * Math.PI;
+    for (let i = 0, cs = getCircleSegs(); i <= cs; i++) {
+        const a = (i / cs) * 2 * Math.PI;
         if (i === 0) centerHole.moveTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
         else centerHole.lineTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
     }
@@ -3187,7 +3759,7 @@ function buildCarrierArm3D(p, state, depth, zShift) {
     threeMeshGroup.add(armMesh);
 
     // Shaft pegs — each sized to fit its gear's hole (radius * 0.2)
-    const pegMat = new THREE.MeshPhongMaterial({ color: 0x6ee7b7 });
+    const pegMat = getCachedMaterial(0x6ee7b7, 1.0);
 
     // Shaft peg for r4 (extends down from arm to r4 gear at z=0)
     const pegR4 = p.r4 * 0.2 * 0.95;  // snug fit in r4 hole
@@ -3228,7 +3800,7 @@ function buildCarrierArm3D(p, state, depth, zShift) {
 
 // Outer arm — sits on outer side (above r1/r3 plane), holds outer idler wheel
 function buildOuterArm3D(p, state, depth, zShift) {
-    const mat = new THREE.MeshPhongMaterial({ color: 0xf472b6, transparent: true, opacity: 0.85 });
+    const mat = getCachedMaterial(0xf472b6);
     const baseT = parseFloat(baseThickSlider.value);
     const compShaftR = p.r2 * 0.2;       // compound shaft radius
     const centerHoleR = compShaftR * 1.05; // clearance around compound shaft
@@ -3259,8 +3831,8 @@ function buildOuterArm3D(p, state, depth, zShift) {
 
     // Center hole (compound shaft diameter with clearance)
     const hole1 = new THREE.Path();
-    for (let i = 0; i <= 32; i++) {
-        const a = (i / 32) * 2 * Math.PI;
+    for (let i = 0, cs = getCircleSegs(); i <= cs; i++) {
+        const a = (i / cs) * 2 * Math.PI;
         if (i === 0) hole1.moveTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
         else hole1.lineTo(Math.cos(a) * centerHoleR, Math.sin(a) * centerHoleR);
     }
@@ -3268,8 +3840,8 @@ function buildOuterArm3D(p, state, depth, zShift) {
 
     // r3 shaft hole
     const hole2 = new THREE.Path();
-    for (let i = 0; i <= 32; i++) {
-        const a = (i / 32) * 2 * Math.PI;
+    for (let i = 0, cs = getCircleSegs(); i <= cs; i++) {
+        const a = (i / cs) * 2 * Math.PI;
         if (i === 0) hole2.moveTo(orbitB + Math.cos(a) * r3HoleR, Math.sin(a) * r3HoleR);
         else hole2.lineTo(orbitB + Math.cos(a) * r3HoleR, Math.sin(a) * r3HoleR);
     }
@@ -3283,22 +3855,147 @@ function buildOuterArm3D(p, state, depth, zShift) {
     armMesh.rotation.z = angle;
     threeMeshGroup.add(armMesh);
 
-    // Idler shaft peg — extends from arm down to idler wheel
+    // Idler shaft peg — extends from outer arm top down through both outer idlers
     const idlerPegR = idlerR * 0.2 * 0.95;
-    const pegMat = new THREE.MeshPhongMaterial({ color: 0xfda4af });
-    // Outer idler wheel is at rack midplane: z = 2*depth+zShift to 3*depth+zShift
-    const idlerBottom = 2 * depth + zShift;
-    const pegH = armZ + armThick - idlerBottom;  // from arm top down to wheel bottom
+    const pegMat = getCachedMaterial(0xfda4af, 1.0);
+    // Second outer idler is at the inner idler Z level (just below carrier arm in spacer)
+    const clearance2 = 1;
+    const carrierArmThick = depth - 2 * clearance2;
+    const carrierArmZ = 2 * depth + zShift - gearClearance - carrierArmThick;
+    const idler2TopZ = carrierArmZ - gearClearance;
+    const idler2BottomZ = idler2TopZ - depth;
+    // Peg extends from outer arm top down to second outer idler bottom
+    const pegH = armZ + armThick - idler2BottomZ;
     const pegGeo = new THREE.CylinderGeometry(idlerPegR, idlerPegR, pegH, 16);
     const peg = new THREE.Mesh(pegGeo, pegMat);
     peg.rotation.x = Math.PI / 2;
     const ix = state.compX + state.radX * idlerDist;
     const iy = state.compY + state.radY * idlerDist;
-    peg.position.set(ix, iy, idlerBottom + pegH / 2);
+    peg.position.set(ix, iy, idler2BottomZ + pegH / 2);
     threeMeshGroup.add(peg);
 }
 
-// Outer idler wheel — rolls on outside of outer rack, midplane aligned with rack midplane
+// Output shaft tube — hollow cylinder extruded from the outer arm's center hole,
+// extending upward through the casing front cover and beyond.
+// Separate part from the outer arm — integral to the outer arm assembly.
+function buildShaftTube3D(p, state, depth, zShift) {
+    const gearClearance = 2;
+    const armZ = 3 * depth + zShift + gearClearance;
+    const outerArmTop = armZ + depth;
+    const frontCoverZ = outerArmTop + gearClearance;
+    const coverPlateT = 3;
+
+    const compShaftR = p.r2 * 0.2;
+    const centerHoleR = compShaftR * 1.05;
+    const shaftTubeWall = 2;
+    const shaftTubeInnerR = centerHoleR;
+    const shaftTubeOuterR = shaftTubeInnerR + shaftTubeWall;
+    const shaftTubeExtBeyond = 15;
+    const shaftTubeTop = frontCoverZ + coverPlateT + shaftTubeExtBeyond;
+    const shaftTubeBot = armZ;
+    const shaftTubeH = shaftTubeTop - shaftTubeBot;
+
+    const tubeMat = getCachedMaterial(0xf472b6);
+    const tubeOuterGeo = new THREE.CylinderGeometry(shaftTubeOuterR, shaftTubeOuterR, shaftTubeH, 24);
+    const tubeOuterMesh = new THREE.Mesh(tubeOuterGeo, tubeMat);
+    tubeOuterMesh.rotation.x = Math.PI / 2;
+    tubeOuterMesh.position.set(state.compX, state.compY, shaftTubeBot + shaftTubeH / 2);
+    threeMeshGroup.add(tubeOuterMesh);
+
+    const tubeBoreMat = getCachedMaterial(0x0d1117, 1.0);
+    const tubeBoreGeo = new THREE.CylinderGeometry(shaftTubeInnerR, shaftTubeInnerR, shaftTubeH + 0.4, 24);
+    const tubeBoreMesh = new THREE.Mesh(tubeBoreGeo, tubeBoreMat);
+    tubeBoreMesh.rotation.x = Math.PI / 2;
+    tubeBoreMesh.position.set(state.compX, state.compY, shaftTubeBot + shaftTubeH / 2);
+    threeMeshGroup.add(tubeBoreMesh);
+}
+
+// Output arm — separate part that press-fits onto the shaft tube outside the casing.
+// This is the final output link of the mechanism.
+function buildOutputArm3D(p, state, depth, zShift) {
+    const gearClearance = 2;
+    const armZ = 3 * depth + zShift + gearClearance;
+    const outerArmTop = armZ + depth;
+    const frontCoverZ = outerArmTop + gearClearance;
+    const coverPlateT = 3;
+
+    const compShaftR = p.r2 * 0.2;
+    const centerHoleR = compShaftR * 1.05;
+    const shaftTubeWall = 2;
+    const shaftTubeInnerR = centerHoleR;
+    const shaftTubeOuterR = shaftTubeInnerR + shaftTubeWall;
+
+    const baseT = 8;
+    const idlerR = p.r3;
+    const idlerDist = p.R1 + baseT + idlerR;
+    const outputArmLen = idlerDist;  // same length as outer arm
+    const outputArmW = shaftTubeOuterR * 2.5;
+    const outputArmThick = depth;  // tall — same as gear depth
+    const outputArmZ = frontCoverZ + coverPlateT + 1;  // 1 unit clearance above cover
+
+    const outputMat = getCachedMaterial(0xec4899);
+
+    const outArmShape = new THREE.Shape();
+    outArmShape.moveTo(0, -outputArmW / 2);
+    outArmShape.lineTo(outputArmLen, -outputArmW / 2);
+    outArmShape.arc(0, outputArmW / 2, outputArmW / 2, -Math.PI / 2, Math.PI / 2, false);
+    outArmShape.lineTo(0, outputArmW / 2);
+    outArmShape.arc(0, -outputArmW / 2, outputArmW / 2, Math.PI / 2, -Math.PI / 2, false);
+    outArmShape.closePath();
+
+    const outHole = new THREE.Path();
+    for (let i = 0, cs = getCircleSegs(); i <= cs; i++) {
+        const a = (i / cs) * 2 * Math.PI;
+        if (i === 0) outHole.moveTo(Math.cos(a) * shaftTubeInnerR, Math.sin(a) * shaftTubeInnerR);
+        else outHole.lineTo(Math.cos(a) * shaftTubeInnerR, Math.sin(a) * shaftTubeInnerR);
+    }
+    outArmShape.holes.push(outHole);
+
+    const angle = Math.atan2(state.radY, state.radX);
+    const outArmGeo = new THREE.ExtrudeGeometry(outArmShape, { depth: outputArmThick, bevelEnabled: false });
+    const outArmMesh = new THREE.Mesh(outArmGeo, outputMat);
+    outArmMesh.position.set(state.compX, state.compY, outputArmZ);
+    outArmMesh.rotation.z = angle;
+    threeMeshGroup.add(outArmMesh);
+
+    // Body shaft — pin on the output arm that slides in the body's vertical slot.
+    // Offset from compound center along the arm direction.
+    const bodyShaftDist = idlerDist * 0.6;
+    const bodyShaftR = 3;
+    const bodyBarT = 5;
+    const bodyShaftTop = outputArmZ + outputArmThick + bodyBarT + 5;
+    const bodyShaftH = bodyShaftTop - outputArmZ;
+    const bsMat = getCachedMaterial(0xd4d4d8);
+    const bsGeo = new THREE.CylinderGeometry(bodyShaftR, bodyShaftR, bodyShaftH, 16);
+    const bsMesh = new THREE.Mesh(bsGeo, bsMat);
+    bsMesh.rotation.x = Math.PI / 2;
+    const bsx = state.compX + state.radX * bodyShaftDist;
+    const bsy = state.compY + state.radY * bodyShaftDist;
+    bsMesh.position.set(bsx, bsy, outputArmZ + bodyShaftH / 2);
+    threeMeshGroup.add(bsMesh);
+}
+
+// Helper: create a V-slot wheel geometry using LatheGeometry
+// Cross-section profile: flat rims at top/bottom with a V-groove around the circumference
+// The V-groove depth is how deep the groove cuts into the wheel rim
+function makeVSlotWheelGeo(outerR, holeR, halfThick, vDepth, vAngle, segs) {
+    // Profile points (in r,z space for lathe, where z is the wheel axis)
+    // Going from bottom to top of the wheel cross-section:
+    // Bottom face outer edge → V-groove lower rim → V-groove bottom (narrowest) → V-groove upper rim → Top face outer edge
+    // Then back inward along the top face, down the bore, along bottom face
+    const rimR = outerR;
+    const grooveR = outerR - vDepth;  // radius at the bottom of the V-groove
+    const pts = [
+        new THREE.Vector2(holeR, -halfThick),        // bottom inner (bore)
+        new THREE.Vector2(rimR, -halfThick),          // bottom outer (rim)
+        new THREE.Vector2(grooveR, 0),                // V-groove center (narrowest point)
+        new THREE.Vector2(rimR, halfThick),           // top outer (rim)
+        new THREE.Vector2(holeR, halfThick),          // top inner (bore)
+    ];
+    return new THREE.LatheGeometry(pts, segs);
+}
+
+// Outer idler wheel — V-slot wheel rolling on outside of outer rack
 function buildIdlerWheel3D(p, state, depth, zShift) {
     const baseT = parseFloat(baseThickSlider.value);
     const idlerR = p.r3;
@@ -3306,11 +4003,15 @@ function buildIdlerWheel3D(p, state, depth, zShift) {
 
     // Outer rack: z=2*depth+zShift to z=3*depth+zShift, midplane = 2.5*depth+zShift
     const rackMidZ = 2 * depth + zShift + depth / 2;
-    const wheelThick = depth;  // same as rack thickness
+    const wheelThick = depth;
+    const halfThick = wheelThick / 2;
+    const vDepth = Math.min(idlerR * 0.25, depth * 0.4);  // V-groove depth
+    const holeR = idlerR * 0.2;
 
-    const mat = new THREE.MeshPhongMaterial({ color: 0xfb923c, transparent: true, opacity: 0.85 });
-    const geo = new THREE.CylinderGeometry(idlerR, idlerR, wheelThick, 32);
+    const mat = getCachedMaterial(0xfb923c);
+    const geo = makeVSlotWheelGeo(idlerR, holeR, halfThick, vDepth, 90, 32);
     const wheel = new THREE.Mesh(geo, mat);
+    // LatheGeometry generates around Y axis; we need the wheel axis along Z
     wheel.rotation.x = Math.PI / 2;
 
     const angle = Math.atan2(state.radY, state.radX);
@@ -3318,15 +4019,39 @@ function buildIdlerWheel3D(p, state, depth, zShift) {
     const iy = state.compY + Math.sin(angle) * idlerDist;
     wheel.position.set(ix, iy, rackMidZ);
     threeMeshGroup.add(wheel);
+}
 
-    // Hub hole
+// Second outer idler wheel — V-slot wheel, coaxial with first outer idler (same shaft),
+// positioned at the inner idler's Z level in the spacer region.
+// Together with the first outer idler (at rack level) and the inner idler,
+// these three form a triangular support for racetrack stability.
+function buildOuterIdler2_3D(p, state, depth, zShift) {
+    const baseT = parseFloat(baseThickSlider.value);
+    const idlerR = p.r3;  // same radius as first outer idler
+    const idlerDist = p.R1 + baseT + idlerR;  // same radial distance as first outer idler
+
+    // Z position: same as inner idler (just below carrier arm in spacer)
+    const clearance = 1;
+    const armThick = depth - 2 * clearance;
+    const gearClearance = 2;
+    const armZ = 2 * depth + zShift - gearClearance - armThick;
+    const idlerTopZ = armZ - gearClearance;
+    const wheelThick = depth;
+    const halfThick = wheelThick / 2;
+    const wheelMidZ = idlerTopZ - halfThick;
+    const vDepth = Math.min(idlerR * 0.25, depth * 0.4);
     const holeR = idlerR * 0.2;
-    const holeMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
-    const holeGeo = new THREE.CylinderGeometry(holeR, holeR, wheelThick + 0.2, 16);
-    const holeMesh = new THREE.Mesh(holeGeo, holeMat);
-    holeMesh.rotation.x = Math.PI / 2;
-    holeMesh.position.set(ix, iy, rackMidZ);
-    threeMeshGroup.add(holeMesh);
+
+    const mat = getCachedMaterial(0xf97316);
+    const geo = makeVSlotWheelGeo(idlerR, holeR, halfThick, vDepth, 90, 32);
+    const wheel = new THREE.Mesh(geo, mat);
+    wheel.rotation.x = Math.PI / 2;
+
+    const angle = Math.atan2(state.radY, state.radX);
+    const ix = state.compX + Math.cos(angle) * idlerDist;
+    const iy = state.compY + Math.sin(angle) * idlerDist;
+    wheel.position.set(ix, iy, wheelMidZ);
+    threeMeshGroup.add(wheel);
 }
 
 // Inner idler wheel — coaxial with r3, rolls on inside of R1 wall
@@ -3345,8 +4070,8 @@ function buildInnerIdlerWheel3D(p, state, depth, zShift) {
     const idlerTopZ = armZ - gearClearance;  // clearance below arm
     const wheelMidZ = idlerTopZ - wheelThick / 2;
 
-    const mat = new THREE.MeshPhongMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
-    const geo = new THREE.CylinderGeometry(idlerR, idlerR, wheelThick, 32);
+    const mat = getCachedMaterial(0x38bdf8);
+    const geo = new THREE.CylinderGeometry(idlerR, idlerR, wheelThick, getCircleSegs());
     const wheel = new THREE.Mesh(geo, mat);
     wheel.rotation.x = Math.PI / 2;
 
@@ -3359,7 +4084,7 @@ function buildInnerIdlerWheel3D(p, state, depth, zShift) {
 
     // Hub hole
     const holeR = Math.min(idlerR * 0.35, p.r3 * 0.2);
-    const holeMat = new THREE.MeshPhongMaterial({ color: 0x0d1117 });
+    const holeMat = getCachedMaterial(0x0d1117, 1.0);
     const holeGeo = new THREE.CylinderGeometry(holeR, holeR, wheelThick + 0.2, 16);
     const holeMesh = new THREE.Mesh(holeGeo, holeMat);
     holeMesh.rotation.x = Math.PI / 2;
@@ -3384,7 +4109,7 @@ function buildDriveShaft3D(p, state, depth) {
     const shaftZ = -flangeExt / 2;  // centered in the flanges, behind z=0 face
     const shaftLen = p.L + 2 * outerR + 40;    // extends beyond racetrack ends
 
-    const mat = new THREE.MeshPhongMaterial({ color: 0xe879f9, transparent: true, opacity: 0.8 });
+    const mat = getCachedMaterial(0xe879f9, 0.8);
     const geo = new THREE.CylinderGeometry(shaftR, shaftR, shaftLen, 16);
     const shaft = new THREE.Mesh(geo, mat);
     // Cylinder default is along Y — rotate to lie along X
@@ -3399,7 +4124,7 @@ function buildBevelShaft3D(p, state, depth) {
     const bevelR = 12;
     const bevelH = 10;
 
-    const mat = new THREE.MeshPhongMaterial({ color: 0xc084fc, transparent: true, opacity: 0.85 });
+    const mat = getCachedMaterial(0xc084fc);
 
     // Bevel gear on drive shaft — cone with base at shaft, tip pointing toward compound (+Z toward racetrack)
     const geo = new THREE.ConeGeometry(bevelR, bevelH, 20);
@@ -3415,7 +4140,7 @@ function buildBevelCompound3D(p, state, depth) {
     const bevelR = 12;
     const bevelH = 10;
 
-    const mat = new THREE.MeshPhongMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.85 });
+    const mat = getCachedMaterial(0xa78bfa);
 
     // Bevel gear on compound shaft — cone with base at z=0 (back face), tip pointing toward drive shaft (-Z)
     const geo = new THREE.ConeGeometry(bevelR, bevelH, 20);
@@ -3425,6 +4150,452 @@ function buildBevelCompound3D(p, state, depth) {
     bevel.rotation.x = Math.PI / 2;
     bevel.position.set(state.compX, 0, -bevelH / 2);
     threeMeshGroup.add(bevel);
+}
+
+// Crankshaft drive system — alternative to bevel gear drive.
+// Two end crankshafts at ±L/2 (fixed) + one compound crankshaft (moves with compound).
+// Structure: Disc→Pin→Disc→Pin→Disc→Pin→Disc (4 discs, 3 pins per crankshaft).
+// Each pin is offset from disc center by throwR, at 120° intervals.
+// Bars have round holes for end crank pins, slots for compound crank pins.
+function buildCrankshaftDrive3D(p, state, depth) {
+    // Crankshaft dimensions
+    const pinR = 3;             // crank pin radius
+    const throwR = 18;          // pin offset from disc center
+    const pinH = 5;             // pin height (Z, between two discs)
+    const discR = throwR + pinR + 2;  // disc radius — must enclose the pins
+    const discH = 3;            // disc thickness
+    const clearance = 2;        // clearance from z=0
+
+    // Bar dimensions
+    const barW = 12;            // bar width (Y)
+    const barT = pinH;          // bar thickness = pin height
+    const holeR = pinR + 0.5;   // hole radius (snug around end crank pin)
+    const slotHalfW = pinR + 1; // slot half-width (Y clearance around compound pin)
+
+    // Materials
+    const pinMat = getCachedMaterial(0xf59e0b);        // amber pins
+    const discMat = getCachedMaterial(0x78716c);        // warm gray discs
+    const barMat = getCachedMaterial(0xb0b8c4);        // metallic gray bars
+    const holeMat = getCachedMaterial(0x0d1117, 1.0);  // dark (hole/slot cutout)
+
+    // End crankshaft positions — pushed far outward beyond racetrack ends
+    const endOffset = p.L / 2 + throwR + discR + 40;  // much bigger spacing
+    const endCenters = [endOffset, -endOffset];
+    // Compound crankshaft position
+    const compX = state.compX;
+
+    // Rotation angles — compound uses -compTheta (like the gear), end cranks same
+    const compAngle = -state.compTheta;
+    const endAngle = -state.compTheta;
+
+    // 3 pin angles at 120° apart
+    const pinAngles = [0, 2 * Math.PI / 3, 4 * Math.PI / 3];
+
+    // Z layout: Disc0 → Pin0 → Disc1 → Pin1 → Disc2 → Pin2 → Disc3
+    function discZCenter(i) { return -(clearance + i * (pinH + discH) + discH / 2); }
+    function pinZCenter(i) { return -(clearance + (i + 1) * discH + i * pinH + pinH / 2); }
+
+    // === Build each crankshaft (2 end + 1 compound) ===
+    const crankshafts = [
+        ...endCenters.map(ex => ({ cx: ex, angle: endAngle })),
+        { cx: compX, angle: compAngle }
+    ];
+
+    crankshafts.forEach(({ cx, angle }) => {
+        // 4 discs
+        for (let d = 0; d < 4; d++) {
+            const dz = discZCenter(d);
+            const dGeo = new THREE.CylinderGeometry(discR, discR, discH, 24);
+            const dMesh = new THREE.Mesh(dGeo, discMat);
+            dMesh.rotation.x = Math.PI / 2;
+            dMesh.position.set(cx, 0, dz);
+            threeMeshGroup.add(dMesh);
+        }
+
+        // 3 pins (connecting disc i to disc i+1)
+        for (let i = 0; i < 3; i++) {
+            const pinAngle = pinAngles[i] + angle;
+            const pz = pinZCenter(i);
+            const px = cx + Math.cos(pinAngle) * throwR;
+            const py = Math.sin(pinAngle) * throwR;
+
+            const pGeo = new THREE.CylinderGeometry(pinR, pinR, pinH, 16);
+            const pMesh = new THREE.Mesh(pGeo, pinMat);
+            pMesh.rotation.x = Math.PI / 2;
+            pMesh.position.set(px, py, pz);
+            threeMeshGroup.add(pMesh);
+        }
+    });
+
+    // === Build 3 bars (one per pin level) ===
+    for (let i = 0; i < 3; i++) {
+        const angle = pinAngles[i] + endAngle;  // bars follow end crank rotation
+        const pz = pinZCenter(i);
+
+        // Pin offset from crankshaft axis (same for both end cranks, they rotate in sync)
+        const pinDx = Math.cos(angle) * throwR;
+        const pinDy = Math.sin(angle) * throwR;
+
+        // End crank pin positions (bar connects these two pins)
+        const ep1X = endCenters[0] + pinDx;
+        const ep2X = endCenters[1] + pinDx;
+        const pin1X = Math.min(ep1X, ep2X);
+        const pin2X = Math.max(ep1X, ep2X);
+        const barLen = pin2X - pin1X;
+        const barCx = (pin1X + pin2X) / 2;
+
+        // Bar body — metallic bar connecting the two end pins
+        const barGeo = new THREE.BoxGeometry(barLen, barW, barT);
+        const barMesh = new THREE.Mesh(barGeo, barMat);
+        barMesh.position.set(barCx, pinDy, pz);
+        threeMeshGroup.add(barMesh);
+
+        // Rounded ends on bar
+        const capGeo = new THREE.CylinderGeometry(barW / 2, barW / 2, barT, 16);
+        const capL = new THREE.Mesh(capGeo, barMat);
+        capL.rotation.x = Math.PI / 2;
+        capL.position.set(pin1X, pinDy, pz);
+        threeMeshGroup.add(capL);
+        const capR = new THREE.Mesh(capGeo, barMat);
+        capR.rotation.x = Math.PI / 2;
+        capR.position.set(pin2X, pinDy, pz);
+        threeMeshGroup.add(capR);
+
+        // Round holes for end crank pins (dark cylinders through bar)
+        endCenters.forEach(ex => {
+            const hGeo = new THREE.CylinderGeometry(holeR, holeR, barT + 0.4, 16);
+            const hMesh = new THREE.Mesh(hGeo, holeMat);
+            hMesh.rotation.x = Math.PI / 2;
+            hMesh.position.set(ex + pinDx, pinDy, pz);
+            threeMeshGroup.add(hMesh);
+        });
+
+        // Slot for compound crank pin
+        // The compound travels roughly within ±(L/2 + throwR) in X
+        // Slot length = travel range of compound pin + some margin
+        const slotLen = p.L + 2 * throwR + 10;
+        // Slot is a rectangular cutout thru the bar, narrower than the bar
+        const slotGeo = new THREE.BoxGeometry(slotLen, slotHalfW * 2, barT + 0.4);
+        const slotMesh = new THREE.Mesh(slotGeo, holeMat);
+        slotMesh.position.set(barCx, pinDy, pz);
+        threeMeshGroup.add(slotMesh);
+        // Slot end caps (rounded ends of the slot)
+        const slotCapGeo = new THREE.CylinderGeometry(slotHalfW, slotHalfW, barT + 0.4, 16);
+        const scL = new THREE.Mesh(slotCapGeo, holeMat);
+        scL.rotation.x = Math.PI / 2;
+        scL.position.set(barCx - slotLen / 2, pinDy, pz);
+        threeMeshGroup.add(scL);
+        const scR = new THREE.Mesh(slotCapGeo, holeMat);
+        scR.rotation.x = Math.PI / 2;
+        scR.position.set(barCx + slotLen / 2, pinDy, pz);
+        threeMeshGroup.add(scR);
+    }
+}
+
+// Transfer gear train — idler gear(s) connecting the two compound transfer gears.
+// The transfer gears on each compound shaft are built by buildTransferGear3D (per-set).
+// This function builds only the idler gear(s) and the connecting bar.
+// 1 idler (odd count) ensures both compounds rotate in the same direction.
+function buildTransferGearTrain3D(p, depth, set2X, tFrac, phaseOffset, xOffset) {
+    xOffset = xOffset || 0;
+    const transferDepth = depth;
+    const transferZ = -transferDepth - 2;  // same Z as transfer gears on compound
+
+    // Transfer gear on each compound has radius p.r2.
+    // With 1 idler centered at set2X/2: idlerR = set2X/2 - p.r2
+    const transferR = p.r2;
+    const idlerR = set2X / 2 - transferR;
+    const idlerX = set2X / 2;
+
+    const compShaftR = p.r2 * 0.2;
+
+    // Idler rotation: driven by transfer gear 1 (at x=0).
+    // idlerAngle = -compTheta * (transferR / idlerR)
+    const state1 = getStateFromTime(tFrac, p);
+    const idlerAngle = state1.compTheta * (transferR / idlerR);  // sign: compound uses -compTheta, idler reverses
+
+    // Build idler gear using the shared buildGear3D helper
+    const nTeeth = Math.max(8, Math.round(idlerR / 3));
+    buildGear3D(idlerR, nTeeth, transferDepth, 0x6366f1, xOffset + idlerX, 0, transferZ, compShaftR, idlerAngle);
+
+    // Connecting bar — fixed, holds compound shafts + idler shaft
+    const barW = compShaftR * 4;
+    const barT = 4;
+    const barLen = set2X;
+    const barZ = transferZ - barT - 0.5;  // below transfer gears
+
+    const barMat = getCachedMaterial(0xb0b8c4);  // metallic, matches body
+    const barGeo = new THREE.BoxGeometry(barLen, barW, barT);
+    const bar = new THREE.Mesh(barGeo, barMat);
+    bar.position.set(xOffset + set2X / 2, 0, barZ + barT / 2);
+    threeMeshGroup.add(bar);
+
+    // Rounded ends on the bar
+    const capGeo = new THREE.CylinderGeometry(barW / 2, barW / 2, barT, 16);
+    const cap1 = new THREE.Mesh(capGeo, barMat);
+    cap1.rotation.x = Math.PI / 2;
+    cap1.position.set(xOffset, 0, barZ + barT / 2);
+    threeMeshGroup.add(cap1);
+    const cap2 = new THREE.Mesh(capGeo, barMat);
+    cap2.rotation.x = Math.PI / 2;
+    cap2.position.set(xOffset + set2X, 0, barZ + barT / 2);
+    threeMeshGroup.add(cap2);
+    const cap3 = new THREE.Mesh(capGeo, barMat);
+    cap3.rotation.x = Math.PI / 2;
+    cap3.position.set(xOffset + idlerX, 0, barZ + barT / 2);
+    threeMeshGroup.add(cap3);
+
+    // Compound shaft pegs — extend from the bar upward through the transfer gears
+    // and into the compound gear (up to z = depth, where r2 sits)
+    const pegMat = getCachedMaterial(0xd4d4d8);
+    const compPegTop = depth;  // top of r2 gear layer
+    const compPegBot = barZ;
+    const compPegH = compPegTop - compPegBot;
+    [0, set2X].forEach(px => {
+        const pegGeo = new THREE.CylinderGeometry(compShaftR, compShaftR, compPegH, 16);
+        const peg = new THREE.Mesh(pegGeo, pegMat);
+        peg.rotation.x = Math.PI / 2;
+        peg.position.set(xOffset + px, 0, compPegBot + compPegH / 2);
+        threeMeshGroup.add(peg);
+    });
+
+    // Idler shaft peg — just through the idler gear and bar
+    const idlerPegH = transferDepth + barT + 2;
+    const idlerPegGeo = new THREE.CylinderGeometry(compShaftR * 0.8, compShaftR * 0.8, idlerPegH, 12);
+    const idlerPeg = new THREE.Mesh(idlerPegGeo, pegMat);
+    idlerPeg.rotation.x = Math.PI / 2;
+    idlerPeg.position.set(xOffset + idlerX, 0, transferZ + transferDepth / 2 - 1);
+    threeMeshGroup.add(idlerPeg);
+}
+
+// Body — fixed frame for paired configuration.
+// Two vertical slotted bars (one per set) connected by a horizontal cross-bar.
+// A body shaft on each outer arm (offset from center) slides in the vertical slot.
+// The slots run vertically (along Y). The cross-bar runs horizontally (along X).
+function buildBody3D(p, depth, zShift, set2X) {
+    const gearClearance = 2;
+    const armZ = 3 * depth + zShift + gearClearance;
+    const outerArmTop = armZ + depth;
+    const frontCoverZ = outerArmTop + gearClearance;
+    const coverPlateT = 3;
+
+    // Body shaft radius (the shaft on the outer arm that slides in the slot)
+    const bodyShaftR = 3;
+    const slotR = bodyShaftR + 1;  // clearance around body shaft
+
+    // Slot runs vertically (Y direction). The outer arm swings, so the body shaft
+    // traces a vertical arc. Slot length covers the full Y range of the shaft.
+    // The shaft is at bodyShaftDist from compound center on the outer arm.
+    // Max Y travel = bodyShaftDist (when arm points straight up/down).
+    const baseT = parseFloat(baseThickSlider.value);
+    const idlerR = p.r3;
+    const idlerDist = p.R1 + baseT + idlerR;
+    const bodyShaftDist = idlerDist * 0.6;  // body shaft position on outer arm
+    const slotLen = 2 * bodyShaftDist + slotR * 2;  // full vertical range + clearance
+
+    // Body sits at the output arm level (above casing cover)
+    const bodyZ = frontCoverZ + coverPlateT + 1;
+    const barW = slotR * 4;    // width (X extent) of each vertical slotted bar
+    const barT = 5;             // thickness (Z)
+
+    // Metallic appearance
+    const bodyMat = getCachedMaterial(0xb0b8c4);  // brushed steel gray
+    const holeMat = getCachedMaterial(0x0d1117, 1.0);
+
+    // Output arm Z (body bars sit at this level)
+    const outputArmThick = depth;
+    const outputArmZ = frontCoverZ + coverPlateT + 1;
+    const bodyBarZ = outputArmZ + outputArmThick / 2;  // midplane of output arm
+
+    // Vertical slotted bar for each set
+    const barLen = slotLen + barW;  // extra at ends for material around slot
+    [0, set2X].forEach(setX => {
+        // Bar — tall rectangle along Y
+        const barGeo = new THREE.BoxGeometry(barW, barLen, barT);
+        const barMesh = new THREE.Mesh(barGeo, bodyMat);
+        barMesh.position.set(setX, 0, bodyBarZ);
+        threeMeshGroup.add(barMesh);
+
+        // Rounded ends (top and bottom)
+        const capGeo = new THREE.CylinderGeometry(barW / 2, barW / 2, barT, 20);
+        const capTop = new THREE.Mesh(capGeo, bodyMat);
+        capTop.rotation.x = Math.PI / 2;
+        capTop.position.set(setX, barLen / 2, bodyBarZ);
+        threeMeshGroup.add(capTop);
+        const capBot = new THREE.Mesh(capGeo, bodyMat);
+        capBot.rotation.x = Math.PI / 2;
+        capBot.position.set(setX, -barLen / 2, bodyBarZ);
+        threeMeshGroup.add(capBot);
+
+        // Vertical slot — racetrack-shaped cutout running along Y
+        const slotHalfLen = slotLen / 2;
+        const slotCapGeo = new THREE.CylinderGeometry(slotR, slotR, barT + 0.4, 20);
+        // Top semicircle of slot
+        const slotCapTop = new THREE.Mesh(slotCapGeo, holeMat);
+        slotCapTop.rotation.x = Math.PI / 2;
+        slotCapTop.position.set(setX, slotHalfLen - slotR, bodyBarZ);
+        threeMeshGroup.add(slotCapTop);
+        // Bottom semicircle of slot
+        const slotCapBot = new THREE.Mesh(slotCapGeo, holeMat);
+        slotCapBot.rotation.x = Math.PI / 2;
+        slotCapBot.position.set(setX, -slotHalfLen + slotR, bodyBarZ);
+        threeMeshGroup.add(slotCapBot);
+        // Rectangle connecting the semicircles (vertical)
+        if (slotLen > 2 * slotR) {
+            const rectH = slotLen - 2 * slotR;
+            const slotRectGeo = new THREE.BoxGeometry(slotR * 2, rectH, barT + 0.4);
+            const slotRect = new THREE.Mesh(slotRectGeo, holeMat);
+            slotRect.position.set(setX, 0, bodyBarZ);
+            threeMeshGroup.add(slotRect);
+        }
+    });
+
+    // Top horizontal cross-bar connecting the two vertical bars
+    const crossBarLen = set2X;
+    const crossBarW = barW * 0.6;
+    const crossBarGeo = new THREE.BoxGeometry(crossBarLen, crossBarW, barT);
+    const crossBarTop = new THREE.Mesh(crossBarGeo, bodyMat);
+    crossBarTop.position.set(set2X / 2, barLen / 2, bodyBarZ);
+    threeMeshGroup.add(crossBarTop);
+
+    // Bottom horizontal cross-bar
+    const crossBarBot = new THREE.Mesh(crossBarGeo, bodyMat);
+    crossBarBot.position.set(set2X / 2, -barLen / 2, bodyBarZ);
+    threeMeshGroup.add(crossBarBot);
+}
+
+// Casing — racetrack-shaped enclosure screwed to the mounting flange.
+// Thin wall at casingOuterR from z=0 to the front, with a solid cover plate at the front.
+function buildCasing3D(p, depth, zShift) {
+    const baseT = parseFloat(baseThickSlider.value);
+    const outerR = p.R1 + baseT;
+    const gearClearance = 2;
+
+    // Compute casingOuterR same as mounting flange
+    const idlerR = p.r3;
+    const idlerDist = p.R1 + baseT + idlerR;
+    const idlerOuterEdge = idlerDist + idlerR;
+    const screwMargin = 6;
+    const screwR = 1.5;
+    const screwCenterR = idlerOuterEdge + screwMargin;
+    const casingOuterR = screwCenterR + screwR + 4;
+
+    // Casing extends from z=0 (back face, where flange is) to the front cover
+    // Front cover needs to clear the outer arm top: 3*depth + zShift + gearClearance + depth
+    const outerArmTop = 3 * depth + zShift + gearClearance + depth;
+    const frontCoverZ = outerArmTop + gearClearance;  // clearance beyond outer arm top
+    const casingWallT = 2;     // wall thickness (thin)
+    const coverPlateT = 3;     // front cover plate thickness
+    const casingTotalH = frontCoverZ;  // from z=0 to frontCoverZ
+
+    // Output shaft tube dimensions (must match buildOuterArm3D)
+    const compShaftR = p.r2 * 0.2;
+    const centerHoleR = compShaftR * 1.05;
+    const shaftTubeWall = 2;
+    const shaftTubeOuterR = centerHoleR + shaftTubeWall;
+    const slotR = shaftTubeOuterR + 1;  // slot clearance around tube
+
+    const mat = getCachedMaterial(0x64748b, 0.4);
+    const arcSegs = 64;
+
+    // --- Side walls: thin racetrack ring from casingOuterR-casingWallT to casingOuterR ---
+    const wallInnerR = casingOuterR - casingWallT;
+
+    // Top straight wall
+    const topGeo = new THREE.BoxGeometry(p.L, casingWallT, casingTotalH);
+    const topMesh = new THREE.Mesh(topGeo, mat);
+    topMesh.position.set(0, -(wallInnerR + casingWallT / 2), casingTotalH / 2);
+    threeMeshGroup.add(topMesh);
+    // Bottom straight wall
+    const botMesh = new THREE.Mesh(topGeo, mat);
+    botMesh.position.set(0, wallInnerR + casingWallT / 2, casingTotalH / 2);
+    threeMeshGroup.add(botMesh);
+
+    // Right arc wall
+    const rightShape = new THREE.Shape();
+    for (let i = 0; i <= arcSegs; i++) {
+        const ang = -Math.PI / 2 + (i / arcSegs) * Math.PI;
+        if (i === 0) rightShape.moveTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+        else rightShape.lineTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+    }
+    for (let i = arcSegs; i >= 0; i--) {
+        const ang = -Math.PI / 2 + (i / arcSegs) * Math.PI;
+        rightShape.lineTo(wallInnerR * Math.cos(ang), wallInnerR * Math.sin(ang));
+    }
+    rightShape.closePath();
+    const rightGeo = new THREE.ExtrudeGeometry(rightShape, { depth: casingTotalH, bevelEnabled: false });
+    const rightMesh = new THREE.Mesh(rightGeo, mat);
+    rightMesh.position.set(p.L / 2, 0, 0);
+    threeMeshGroup.add(rightMesh);
+
+    // Left arc wall
+    const leftShape = new THREE.Shape();
+    for (let i = 0; i <= arcSegs; i++) {
+        const ang = Math.PI / 2 + (i / arcSegs) * Math.PI;
+        if (i === 0) leftShape.moveTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+        else leftShape.lineTo(casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+    }
+    for (let i = arcSegs; i >= 0; i--) {
+        const ang = Math.PI / 2 + (i / arcSegs) * Math.PI;
+        leftShape.lineTo(wallInnerR * Math.cos(ang), wallInnerR * Math.sin(ang));
+    }
+    leftShape.closePath();
+    const leftGeo = new THREE.ExtrudeGeometry(leftShape, { depth: casingTotalH, bevelEnabled: false });
+    const leftMesh = new THREE.Mesh(leftGeo, mat);
+    leftMesh.position.set(-p.L / 2, 0, 0);
+    threeMeshGroup.add(leftMesh);
+
+    // --- Front cover plate: racetrack shape with racetrack-shaped slot ---
+    // The slot allows the output shaft tube to travel the full linear range of the compound center.
+    // Compound center travels along X from -L/2 to +L/2 at y=0, so the slot is a
+    // racetrack shape: straight from -L/2 to +L/2 with semicircular caps of radius slotR.
+    const coverMat = getCachedMaterial(0x64748b, 0.5);
+
+    // Outer boundary: full racetrack shape at casingOuterR
+    // Build as a single shape with straight sections + semicircular ends
+    const coverShape = new THREE.Shape();
+    // Start at top-right of the straight section
+    coverShape.moveTo(p.L / 2, -casingOuterR);
+    // Top straight edge (y = -casingOuterR, left to right)
+    coverShape.lineTo(-p.L / 2, -casingOuterR);
+    // Left semicircle (centered at -L/2, from -90° to +90° going CCW = 90° to 270°)
+    for (let i = 1; i <= arcSegs; i++) {
+        const ang = -Math.PI / 2 - (i / arcSegs) * Math.PI;
+        coverShape.lineTo(-p.L / 2 + casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+    }
+    // Bottom straight edge (y = +casingOuterR, right to left)
+    coverShape.lineTo(p.L / 2, casingOuterR);
+    // Right semicircle (centered at +L/2, from +90° to -90° going CCW = 270° to 90°)
+    for (let i = 1; i <= arcSegs; i++) {
+        const ang = Math.PI / 2 - (i / arcSegs) * Math.PI;
+        coverShape.lineTo(p.L / 2 + casingOuterR * Math.cos(ang), casingOuterR * Math.sin(ang));
+    }
+    coverShape.closePath();
+
+    // Racetrack-shaped slot hole: straight from -L/2 to +L/2 with semicircular caps of radius slotR
+    const slotHole = new THREE.Path();
+    // Start at top-right of slot
+    slotHole.moveTo(p.L / 2, -slotR);
+    // Top edge going left
+    slotHole.lineTo(-p.L / 2, -slotR);
+    // Left semicircular cap
+    for (let i = 1, cs = getCircleSegs(); i <= cs; i++) {
+        const ang = -Math.PI / 2 - (i / cs) * Math.PI;
+        slotHole.lineTo(-p.L / 2 + slotR * Math.cos(ang), slotR * Math.sin(ang));
+    }
+    // Bottom edge going right
+    slotHole.lineTo(p.L / 2, slotR);
+    // Right semicircular cap
+    for (let i = 1, cs = getCircleSegs(); i <= cs; i++) {
+        const ang = Math.PI / 2 - (i / cs) * Math.PI;
+        slotHole.lineTo(p.L / 2 + slotR * Math.cos(ang), slotR * Math.sin(ang));
+    }
+    coverShape.holes.push(slotHole);
+
+    const coverGeo = new THREE.ExtrudeGeometry(coverShape, { depth: coverPlateT, bevelEnabled: false });
+    const coverMesh = new THREE.Mesh(coverGeo, coverMat);
+    coverMesh.position.set(0, 0, frontCoverZ);
+    threeMeshGroup.add(coverMesh);
 }
 
 function generateRacetrack(p) {
@@ -3823,28 +4994,71 @@ translate([idler_dist, 0, arm_thick])
 
 function generateIdlerWheel(p) {
     const depth = parseFloat(rackDepthSlider.value);
-    const clearance = 1;
-    const armThick = depth - 2 * clearance;
     const idlerR = p.r3;
     const holeR = idlerR * 0.2;
+    const vDepth = Math.min(idlerR * 0.25, depth * 0.4);
+    const grooveR = idlerR - vDepth;
+    const halfThick = depth / 2;
 
-    return `// Mechanism 61 - Idler Wheel
-// Rolls on outside of outer racetrack
-// Plain wheel (no teeth)
+    return `// Mechanism 61 - Outer Idler Wheel 1 (V-slot)
+// V-groove wheel rolling on outside of outer racetrack
+// V-groove profile for self-centering on V-ridge rail
 
 // --- Parameters ---
-idler_r = ${idlerR.toFixed(2)};     // wheel radius
-hole_r = ${holeR.toFixed(2)};       // shaft hole
-thickness = ${armThick.toFixed(2)}; // wheel thickness
+idler_r = ${idlerR.toFixed(2)};       // outer rim radius
+groove_r = ${grooveR.toFixed(2)};     // V-groove bottom radius
+hole_r = ${holeR.toFixed(2)};         // shaft hole
+half_thick = ${halfThick.toFixed(2)}; // half thickness
 
 $fn = 64;
 
 // --- Assembly ---
-difference() {
-    cylinder(r = idler_r, h = thickness);
-    translate([0, 0, -1])
-        cylinder(r = hole_r, h = thickness + 2);
+// V-slot wheel via rotate_extrude of trapezoidal cross-section
+rotate_extrude()
+    difference() {
+        // Outer profile: V-groove
+        polygon(points=[
+            [hole_r, -half_thick],
+            [idler_r, -half_thick],
+            [groove_r, 0],
+            [idler_r, half_thick],
+            [hole_r, half_thick]
+        ]);
+    }
+`;
 }
+
+function generateOuterIdler2(p) {
+    const depth = parseFloat(rackDepthSlider.value);
+    const idlerR = p.r3;
+    const holeR = idlerR * 0.2;
+    const vDepth = Math.min(idlerR * 0.25, depth * 0.4);
+    const grooveR = idlerR - vDepth;
+    const halfThick = depth / 2;
+
+    return `// Mechanism 61 - Outer Idler Wheel 2 (V-slot)
+// Second V-groove wheel, coaxial with first outer idler
+// Positioned at inner idler Z level for triangular support
+
+// --- Parameters ---
+idler_r = ${idlerR.toFixed(2)};       // outer rim radius
+groove_r = ${grooveR.toFixed(2)};     // V-groove bottom radius
+hole_r = ${holeR.toFixed(2)};         // shaft hole
+half_thick = ${halfThick.toFixed(2)}; // half thickness
+
+$fn = 64;
+
+// --- Assembly ---
+rotate_extrude()
+    difference() {
+        polygon(points=[
+            [hole_r, -half_thick],
+            [idler_r, -half_thick],
+            [groove_r, 0],
+            [idler_r, half_thick],
+            [hole_r, half_thick]
+        ]);
+    }
 `;
 }
 
@@ -3892,7 +5106,12 @@ function updateScadCode() {
     else if (scadCurrentPart === 'carrier_arm') code = generateCarrierArm(p);
     else if (scadCurrentPart === 'outer_arm') code = generateOuterArm(p);
     else if (scadCurrentPart === 'idler_wheel') code = generateIdlerWheel(p);
+    else if (scadCurrentPart === 'outer_idler2') code = generateOuterIdler2(p);
     else if (scadCurrentPart === 'inner_idler') code = generateInnerIdlerWheel(p);
+    else if (scadCurrentPart === 'shaft_tube') code = '// Shaft Tube — OpenSCAD export not yet implemented';
+    else if (scadCurrentPart === 'output_arm') code = '// Output Arm — OpenSCAD export not yet implemented';
+    else if (scadCurrentPart === 'crankshaft_drive') code = '// Crankshaft Drive — OpenSCAD export not yet implemented';
+    else if (scadCurrentPart === 'casing') code = '// Casing — OpenSCAD export not yet implemented';
     scadCodeArea.value = code;
     rebuild3D();
 }
@@ -3938,8 +5157,14 @@ function toggleScadPlay() {
     } else {
         if (scadAnimFrame) cancelAnimationFrame(scadAnimFrame);
         scadAnimFrame = null;
+        // Rebuild at full quality when paused
+        rebuild3D();
     }
 }
+
+// Throttle 3D animation to ~20 FPS to avoid GPU overload
+const SCAD_ANIM_INTERVAL = 50; // ms between 3D rebuilds (~20 FPS)
+let scadLastRebuild = 0;
 
 function scadAnimStep(timestamp) {
     if (!scadPlaying) return;
@@ -3956,7 +5181,12 @@ function scadAnimStep(timestamp) {
 
     const pct = (val / 10).toFixed(0);
     document.getElementById('scadThetaValue').textContent = pct + '%';
-    rebuild3D();
+
+    // Only rebuild geometry at throttled rate
+    if (timestamp - scadLastRebuild >= SCAD_ANIM_INTERVAL) {
+        scadLastRebuild = timestamp;
+        rebuild3D();
+    }
 
     scadAnimFrame = requestAnimationFrame(scadAnimStep);
 }
@@ -3970,6 +5200,8 @@ function scadAnimStep(timestamp) {
 // Sync scadConfigSelect ↔ configSelect
 scadConfigSelect.addEventListener('change', () => {
     configSelect.value = scadConfigSelect.value;
+    localStorage.setItem(LS_PREFIX + 'config', configSelect.value);
+    updatePairedVis();
     draw();
     if (threeInitialized) updateScadCode();
 });
