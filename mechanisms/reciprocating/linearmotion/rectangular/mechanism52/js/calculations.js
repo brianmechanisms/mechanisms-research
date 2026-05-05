@@ -743,6 +743,50 @@ export function getJyAtAngle(angle) {
 }
 
 /**
+ * Calculate fixed point position based on output point, R1, R2, and fixedPointDistance
+ *
+ * Linkage geometry:
+ * - R1 arm: From origin (0,0) to output point
+ * - R2 arm: From output point to a fixed pivot (length R2)
+ * - Fixed point: On R2 arm at distance fixedPointDistance from output point
+ *
+ * For a 2-bar linkage, we place the fixed pivot along the radial direction
+ */
+export function calculateFixedPoint(sx, sy) {
+    // Output point position (from origin)
+    const outputX = sx;
+    const outputY = sy;
+
+    // Distance from origin to output point
+    const r1Distance = Math.sqrt(outputX * outputX + outputY * outputY);
+
+    // If output point is at origin, can't calculate fixed point
+    if (r1Distance === 0) {
+        return { fixedX: 0, fixedY: 0, pivotX: 0, pivotY: 0 };
+    }
+
+    // Unit vector from origin to output point (along R1 arm direction)
+    const r1UnitX = outputX / r1Distance;
+    const r1UnitY = outputY / r1Distance;
+
+    // Fixed pivot is at distance R2b from output point, along R1 direction
+    // (This creates a radial 2-bar linkage)
+    const fixedPivotX = outputX + r1UnitX * params.R2b;
+    const fixedPivotY = outputY + r1UnitY * params.R2b;
+
+    // Fixed point is at fixedPointDistance from output point, along R2 arm (same direction)
+    const fixedX = outputX + r1UnitX * params.fixedPointDistance;
+    const fixedY = outputY + r1UnitY * params.fixedPointDistance;
+
+    return {
+        fixedX,
+        fixedY,
+        pivotX: fixedPivotX,
+        pivotY: fixedPivotY
+    };
+}
+
+/**
  * Calculate displacement for all angles (0-360)
  */
 export function calculateDisplacement() {
@@ -758,6 +802,9 @@ export function calculateDisplacement() {
         const jx = getJxAtAngle(angle) * params.jxScale;
         const jy = getJyAtAngle(angle) * params.jyScale;
 
+        // Calculate fixed point position
+        const { fixedX, fixedY, pivotX, pivotY } = calculateFixedPoint(sx, sy);
+
         displacements.push({
             angle,
             sx,
@@ -767,7 +814,11 @@ export function calculateDisplacement() {
             ax,
             ay,
             jx,
-            jy
+            jy,
+            fixedX,
+            fixedY,
+            pivotX,
+            pivotY
         });
     }
 

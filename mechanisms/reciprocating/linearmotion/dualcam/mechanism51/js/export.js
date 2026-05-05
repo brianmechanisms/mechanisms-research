@@ -63,13 +63,13 @@ export function exportGIF() {
     const framesPerGifFrame = degreesPerGifFrame / mechanismParams.animationSpeed;
     const delayMs = Math.round((framesPerGifFrame / 60) * 1000); // Convert to milliseconds
 
-    // Configure GIF encoder with local worker script
+    // Configure GIF encoder with shared worker script
     const gif = new GIF({
         workers: 2,
         quality: 10,
         width: canvas.width,
         height: canvas.height,
-        workerScript: '/mechanisms/reciprocating/linearmotion/dualcam/mechanism51/gif.worker.js'
+        workerScript: '/lib/gif.worker.js'
     });
 
     // Capture frames for full rotation

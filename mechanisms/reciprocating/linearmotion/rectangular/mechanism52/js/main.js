@@ -489,13 +489,6 @@ function drawPath() {
 
     ctx.clearRect(0, 0, width, height);
 
-    // Draw title on canvas
-    ctx.font = 'bold 18px sans-serif';
-    ctx.fillStyle = '#1f2937';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('Mechanism 52', 20, 15);
-
     // Draw watermark
     ctx.save();
     ctx.translate(width / 2, height / 2);
@@ -511,24 +504,55 @@ function drawPath() {
     const displacements = calculateDisplacement();
     const phaseAngles = calculatePhaseAngles();
 
-    // Find bounds for scaling
+    // Find bounds for scaling - need to consider ALL elements:
+    // 1. Main path (sx, sy)
+    // 2. Offset paths (±perpendicularOffset)
+    // 3. Fixed point locus (fixedX, fixedY)
+    // 4. R2 pivot points (pivotX, pivotY)
+    // 5. R1 circle radius
+
     const sxValues = displacements.map(d => d.sx);
     const syValues = displacements.map(d => d.sy);
-    const minSx = Math.min(...sxValues);
-    const maxSx = Math.max(...sxValues);
-    const minSy = Math.min(...syValues);
-    const maxSy = Math.max(...syValues);
+    const fixedXValues = displacements.map(d => d.fixedX);
+    const fixedYValues = displacements.map(d => d.fixedY);
+    const pivotXValues = displacements.map(d => d.pivotX);
+    const pivotYValues = displacements.map(d => d.pivotY);
+
+    // Combine all X and Y values
+    const allXValues = [...sxValues, ...fixedXValues, ...pivotXValues];
+    const allYValues = [...syValues, ...fixedYValues, ...pivotYValues];
+
+    let minX = Math.min(...allXValues);
+    let maxX = Math.max(...allXValues);
+    let minY = Math.min(...allYValues);
+    let maxY = Math.max(...allYValues);
+
+    // Add perpendicular offset to bounds
+    if (params.perpendicularOffset > 0) {
+        minX -= params.perpendicularOffset;
+        maxX += params.perpendicularOffset;
+        minY -= params.perpendicularOffset;
+        maxY += params.perpendicularOffset;
+    }
+
+    // Add R1 circle radius to bounds (centered at offset position)
+    const r1CenterOffsetX = params.horizontalLength / 2;
+    const r1CenterOffsetY = -params.transitionRadius - params.verticalLength / 2;
+    minX = Math.min(minX, r1CenterOffsetX - params.R1);
+    maxX = Math.max(maxX, r1CenterOffsetX + params.R1);
+    minY = Math.min(minY, r1CenterOffsetY - params.R1);
+    maxY = Math.max(maxY, r1CenterOffsetY + params.R1);
 
     const padding = 50;
-    const scaleX = (width - 2 * padding) / (maxSx - minSx);
-    const scaleY = (height - 2 * padding) / (maxSy - minSy);
+    const scaleX = (width - 2 * padding) / (maxX - minX);
+    const scaleY = (height - 2 * padding) / (maxY - minY);
     const scale = Math.min(scaleX, scaleY) * params.pathScale;
 
     // Center the path
     const centerX = width / 2;
     const centerY = height / 2;
-    const pathCenterX = (minSx + maxSx) / 2;
-    const pathCenterY = (minSy + maxSy) / 2;
+    const pathCenterX = (minX + maxX) / 2;
+    const pathCenterY = (minY + maxY) / 2;
 
     function toCanvasX(sx) {
         return centerX + (sx - pathCenterX) * scale;
@@ -684,15 +708,27 @@ function drawPath() {
         drawOffsetPath(1);
     }
 
-    // Draw current position
-    const currentDisplacement = displacements[Math.round(currentTheta)] || displacements[0];
+    // Calculate offset angle for output point
+    // Total circumference of output locus
+    const totalCircumference = 2 * (params.horizontalLength + params.verticalLength) +
+                               4 * (Math.PI / 2 * params.transitionRadius);
+
+    // Sum = horizontal + transition1 + half of vertical
+    const sum = params.horizontalLength +
+                (Math.PI / 2 * params.transitionRadius) +
+                (params.verticalLength / 2);
+
+    // Offset angle
+    const offsetAngle = (sum / totalCircumference) * 360;
+
+    // Output point is at theta + offset
+    const outputTheta = currentTheta + offsetAngle;
+    const outputThetaRounded = Math.round(outputTheta) % 360;
+
+    // Current displacement for first arm (used for offset dots)
+    const currentDisplacement = displacements[outputThetaRounded] || displacements[0];
     const currentX = toCanvasX(currentDisplacement.sx);
     const currentY = toCanvasY(currentDisplacement.sy);
-
-    ctx.fillStyle = '#EF4444';
-    ctx.beginPath();
-    ctx.arc(currentX, currentY, 8, 0, 2 * Math.PI);
-    ctx.fill();
 
     // Draw offset position dots and connecting line if offset > 0
     if (params.perpendicularOffset > 0) {
@@ -736,6 +772,219 @@ function drawPath() {
     ctx.beginPath();
     ctx.arc(startX, startY, 6, 0, 2 * Math.PI);
     ctx.fill();
+
+    // Use R1 circle center offset calculated earlier in bounds
+    // (already declared as r1CenterOffsetX and r1CenterOffsetY)
+    const r1CenterCanvasX = toCanvasX(r1CenterOffsetX);
+    const r1CenterCanvasY = toCanvasY(r1CenterOffsetY);
+
+    // Draw R1 circle (reference circle centered at offset origin)
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)'; // Light blue
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 5]);
+    ctx.beginPath();
+    const r1Radius = params.R1 * scale;
+    ctx.arc(r1CenterCanvasX, r1CenterCanvasY, r1Radius, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw origin point (R1 circle center)
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(r1CenterCanvasX, r1CenterCanvasY, 5, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Calculate and draw fixed point locus for all theta values
+    ctx.strokeStyle = '#F59E0B'; // Amber
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    let firstPoint = true;
+
+    for (let theta = 0; theta <= 360; theta++) {
+        // Calculate output theta with offset
+        const outputTheta = theta + offsetAngle;
+        const outputThetaRounded = Math.round(outputTheta) % 360;
+        const outputDisp = displacements[outputThetaRounded] || displacements[0];
+
+        // R1 arm at -theta
+        const r1ArmTheta = -theta;
+        const thetaRad = r1ArmTheta * Math.PI / 180;
+        const r1CircX = r1CenterOffsetX + params.R1 * Math.cos(thetaRad);
+        const r1CircY = r1CenterOffsetY + params.R1 * Math.sin(thetaRad);
+
+        // Direction from end of R1 to output point
+        const dirX = outputDisp.sx - r1CircX;
+        const dirY = outputDisp.sy - r1CircY;
+        const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
+
+        if (dirLen > 0) {
+            const unitX = dirX / dirLen;
+            const unitY = dirY / dirLen;
+
+            // Fixed point position
+            const fpX = r1CircX + unitX * params.fixedPointDistance;
+            const fpY = r1CircY + unitY * params.fixedPointDistance;
+
+            const canvasX = toCanvasX(fpX);
+            const canvasY = toCanvasY(fpY);
+
+            if (firstPoint) {
+                ctx.moveTo(canvasX, canvasY);
+                firstPoint = false;
+            } else {
+                ctx.lineTo(canvasX, canvasY);
+            }
+        }
+    }
+    ctx.stroke();
+
+    // Draw multiple arms
+    const angleSpacing = 360 / params.numArms;
+
+    for (let i = 0; i < params.numArms; i++) {
+        const armTheta = currentTheta + i * angleSpacing;
+
+        // Draw R1 arm at -armTheta (reversed)
+        const r1ArmTheta = -armTheta;
+        const thetaRad = r1ArmTheta * Math.PI / 180;
+        const r1CircumferenceX = r1CenterOffsetX + params.R1 * Math.cos(thetaRad);
+        const r1CircumferenceY = r1CenterOffsetY + params.R1 * Math.sin(thetaRad);
+
+        const r1CircumferenceCanvasX = toCanvasX(r1CircumferenceX);
+        const r1CircumferenceCanvasY = toCanvasY(r1CircumferenceY);
+
+        ctx.strokeStyle = '#3B82F6'; // Solid blue
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(r1CenterCanvasX, r1CenterCanvasY);
+        ctx.lineTo(r1CircumferenceCanvasX, r1CircumferenceCanvasY);
+        ctx.stroke();
+
+        // Draw point on R1 circumference (end of R1 arm) - draw AFTER other elements so it's on top
+        // (will be drawn at end of loop)
+
+        // Calculate output point for this arm
+        const armOutputTheta = armTheta + offsetAngle;
+        const armOutputThetaRounded = Math.round(armOutputTheta) % 360;
+        const armOutputDisplacement = displacements[armOutputThetaRounded] || displacements[0];
+
+        // Calculate canvas positions for output point (will be drawn at end)
+        const armOutputX = toCanvasX(armOutputDisplacement.sx);
+        const armOutputY = toCanvasY(armOutputDisplacement.sy);
+
+        // Variables for fixed point position (to draw at end)
+        let fixedPointCanvasX = null;
+        let fixedPointCanvasY = null;
+
+        // Draw R2 arm - must pass through the output point
+        // R2 arm has its MIDDLE (center) at the end of R1 arm
+        // R2 arm has fixed point at distance fixedPointDistance from R2 center (end of R1)
+        // Calculate direction from end of R1 to output point
+        const r2DirX = armOutputDisplacement.sx - r1CircumferenceX;
+        const r2DirY = armOutputDisplacement.sy - r1CircumferenceY;
+        const r2DirLength = Math.sqrt(r2DirX * r2DirX + r2DirY * r2DirY);
+
+        if (r2DirLength > 0) {
+            // Normalize direction
+            const r2UnitX = r2DirX / r2DirLength;
+            const r2UnitY = r2DirY / r2DirLength;
+
+            // R2 center is at end of R1 arm
+            const r2CenterX = r1CircumferenceX;
+            const r2CenterY = r1CircumferenceY;
+
+            // Fixed point is at fixedPointDistance from R2 center (can be positive or negative)
+            const fixedPointX = r2CenterX + r2UnitX * params.fixedPointDistance;
+            const fixedPointY = r2CenterY + r2UnitY * params.fixedPointDistance;
+
+            // R2 arm extends from R2 center:
+            // - R2a in the positive direction (outside, away from R1 center)
+            // - R2b in the negative direction (inside, towards R1 center)
+            const r2End1X = r2CenterX + r2UnitX * params.R2a;
+            const r2End1Y = r2CenterY + r2UnitY * params.R2a;
+            const r2End2X = r2CenterX - r2UnitX * params.R2b;
+            const r2End2Y = r2CenterY - r2UnitY * params.R2b;
+
+            const r2End1CanvasX = toCanvasX(r2End1X);
+            const r2End1CanvasY = toCanvasY(r2End1Y);
+            const r2End2CanvasX = toCanvasX(r2End2X);
+            const r2End2CanvasY = toCanvasY(r2End2Y);
+
+            // Store fixed point position to draw at end
+            fixedPointCanvasX = toCanvasX(fixedPointX);
+            fixedPointCanvasY = toCanvasY(fixedPointY);
+
+            // Draw R2 arm
+            ctx.strokeStyle = '#DC2626'; // Red
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(r2End1CanvasX, r2End1CanvasY);
+            ctx.lineTo(r2End2CanvasX, r2End2CanvasY);
+            ctx.stroke();
+
+            // Draw endpoints of R2 arm (smaller red dots)
+            ctx.fillStyle = '#DC2626'; // Red
+            ctx.beginPath();
+            ctx.arc(r2End1CanvasX, r2End1CanvasY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(r2End2CanvasX, r2End2CanvasY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        // Draw dots on top of everything (at end of loop iteration)
+
+        // Blue dot on R1 circumference
+        ctx.fillStyle = '#3B82F6'; // Blue
+        ctx.beginPath();
+        ctx.arc(r1CircumferenceCanvasX, r1CircumferenceCanvasY, 6, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Red dot on output point
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.arc(armOutputX, armOutputY, 8, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Amber dot on fixed point (if it was calculated)
+        if (fixedPointCanvasX !== null && fixedPointCanvasY !== null) {
+            ctx.fillStyle = '#F59E0B'; // Amber-500
+            ctx.beginPath();
+            ctx.arc(fixedPointCanvasX, fixedPointCanvasY, 8, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        // Draw offset position dots for this arm (perpendicular offset loci)
+        if (params.perpendicularOffset > 0) {
+            const negPos = getOffsetPosition(armOutputDisplacement, -1);
+            const posPos = getOffsetPosition(armOutputDisplacement, 1);
+
+            const negX = toCanvasX(negPos.x);
+            const negY = toCanvasY(negPos.y);
+            const posX = toCanvasX(posPos.x);
+            const posY = toCanvasY(posPos.y);
+
+            // Draw connecting line (length = 2 * offset)
+            ctx.strokeStyle = 'rgba(107, 114, 128, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(negX, negY);
+            ctx.lineTo(posX, posY);
+            ctx.stroke();
+
+            // Draw negative offset dot (purple - inner)
+            ctx.fillStyle = '#8B5CF6';  // Purple
+            ctx.beginPath();
+            ctx.arc(negX, negY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Draw positive offset dot (green - outer)
+            ctx.fillStyle = '#10B981';  // Green
+            ctx.beginPath();
+            ctx.arc(posX, posY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
 }
 
 /**
@@ -921,6 +1170,46 @@ function initControls() {
     perpendicularOffsetSlider.addEventListener('input', function() {
         params.perpendicularOffset = parseFloat(this.value);
         document.getElementById('perpendicularOffsetValue').textContent = params.perpendicularOffset.toFixed(1);
+        drawPath();
+    });
+
+    // Linkage parameter sliders
+    const r1Slider = document.getElementById('r1Slider');
+    r1Slider.addEventListener('input', function() {
+        params.R1 = parseFloat(this.value);
+        document.getElementById('r1Value').textContent = params.R1.toFixed(0);
+        updateCharts();
+        drawPath();
+    });
+
+    const r2aSlider = document.getElementById('r2aSlider');
+    r2aSlider.addEventListener('input', function() {
+        params.R2a = parseFloat(this.value);
+        document.getElementById('r2aValue').textContent = params.R2a.toFixed(1);
+        updateCharts();
+        drawPath();
+    });
+
+    const r2bSlider = document.getElementById('r2bSlider');
+    r2bSlider.addEventListener('input', function() {
+        params.R2b = parseFloat(this.value);
+        document.getElementById('r2bValue').textContent = params.R2b.toFixed(1);
+        updateCharts();
+        drawPath();
+    });
+
+    const fixedPointDistanceSlider = document.getElementById('fixedPointDistanceSlider');
+    fixedPointDistanceSlider.addEventListener('input', function() {
+        params.fixedPointDistance = parseFloat(this.value);
+        document.getElementById('fixedPointDistanceValue').textContent = params.fixedPointDistance.toFixed(0);
+        updateCharts();
+        drawPath();
+    });
+
+    const numArmsSlider = document.getElementById('numArmsSlider');
+    numArmsSlider.addEventListener('input', function() {
+        params.numArms = parseInt(this.value);
+        document.getElementById('numArmsValue').textContent = params.numArms;
         drawPath();
     });
 

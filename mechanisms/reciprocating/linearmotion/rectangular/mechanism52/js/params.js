@@ -30,6 +30,13 @@ export const params = {
     perpendicularOffset: 3,       // Perpendicular offset for additional paths (perpendicular to motion direction)
     showOffsetPaths: true,        // Show offset paths
 
+    // Linkage parameters
+    R1: 50,                       // First arm length (from R1 center to R1 circumference)
+    R2a: 68.8,                    // R2 arm outside part (away from R1 center)
+    R2b: 0.0,                     // R2 arm inside part (towards R1 center)
+    fixedPointDistance: 50,       // Distance of fixed point from R2 center (end of R1) along R2 direction
+    numArms: 1,                   // Number of arms (1 to 20)
+
     // Display options
     showPhaseColors: true,
     showAngleMarkers: true

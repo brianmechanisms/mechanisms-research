@@ -132,13 +132,13 @@ function exportPathGIF() {
     const degreesPerFrame = 360 / totalFrames;
     let currentFrame = 0;
 
-    // Configure GIF encoder with local worker script
+    // Configure GIF encoder with shared worker script
     const gif = new GIF({
         workers: 2,
         quality: 10,
         width: canvas.width,
         height: canvas.height,
-        workerScript: './gif.worker.js'
+        workerScript: '/lib/gif.worker.js'
     });
 
     // We need to get the drawPath function from main.js
