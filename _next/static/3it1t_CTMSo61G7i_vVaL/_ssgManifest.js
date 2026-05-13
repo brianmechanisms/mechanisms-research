@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fcategories\u002F[id]","\u002Fdesigns\u002Fassemblies\u002F[slug]","\u002Fdesigns\u002Fcomponents\u002F[slug]","\u002Floci\u002Fapp\u002F[id]","\u002Fmechanisms\u002F[category]\u002F[id]","\u002Fpractical\u002F[id]","\u002Fresearch\u002F[slug]","\u002Fsynthesized\u002Fapp\u002F[id]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
