@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="lead" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#444"/>
+    </marker>
+    <marker id="rot" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#0a7d33"/>
+    </marker>
+    <pattern id="bin" width="9" height="9" patternUnits="userSpaceOnUse">
+      <rect width="9" height="9" fill="#efe6d4"/>
+      <circle cx="2.5" cy="2.5" r="1.1" fill="#b69a5e"/>
+      <circle cx="6.5" cy="6.5" r="1.1" fill="#b69a5e"/>
+    </pattern>
+    <!-- reusable screw stage: container, gear (teeth all round), casing, screw+spiral -->
+    <g id="stage">
+      <circle r="34" fill="url(#bin)" stroke="#8a7a52" stroke-width="2"/>
+      <circle r="40" fill="none" stroke="#888" stroke-width="1"/>
+      <circle r="40" fill="none" stroke="#555" stroke-width="7" stroke-dasharray="8 8"/>
+      <circle r="23" fill="#dfe6ee" stroke="#33485f" stroke-width="1.5"/>
+      <circle r="17" fill="#c9b896" stroke="#7a5a2a" stroke-width="1.5"/>
+      <path d="M16,0 A16,16 0 0 1 -14,0 A14,14 0 0 1 12,0 A12,12 0 0 1 -10,0 A10,10 0 0 1 8,0 A8,8 0 0 1 -6,0"
+            fill="none" stroke="#7a5a2a" stroke-width="2"/>
+      <circle r="3" fill="#5a5a5a"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="720" fill="#ffffff"/>
+  <text x="360" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#222">
+    Radial multi-screw dispenser — TOP VIEW (sector-gear selection)
+  </text>
+  <text x="360" y="50" text-anchor="middle" font-size="12" fill="#777">
+    central gear has teeth over only a small arc → engages one screw's gear at a time · single actuator
+  </text>
+
+  <!-- ===== 4 screw stages around the centre (N, E, S, W) ===== -->
+  <use href="#stage" x="360" y="240"/>
+  <use href="#stage" x="480" y="360"/>
+  <use href="#stage" x="360" y="480"/>
+  <use href="#stage" x="240" y="360"/>
+
+  <!-- ===== central sector gear ===== -->
+  <!-- pitch circle (reference) -->
+  <circle cx="360" cy="360" r="80" fill="none" stroke="#bbb" stroke-width="1" stroke-dasharray="3 4"/>
+  <!-- teeth only over a small arc, facing the EAST screw (currently engaged) -->
+  <path d="M433.08,327.46 A80,80 0 0 1 433.08,392.54"
+        fill="none" stroke="#444" stroke-width="8" stroke-dasharray="8 7"/>
+  <!-- hub + shaft -->
+  <circle cx="360" cy="360" r="30" fill="#555" stroke="#222" stroke-width="2"/>
+  <circle cx="360" cy="360" r="11" fill="#999" stroke="#222" stroke-width="1.5"/>
+  <!-- rotation arrow -->
+  <path d="M360,318 A42,42 0 0 1 402,360" fill="none" stroke="#0a7d33" stroke-width="2.5" marker-end="url(#rot)"/>
+  <text x="360" y="364" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">ACT</text>
+
+  <!-- highlight the engaged mesh (east) -->
+  <text x="455" y="345" font-size="11" fill="#0a7d33" font-weight="700">engaged</text>
+
+  <!-- ===== labels ===== -->
+  <g font-size="12" fill="#333">
+    <!-- central sector gear -->
+    <line x1="360" y1="330" x2="250" y2="250" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="70" y="240">central sector gear —</text>
+    <text x="70" y="255">teeth over a small arc only;</text>
+    <text x="70" y="270">engages one screw at a time</text>
+
+    <!-- single actuator -->
+    <line x1="360" y1="390" x2="360" y2="430" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="360" y="447" text-anchor="middle" font-weight="700">single actuator drives the central gear</text>
+
+    <!-- screw gear (point to north stage gear) -->
+    <line x1="392" y1="212" x2="470" y2="150" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="474" y="140">screw gear</text>
+    <text x="474" y="155">(bigger diameter than the screw)</text>
+
+    <!-- screw / auger (north) -->
+    <line x1="360" y1="223" x2="470" y2="195" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="474" y="192">screw / auger</text>
+
+    <!-- casing (east) -->
+    <line x1="480" y1="383" x2="560" y2="430" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="564" y="427">casing (tube)</text>
+
+    <!-- container (east) -->
+    <line x1="510" y1="385" x2="600" y2="470" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="540" y="487">container (the screw sits inside)</text>
+
+    <!-- gear teeth all round (south) -->
+    <line x1="360" y1="520" x2="250" y2="585" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="70" y="588">each screw gear is toothed all round</text>
+  </g>
+</svg>

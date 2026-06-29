@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1040" viewBox="0 0 760 1040" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#0a7d33"/>
+    </marker>
+    <marker id="lead" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#444"/>
+    </marker>
+    <pattern id="solidA" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="#e9d9b8"/>
+      <circle cx="3" cy="3" r="1.3" fill="#b69a5e"/>
+      <circle cx="8" cy="8" r="1.3" fill="#b69a5e"/>
+    </pattern>
+    <pattern id="solidB" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="#dce8e0"/>
+      <circle cx="3" cy="3" r="1.3" fill="#7aa98a"/>
+      <circle cx="8" cy="8" r="1.3" fill="#7aa98a"/>
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="760" height="1040" fill="#ffffff"/>
+  <text x="380" y="26" text-anchor="middle" font-size="18" font-weight="700" fill="#222">
+    Vertical-stacked screw dispenser — shared central rod
+  </text>
+  <text x="380" y="44" text-anchor="middle" font-size="12" fill="#777">
+    one rod up through every hollow screw core · each screw couples to the rod (key / friction gripper) · single actuator
+  </text>
+
+  <!-- =================== SHARED CENTRAL ROD =================== -->
+  <!-- runs from the actuator up to the very top of the topmost set -->
+  <rect x="312" y="60" width="16" height="868" fill="#5a5a5a" stroke="#222" stroke-width="1.5"/>
+  <line x1="320" y1="60" x2="320" y2="48" stroke="#222" stroke-width="3"/>
+  <text x="338" y="62" font-size="12" fill="#333">rod extends to the very top of the topmost set</text>
+
+  <!-- ============================================================
+       STAGE 2  (top set: container + screw + casing)
+       tube y 120..380, container y 380..500, outlet ~y110
+  ============================================================ -->
+  <!-- side outlet at the top of stage 2 -->
+  <path d="M250,150 L250,120 L150,120 L150,92 L320,92 L320,150 Z" fill="#cfd8e3" stroke="#33485f" stroke-width="2"/>
+  <rect x="320" y="92" width="70" height="28" fill="#cfd8e3" stroke="#33485f" stroke-width="2"/>
+  <line x1="150" y1="106" x2="104" y2="106" stroke="#0a7d33" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="120" cy="120" r="2.5" fill="#7aa98a"/><circle cx="110" cy="128" r="2.5" fill="#7aa98a"/>
+
+  <!-- stage 2 tube walls + product (solid B) -->
+  <rect x="236" y="150" width="14" height="350" fill="#dfe6ee" stroke="#33485f" stroke-width="2"/>
+  <rect x="390" y="150" width="14" height="230" fill="#dfe6ee" stroke="#33485f" stroke-width="2"/>
+  <rect x="250" y="150" width="154" height="230" fill="url(#solidB)" opacity="0.6"/>
+
+  <!-- stage 2 container (wider) -->
+  <path d="M214,380 L214,476 Q214,500 238,500 L402,500 Q426,500 426,476 L426,380 Z" fill="url(#solidB)" stroke="#33485f" stroke-width="2"/>
+  <line x1="214" y1="380" x2="250" y2="380" stroke="#33485f" stroke-width="2"/>
+  <line x1="390" y1="380" x2="426" y2="380" stroke="#33485f" stroke-width="2"/>
+
+  <!-- stage 2 screw shaft + hollow core (rod sits inside core) -->
+  <rect x="300" y="120" width="40" height="380" fill="#b7bfc9" stroke="#33485f" stroke-width="1.5"/>
+  <rect x="308" y="120" width="24" height="380" fill="#ffffff" stroke="#33485f" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <rect x="312" y="120" width="16" height="380" fill="#5a5a5a"/>
+  <!-- stage 2 flights -->
+  <g stroke="#7a5a2a" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M300,360 L256,334"/><path d="M300,308 L256,282"/><path d="M300,256 L256,230"/><path d="M300,204 L256,178"/>
+    <path d="M340,334 L384,308"/><path d="M340,282 L384,256"/><path d="M340,230 L384,204"/><path d="M340,178 L384,152"/>
+    <!-- intake flights into the container -->
+    <path d="M300,440 L264,418"/><path d="M340,418 L376,440"/>
+  </g>
+  <line x1="270" y1="370" x2="270" y2="170" stroke="#0a7d33" stroke-width="2" stroke-dasharray="6 6" marker-end="url(#arrow)"/>
+
+  <!-- stage 2 coupling collar (key / friction gripper) -->
+  <rect x="298" y="250" width="44" height="22" fill="#d98a2b" stroke="#7a4a10" stroke-width="1.5"/>
+  <line x1="342" y1="261" x2="470" y2="240" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+  <text x="474" y="237" font-size="12" fill="#333">key / friction gripper</text>
+  <text x="474" y="252" font-size="12" fill="#333">— couples this screw to the rod</text>
+
+  <text x="74" y="300" font-size="13" font-weight="700" fill="#3b6b4b">STAGE 2</text>
+  <text x="74" y="316" font-size="11" fill="#777">(top set)</text>
+
+  <!-- ============================================================
+       STAGE 1  (bottom set)
+       tube y 540..800, container y 800..920, outlet ~y530
+  ============================================================ -->
+  <!-- side outlet at the top of stage 1 (just below stage 2 container) -->
+  <path d="M250,560 L250,536 L150,536 L150,512 L320,512 L320,560 Z" fill="#cfd8e3" stroke="#33485f" stroke-width="2"/>
+  <line x1="150" y1="524" x2="104" y2="524" stroke="#0a7d33" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="120" cy="538" r="2.5" fill="#b69a5e"/><circle cx="110" cy="546" r="2.5" fill="#b69a5e"/>
+
+  <!-- stage 1 tube walls + product (solid A) -->
+  <rect x="236" y="560" width="14" height="360" fill="#dfe6ee" stroke="#33485f" stroke-width="2"/>
+  <rect x="390" y="560" width="14" height="240" fill="#dfe6ee" stroke="#33485f" stroke-width="2"/>
+  <rect x="250" y="560" width="154" height="240" fill="url(#solidA)" opacity="0.6"/>
+
+  <!-- stage 1 container (wider) -->
+  <path d="M214,800 L214,896 Q214,920 238,920 L402,920 Q426,920 426,896 L426,800 Z" fill="url(#solidA)" stroke="#33485f" stroke-width="2"/>
+  <line x1="214" y1="800" x2="250" y2="800" stroke="#33485f" stroke-width="2"/>
+  <line x1="390" y1="800" x2="426" y2="800" stroke="#33485f" stroke-width="2"/>
+
+  <!-- stage 1 screw shaft + hollow core (rod inside) -->
+  <rect x="300" y="528" width="40" height="392" fill="#b7bfc9" stroke="#33485f" stroke-width="1.5"/>
+  <rect x="308" y="528" width="24" height="392" fill="#ffffff" stroke="#33485f" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <rect x="312" y="528" width="16" height="392" fill="#5a5a5a"/>
+  <!-- stage 1 flights -->
+  <g stroke="#7a5a2a" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M300,780 L256,754"/><path d="M300,728 L256,702"/><path d="M300,676 L256,650"/><path d="M300,624 L256,598"/>
+    <path d="M340,754 L384,728"/><path d="M340,702 L384,676"/><path d="M340,650 L384,624"/><path d="M340,598 L384,572"/>
+    <path d="M300,860 L264,838"/><path d="M340,838 L376,860"/>
+  </g>
+  <line x1="270" y1="790" x2="270" y2="590" stroke="#0a7d33" stroke-width="2" stroke-dasharray="6 6" marker-end="url(#arrow)"/>
+
+  <!-- stage 1 coupling collar -->
+  <rect x="298" y="680" width="44" height="22" fill="#d98a2b" stroke="#7a4a10" stroke-width="1.5"/>
+
+  <text x="74" y="700" font-size="13" font-weight="700" fill="#7a5a2a">STAGE 1</text>
+  <text x="74" y="716" font-size="11" fill="#777">(bottom set)</text>
+
+  <!-- labels: rod, casing, container, outlet -->
+  <g font-size="12" fill="#333">
+    <line x1="320" y1="450" x2="470" y2="470" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="474" y="467">shared rod inside the hollow screw core</text>
+
+    <line x1="404" y1="640" x2="470" y2="640" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="474" y="637">tube / casing (bore &gt; screw OD)</text>
+
+    <line x1="320" y1="700" x2="470" y2="700" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="474" y="697">coupling (key / friction gripper)</text>
+
+    <line x1="220" y1="860" x2="120" y2="860" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="20" y="857">container</text>
+    <text x="20" y="872">(solid A)</text>
+
+    <line x1="220" y1="440" x2="120" y2="440" stroke="#444" stroke-width="1" marker-end="url(#lead)"/>
+    <text x="20" y="437">container</text>
+    <text x="20" y="452">(solid B)</text>
+
+    <text x="430" y="110" fill="#333">top outlet (stage 2)</text>
+    <text x="330" y="528" fill="#333">outlet (stage 1)</text>
+  </g>
+
+  <!-- =================== SINGLE ACTUATOR =================== -->
+  <rect x="290" y="928" width="60" height="56" rx="6" fill="#444" stroke="#222" stroke-width="2"/>
+  <circle cx="320" cy="956" r="14" fill="#888"/>
+  <path d="M320,920 L320,928" stroke="#222" stroke-width="6"/>
+  <path d="M360,956 A40,40 0 0 1 320,916" fill="none" stroke="#222" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="320" y="1004" text-anchor="middle" font-size="12" font-weight="700" fill="#222">single actuator → rod</text>
+</svg>
