@@ -1,0 +1,123 @@
+2:I[8350,["4687","static/chunks/0bfc6d32-5100df61438d51ae.js","4144","static/chunks/4144-f587ff692dbc30d7.js","6981","static/chunks/6981-84ea8d8545ab219e.js","9129","static/chunks/app/metriq/%5Bslug%5D/page-59ba64a6069aae44.js"],"default"]
+4:I[68046,[],""]
+6:I[87597,[],""]
+7:I[28053,["8952","static/chunks/app/metriq/layout-57fed99190232024.js"],"default"]
+8:I[79821,["3185","static/chunks/app/layout-216e2108b630e66b.js"],"AuthProvider"]
+9:I[10579,["3185","static/chunks/app/layout-216e2108b630e66b.js"],"default"]
+3:T13d1,## Intent
+
+Two vertical tubes side by side, joined into one body by a middle wall that
+stops short of the bottom. A single slanting plunger reciprocates below that
+wall. Turn the drive and solids move from tube **B** into tube **A**.
+
+No valves, no timing, no separate sequencing element. The direction comes from
+one inclined face and one screen.
+
+## The parts
+
+| # | Part | Constraint |
+|---|---|---|
+| **A** | Left tube — the **receiving** side | Fixed. Open at the bottom. |
+| **B** | Right tube — the **supply** side | Fixed. Open at the bottom. |
+| **middle wall** | Divides A from B, **stops short of the bottom** | Fixed. Its bottom edge is the plunger's top stop. |
+| **screen** | Spans A, level with the middle wall's bottom edge | Fixed. The one-way element. |
+| **plunger** | One slanting member spanning **both** bores | One DOF: vertical translation. |
+
+There is **no floor**. The tubes are open at the bottom and the plunger *is*
+the floor — which is why its lowest position is a hard limit rather than a
+preference.
+
+## The slant
+
+One continuous inclined face, **highest in B and falling the whole way into
+A**. No level section, no ridge. Everything resting on it slides down and to
+the left — out of B, across the crossover, and into A. That single inclination
+is the entire direction-giving mechanism.
+
+The face must be steeper than the material's **angle of repose** or nothing
+runs down it. With 35° repose the slant is set at 40° — the shallowest angle
+that still runs, because every extra degree is expensive:
+
+> A single slant across **both** bores is inherently tall. At 40° it rises 5.13
+> across the pair. The plunger works entirely *below* the middle wall, so that
+> rise has to fit under the wall, and the stroke has to fit above the rise.
+> Every degree of slant is therefore paid for twice.
+
+## The cycle
+
+The plunger reciprocates between two hard stops. Neither is a number that was
+chosen — both are things the machine runs into:
+
+| | limit | what stops it |
+|---|---|---|
+| **TOP** | plunger's **top face**, where it passes **under** the wall, meets the wall's bottom edge | the middle wall is the stopper |
+| **BOTTOM** | plunger's **low end** reaches the tubes' open rim | any lower and the seal breaks and material runs out |
+
+Two details about the top stop that are easy to get wrong:
+
+- Contact is **not** at the plunger's high end. That end is out at B's far
+  side, past the wall entirely, and never touches it.
+- Contact is on the plunger's **top** face, not its underside.
+
+Since the face rises left to right, of the two points beneath the wall it is
+the one at the wall's **right** face that stands highest and touches first.
+That single point sets the whole stroke.
+
+### What the material does
+
+**Down-stroke.** Material comes across from B and slides down the face.
+
+**Up-stroke.** The load splits. What sits high on the face — the B side — falls
+back into B. What has already slid low — the A side — is carried up and
+delivered into A.
+
+So each stroke *sorts* rather than pushes: some returns, some crosses. The net
+is a transfer B → A. Nothing has to be timed.
+
+## The screen is the whole problem
+
+**This mechanism only works if the screen does something a plain mesh does
+not.** It has to resist flow downward under gravity, yet permit flow upward
+when driven by the plunger. Those demands are in tension, and a plain woven
+mesh satisfies neither well: sized to hold material under gravity it also
+blocks it under stroke pressure; sized to pass it under pressure it lets it
+drain back.
+
+### It must yield to force, not to motion
+
+A subtlety that is easy to get wrong, and that the simulation got wrong first.
+
+The obvious way to model a one-way screen is *let a particle through if it is
+moving upward*. That is not the mechanism, and it flatters it badly. It means
+material passes **because it is flying** — so fast, bouncing particles sail
+through while a slowly, steadily pressed column is blocked. That is backwards
+from the real loading case.
+
+A real machine of this kind moves slowly. Nothing is flung anywhere. Material
+goes through because the plunger *forces* it through. The physical quantity is
+**contact force**, not velocity.
+
+Under the velocity rule 403 of 542 particles were delivered; under a force
+threshold, 235. The velocity rule was letting material through for free.
+
+### Slower is better — which is the point
+
+| stroke | delivered | fell out |
+|---|---|---|
+| fast | 235 / 542 | 10 |
+| **slow** | **315 / 542** | **3** |
+
+Slowing the machine by 2.2× delivered 43% more and lost a third as much. Under
+the old velocity rule the result would have gone the other way.
+
+At a slow stroke the material stays a **packed column** against the face, so
+the plunger transmits load into it steadily and the contact force at the screen
+builds and *stays* above yield. A fast stroke throws the pack apart — particles
+go ballistic, lose contact, and the load spikes and collapses instead of
+pressing.
+
+**So this is a slow, force-driven machine, and it should be built and run as
+one.**5:["slug","mt-26-01","d"]
+0:["710gl6eUKXjcrYn2SPyPo",[[["",{"children":["metriq",{"children":[["slug","mt-26-01","d"],{"children":["__PAGE__?{\"slug\":\"mt-26-01\"}",{}]}]}]},"$undefined","$undefined",true],["",{"children":["metriq",{"children":[["slug","mt-26-01","d"],{"children":["__PAGE__",{},[["$L1",["$","$L2",null,{"entry":{"slug":"mt-26-01","title":"Slant-Plunger Transfer","summary":"Two tubes, one slanting plunger. Solids move from B into A with no valves and nothing to time.","status":"simulated","visibility":"private","updated":"2026-08-28","source":"apps/research-private/24_slant_plunger_transfer","claims":[{"statement":"Reciprocating the plunger nets a transfer of solids from B into A.","support":"simulated","basis":"315 of 542 particles delivered into A over six cycles in a rigid-body granular simulation (pymunk / Chipmunk2D), with 3 lost."},{"statement":"The screen passes material upward when driven, and holds it against gravity.","support":"assumed","basis":"Modelled as an ideal force-yielding element. No such screen has been designed or built — this is the mechanism’s open problem, not a demonstrated property."},{"statement":"The mechanism works better slowly than quickly.","support":"simulated","basis":"Halving the stroke speed raised delivery from 235 to 315 of 542 and cut losses from 10 to 3. Slow strokes keep the material a packed column, so load at the screen builds and stays above yield."}],"results":[{"label":"Delivered into A","value":"315 / 542","note":"six cycles, slow stroke"},{"label":"Lost out the bottom","value":"3 / 542"},{"label":"Slant angle","value":"40°","note":"repose is 35°; the shallowest angle that still runs"},{"label":"Slant rise","value":"5.13","note":"across both bores"},{"label":"Crossover height","value":"5.21"},{"label":"Stroke","value":"2.00","note":"derived, not chosen"}],"open":["The screen. It must stay shut under the weight of material resting on it and open under stroke load — closer to a pressure-relief element than a filter. Whether that can be built passively, at the difference between “a heap resting” and “a heap being pushed”, is unresolved.","Whether the transfer rate holds with real particle shapes. The simulation uses discs; angular grains interlock and arch differently.","Wear at the plunger’s low end, which seals against the tube rim on every stroke."],"figures":[{"src":"/metriq/mt-26-01/cross-section.png","caption":"Cross-section. Two bores, middle wall stopping short of the bottom, screen level with the wall’s end, and the single slanting plunger spanning both."},{"src":"/metriq/mt-26-01/states.png","caption":"One cycle. Both ends of the stroke are hard stops the machine runs into, not positions chosen for the drawing.","wide":true}],"body":"$3"}}],[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/5ab1acfdd2984050.css","precedence":"next","crossOrigin":"$undefined"}]]],null],null]},[null,["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children","metriq","children","$5","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/a278255f367788ec.css","precedence":"next","crossOrigin":"$undefined"}]],["$","div",null,{"className":"__variable_55ec73 __variable_4918c1 __variable_1f2f98 metriq-root","children":["$","$L7",null,{"children":["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children","metriq","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]}]}]],null],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/36cdcee1aa5b57b7.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_866e57","children":["$","$L8",null,{"children":[["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}],["$","$L9",null,{}]]}]}]}]],null],null],["$La",null]]]]
+a:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","3",{"name":"description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems. Interactive demonstration platform for mechanical engineering."}],["$","meta","4",{"name":"author","content":"Brian Mechanisms Robotics"}],["$","meta","5",{"name":"keywords","content":"mechanical engineering, mechanisms, quick return, rotary motion, walking systems, brianmechanisms, robotics"}],["$","meta","6",{"name":"creator","content":"Brian Mechanisms Robotics"}],["$","meta","7",{"name":"publisher","content":"Brian Mechanisms Robotics"}],["$","meta","8",{"name":"robots","content":"noindex, nofollow"}],["$","meta","9",{"property":"og:title","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","10",{"property":"og:description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems."}],["$","meta","11",{"property":"og:url","content":"https://cseco.co.ke/mechanisms-research/"}],["$","meta","12",{"property":"og:site_name","content":"Brian Mechanisms"}],["$","meta","13",{"property":"og:locale","content":"en_US"}],["$","meta","14",{"property":"og:image","content":"https://cseco.co.ke/mechanisms-research/mechanisms-research/og-image.png"}],["$","meta","15",{"property":"og:image:width","content":"1200"}],["$","meta","16",{"property":"og:image:height","content":"630"}],["$","meta","17",{"property":"og:image:alt","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","18",{"property":"og:type","content":"website"}],["$","meta","19",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","20",{"name":"twitter:creator","content":"@brianmechanisms"}],["$","meta","21",{"name":"twitter:title","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","22",{"name":"twitter:description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems."}],["$","meta","23",{"name":"twitter:image","content":"https://cseco.co.ke/mechanisms-research/mechanisms-research/og-image.png"}],["$","link","24",{"rel":"shortcut icon","href":"/mechanisms-research/favicon.svg"}],["$","link","25",{"rel":"icon","href":"/mechanisms-research/favicon.svg","type":"image/svg+xml"}],["$","link","26",{"rel":"icon","href":"/mechanisms-research/favicon.svg","sizes":"any"}],["$","link","27",{"rel":"apple-touch-icon","href":"/mechanisms-research/favicon.svg"}],["$","meta","28",{"name":"next-size-adjust"}]]
+1:null
