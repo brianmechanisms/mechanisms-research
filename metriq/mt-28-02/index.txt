@@ -1,0 +1,80 @@
+2:I[6679,["4687","static/chunks/0bfc6d32-5100df61438d51ae.js","4144","static/chunks/4144-f587ff692dbc30d7.js","6981","static/chunks/6981-84ea8d8545ab219e.js","9129","static/chunks/app/metriq/%5Bslug%5D/page-455c1191b23a98e9.js"],"default"]
+4:I[68046,[],""]
+6:I[87597,[],""]
+7:I[28053,["4144","static/chunks/4144-f587ff692dbc30d7.js","8952","static/chunks/app/metriq/layout-48b32810203f2314.js"],"default"]
+8:I[80868,["4144","static/chunks/4144-f587ff692dbc30d7.js","8952","static/chunks/app/metriq/layout-48b32810203f2314.js"],"default"]
+9:I[79821,["3185","static/chunks/app/layout-216e2108b630e66b.js"],"AuthProvider"]
+a:I[10579,["3185","static/chunks/app/layout-216e2108b630e66b.js"],"default"]
+3:Tc8c,## Intent
+
+A rotary check valve built from **five nested curved shells** — wedges —
+that all share **one hinge** at the centre. Bottom to top they run blue,
+green, yellow, orange, red; blue is the biggest and outermost, red the
+smallest and innermost. Each shell's outer radius steps down by one wall
+thickness, so every shell fits *inside* the one below it, like a fan or a
+telescope folded round a pivot.
+
+## Fan out to seal, nest to clear
+
+The opening parameter is **theta**, measured anticlockwise from red's fixed
+edge at **90°**:
+
+- **theta = 0 — OPEN.** All five shells are stacked on the same slot, collapsed
+  onto the fixed red core. The valve's whole footprint is a single shell wide;
+  the bore beside it is clear.
+- **theta = 50° — CLOSED.** Blue swings the full angle, the inner shells each
+  swing a proportional share, and they fan out to fill the arc. Blue's leading
+  face — drawn heavy, as the closing/seal face — reaches the **170° stop** and
+  spans the bore.
+
+Red is the **fixed core**: it never moves, and every other shell is measured
+from its 90° edge. Blue (outermost) travels the whole theta; each shell inward
+travels less, so they nest progressively rather than colliding.
+
+## The stop
+
+170° is a hard geometric limit, not a chosen angle. Blue's leading face sits at
+`90 + theta + SEG`; when that reaches 170° the fan is fully open across the
+bore and cannot swing further. That is the seal position.
+
+## The return spring
+
+A coil spring runs from **red's fixed top-right corner** to the **midpoint of
+blue's face line**. As blue fans out to close, the spring is the element pulling
+it there; as force from beneath drives the shells to nest, the spring is
+stretched and stores the energy to close again.
+
+## Check-valve actuation
+
+The physical story is a **spring-return check valve**:
+
+- **Force from below pushes the valve OPEN** — the shells telescope together
+  and nest (theta → 0), clearing the bore.
+- **Releasing the force lets the spring pull it CLOSED** — the shells fan back
+  out to the 170° stop and seal.
+
+So flow (or a pusher) from one side opens it; the spring shuts it when that
+force drops. It passes one way and holds the other, which is the check-valve
+action.
+
+## Prior art
+
+No exact prior art was found. The closest analogues each miss the defining
+feature:
+
+- **Iris diaphragm / iris damper.** Overlapping blades open and close an
+  aperture, but each blade rides its **own pivot around the perimeter** — the
+  blades do not nest, and there is no single shared hinge.
+- **Rotary camera shutter.** Coaxial sector blades do rotate about a common
+  axis, but they are **timing shutters** — they sweep an opening past a frame,
+  not fan rigid shells out to a mechanical stop to seal a bore.
+- **Spring-return swing / multi-flapper check valves.** These share the
+  open-by-flow, close-by-spring actuation, but their leaves are **flat and
+  independent** — they flap, they do not nest concentrically.
+
+The novel element is **rigid concentric shells that rotationally nest about a
+single shared hinge**, combined with **check-valve actuation** (open by force
+from beneath, close by return spring). None of the analogues combines those.5:["slug","mt-28-02","d"]
+0:["ffAIXdR1AizZ25Z-0-jM9",[[["",{"children":["metriq",{"children":[["slug","mt-28-02","d"],{"children":["__PAGE__?{\"slug\":\"mt-28-02\"}",{}]}]}]},"$undefined","$undefined",true],["",{"children":["metriq",{"children":[["slug","mt-28-02","d"],{"children":["__PAGE__",{},[["$L1",["$","$L2",null,{"entry":{"slug":"mt-28-02","title":"Annular Telescope Valve","summary":"Five nested shells on one hinge fan out to seal a bore and telescope into a single-shell footprint to open it.","status":"geometry","visibility":"private","updated":"2026-09-01","source":"apps/research-private/28_annular_telescope_valve","claims":[{"statement":"The nested shells fan out to seal the bore and rotate together to nest into a single-shell footprint when open.","support":"simulated","basis":"Demonstrated in geometry: the concept render shows the shells collapsing onto the fixed core at theta = 0 and fanning to the 170° stop at theta = 50°, sharing a single hinge throughout."},{"statement":"Opened by force from beneath; a return spring closes it (check-valve action).","support":"assumed","basis":"The actuation is a design intent, not a demonstrated property. No spring rate, seal, or flow force has been designed or built — nothing here fixes the balance between them."},{"statement":"Rigid concentric shells that rotationally nest about a single shared hinge appear to be a novel valve element.","support":"assumed","basis":"No exact prior art found. The closest analogues (iris diaphragm, rotary camera shutter, spring-return check valve) each miss either the nesting, the single hinge, or the check actuation — see Prior art below."}],"open":["The seal at the shell edges. Curved rigid faces meeting a bore wall (and each other) is not obviously sealable — the whole valve is only as good as that contact.","Spring rate versus flow force. The spring must hold closed against back-pressure yet yield to opening force from beneath, and nothing here sets that balance.","Wear at the shared hinge and along the sliding shell faces, which rub past one another every cycle.","Whether the shells jam when nesting — a rigid telescope can bind if any face is out of true.","Real fluid or granular behaviour through the fanned gap, which the static geometry says nothing about."],"figures":[{"src":"/metriq/mt-28-02/concept.png","caption":"Three states of the fan. OPEN (theta = 0) — all five shells nested on the fixed red core; opening (theta = 25°); CLOSED (theta = 50°) — blue’s heavy leading face reaches the 170° stop and spans the bore. The zig-zag is the return spring, anchored at red’s fixed corner and blue’s face.","wide":true}],"body":"$3"}}],[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/5ab1acfdd2984050.css","precedence":"next","crossOrigin":"$undefined"}]]],null],null]},[null,["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children","metriq","children","$5","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/914ca70d282c263c.css","precedence":"next","crossOrigin":"$undefined"}]],["$","div",null,{"className":"__variable_55ec73 __variable_4918c1 __variable_1f2f98 metriq-root","children":["$","$L7",null,{"children":[["$","$L8",null,{}],["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children","metriq","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]]}]}]],null],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/mechanisms-research/_next/static/css/0aa1076111372aba.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_866e57","children":["$","$L9",null,{"children":[["$","$L4",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}],["$","$La",null,{}]]}]}]}]],null],null],["$Lb",null]]]]
+b:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","3",{"name":"description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems. Interactive demonstration platform for mechanical engineering."}],["$","meta","4",{"name":"author","content":"Brian Mechanisms Robotics"}],["$","meta","5",{"name":"keywords","content":"mechanical engineering, mechanisms, quick return, rotary motion, walking systems, brianmechanisms, robotics"}],["$","meta","6",{"name":"creator","content":"Brian Mechanisms Robotics"}],["$","meta","7",{"name":"publisher","content":"Brian Mechanisms Robotics"}],["$","meta","8",{"name":"robots","content":"noindex, nofollow"}],["$","meta","9",{"property":"og:title","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","10",{"property":"og:description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems."}],["$","meta","11",{"property":"og:url","content":"https://cseco.co.ke/mechanisms-research/"}],["$","meta","12",{"property":"og:site_name","content":"Brian Mechanisms"}],["$","meta","13",{"property":"og:locale","content":"en_US"}],["$","meta","14",{"property":"og:image","content":"https://cseco.co.ke/mechanisms-research/mechanisms-research/og-image.png"}],["$","meta","15",{"property":"og:image:width","content":"1200"}],["$","meta","16",{"property":"og:image:height","content":"630"}],["$","meta","17",{"property":"og:image:alt","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","18",{"property":"og:type","content":"website"}],["$","meta","19",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","20",{"name":"twitter:creator","content":"@brianmechanisms"}],["$","meta","21",{"name":"twitter:title","content":"Brian Mechanisms - Interactive Mechanism Showcase"}],["$","meta","22",{"name":"twitter:description","content":"Explore 25+ advanced mechanical systems including quick return mechanisms, rotary motion, and walking systems."}],["$","meta","23",{"name":"twitter:image","content":"https://cseco.co.ke/mechanisms-research/mechanisms-research/og-image.png"}],["$","link","24",{"rel":"shortcut icon","href":"/mechanisms-research/favicon.svg"}],["$","link","25",{"rel":"icon","href":"/mechanisms-research/favicon.svg","type":"image/svg+xml"}],["$","link","26",{"rel":"icon","href":"/mechanisms-research/favicon.svg","sizes":"any"}],["$","link","27",{"rel":"apple-touch-icon","href":"/mechanisms-research/favicon.svg"}],["$","meta","28",{"name":"next-size-adjust"}]]
+1:null
